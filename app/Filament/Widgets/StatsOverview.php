@@ -19,16 +19,16 @@ class StatsOverview extends BaseWidget
         return [
             Stat::make('Total Users', User::count())
                 ->description('Total registered users')
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->color('success'),
+                ->descriptionIcon('heroicon-m-user')
+                ->color('primary'),
             Stat::make('Total Projects', $totalProjects)
                 ->description("On-going: {$ongoingProjects} | Exited: {$exitedProjects}")
                 ->descriptionIcon('heroicon-m-briefcase')
                 ->color('info'),
             Stat::make('Total Developers', Developer::count())
                 ->description('Total developers listed')
-                ->descriptionIcon('heroicon-m-users')
-                ->color('success'),
+                ->descriptionIcon('heroicon-m-building-office-2')
+                ->color('warning'),
         ];
     }
 }
