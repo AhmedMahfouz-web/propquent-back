@@ -1,0 +1,24 @@
+.modern-hover {
+    /* Apply a permanent, light background color using the theme's primary color */
+    background-color: rgb(var(--f-primary-500) / 0.1);
+    color: var(--f-primary-600);
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.dark .modern-hover {
+    background-color: rgb(var(--f-primary-400) / 0.15);
+    color: var(--f-primary-400);
+}
+
+.modern-hover:hover {
+    /* Darken the background slightly on hover for feedback */
+    background-color: rgb(var(--f-primary-500) / 0.2);
+}
+
+.dark .modern-hover:hover {
+    background-color: rgb(var(--f-primary-400) / 0.25);
+}
