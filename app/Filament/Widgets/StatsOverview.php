@@ -12,18 +12,22 @@ class StatsOverview extends BaseWidget
 {
     protected function getStats(): array
     {
+        $totalProjects = Project::count();
+        $ongoingProjects = Project::where('status', 'On-going')->count();
+        $exitedProjects = Project::where('status', 'Exited')->count();
+
         return [
             Stat::make('Total Users', User::count())
                 ->description('Total registered users')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
-            Stat::make('Total Projects', Project::count())
-                ->description('Total projects in the system')
-                ->descriptionIcon('heroicon-m-arrow-trending-down')
-                ->color('danger'),
+            Stat::make('Total Projects', $totalProjects)
+                ->description("On-going: {$ongoingProjects} | Exited: {$exitedProjects}")
+                ->descriptionIcon('heroicon-m-briefcase')
+                ->color('info'),
             Stat::make('Total Developers', Developer::count())
                 ->description('Total developers listed')
-                ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->descriptionIcon('heroicon-m-users')
                 ->color('success'),
         ];
     }
