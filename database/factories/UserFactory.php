@@ -24,17 +24,17 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'full_name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'password_hash' => static::$password ??= Hash::make('password'),
-            'auth_provider' => $this->faker->randomElement(['email', 'google', 'apple']),
-            'provider_user_id' => $this->faker->uuid(),
-            'email_verified' => $this->faker->boolean(),
-            'phone_number' => $this->faker->phoneNumber(),
-            'country' => $this->faker->country(),
-            'profile_picture_url' => $this->faker->imageUrl(),
-            'is_active' => $this->faker->boolean(),
-            'last_login_at' => $this->faker->dateTimeThisYear(),
+            'full_name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'password_hash' => Hash::make('password'),
+            'auth_provider' => 'email',
+            'provider_user_id' => null,
+            'email_verified' => true,
+            'phone_number' => fake()->phoneNumber(),
+            'country' => fake()->country(),
+            'profile_picture_url' => fake()->imageUrl(),
+            'is_active' => true,
+            'last_login_at' => now(),
         ];
     }
 
@@ -44,7 +44,7 @@ class UserFactory extends Factory
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'email_verified' => false,
         ]);
     }
 }

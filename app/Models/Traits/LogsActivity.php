@@ -26,14 +26,31 @@ trait LogsActivity
     protected static function logActivity(Model $model, string $action)
     {
         $modelName = class_basename($model);
-        $userName = Auth::user() ? Auth::user()->name : 'System';
+        // Correctly use full_name from the User model
+        $userName = Auth::user() ? Auth::user()->full_name : 'System';
 
         $message = "User '{$userName}' {$action} a {$modelName}.";
+
+        $context = [];
+        switch ($action) {
+            case 'created':
+                // For created events, log all attributes of the new model
+                $context = $model->getAttributes();
+                break;
+            case 'updated':
+                // For updated events, log only the changed attributes
+                $context = $model->getDirty();
+                break;
+            case 'deleted':
+                // For deleted events, log the model's attributes before it was deleted
+                $context = $model->getAttributes();
+                break;
+        }
 
         Log::create([
             'message' => $message,
             'level' => 'info',
-            'context' => json_encode($model->getDirty()), // Log only changed attributes for updates
+            'context' => json_encode($context),
         ]);
     }
 }
