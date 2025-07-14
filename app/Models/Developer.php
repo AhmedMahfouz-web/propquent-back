@@ -9,7 +9,7 @@ use App\Models\Traits\LogsActivity;
 
 class Developer extends Model
 {
-        use HasFactory, LogsActivity;
+        use HasFactory;
 
     /**
      * The attributes that are mass assignable.

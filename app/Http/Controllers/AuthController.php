@@ -35,13 +35,17 @@ class AuthController extends Controller
         $request->validate([
             'full_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
+            'phone' => 'required|max:255',
+            'country' => 'required|string|max:255',
         ]);
 
         $user = User::create([
             'full_name' => $request->full_name,
             'email' => $request->email,
             'password_hash' => Hash::make($request->password),
+            'country' => $request->country,
+            'phone' => $request->phone,
             'auth_provider' => 'email', // Default to email provider
             'is_active' => true, // Activate user on registration
             'last_login_at' => now(), // Set last login on registration

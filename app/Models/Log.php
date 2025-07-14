@@ -10,4 +10,8 @@ class Log extends Model
     use HasFactory;
 
     protected $fillable = ['message', 'context', 'level'];
+
+    protected $casts = [
+        'context' => 'json',
+    ];
 }

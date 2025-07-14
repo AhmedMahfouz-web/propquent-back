@@ -16,7 +16,10 @@ class LatestProjectTransactions extends BaseWidget
     {
         return $table
             ->query(
-                ProjectTransactionResource::getEloquentQuery()->with('project')
+                ProjectTransaction::query()
+                    ->with('project')
+                    ->latest()
+                    ->limit(10)
             )
             ->defaultPaginationPageOption(5)
             ->defaultSort('created_at', 'desc')

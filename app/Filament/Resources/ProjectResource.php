@@ -6,7 +6,12 @@ use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
 use Filament\Forms;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -30,6 +35,7 @@ class ProjectResource extends Resource
     {
         return $form
             ->schema([
+
                 Forms\Components\TextInput::make('key')
                     ->required()
                     ->maxLength(255),
@@ -94,13 +100,19 @@ class ProjectResource extends Resource
                 Forms\Components\TextInput::make('investment_type')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\FileUpload::make('image_url')
-                    ->image()
+                SpatieMediaLibraryFileUpload::make('main_image')
+                    ->label('Main Image')
+                    ->collection('main_image'),
+
+                SpatieMediaLibraryFileUpload::make('images')
+                    ->label('Images')
+                    ->collection('images')
+                    ->multiple()
+                    ->reorderable(),
+                Forms\Components\FileUpload::make('document')
+                    ->label('Document')
                     ->disk('public')
-                    ->directory('project-images'),
-                Forms\Components\TextInput::make('document')
-                    ->maxLength(255)
-                    ->default(null),
+                    ->directory('project-documents'),
             ]);
     }
 
@@ -163,7 +175,6 @@ class ProjectResource extends Resource
                 Tables\Columns\TextColumn::make('investment_type')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\ImageColumn::make('image_url'),
                 Tables\Columns\TextColumn::make('document')
                     ->searchable()
                     ->sortable(),
@@ -185,9 +196,41 @@ class ProjectResource extends Resource
                     ->default('On-going'),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                TextEntry::make('key'),
+                TextEntry::make('title'),
+                TextEntry::make('developer.name'),
+                TextEntry::make('location'),
+                TextEntry::make('type'),
+                TextEntry::make('unit_no'),
+                TextEntry::make('project'),
+                TextEntry::make('area'),
+                TextEntry::make('garden_area'),
+                TextEntry::make('bedrooms'),
+                TextEntry::make('bathrooms'),
+                TextEntry::make('floor'),
+                TextEntry::make('status'),
+                TextEntry::make('stage'),
+                TextEntry::make('target_1'),
+                TextEntry::make('target_2'),
+                TextEntry::make('entry_date')->date(),
+                TextEntry::make('exit_date')->date(),
+                TextEntry::make('investment_type'),
+                SpatieMediaLibraryImageEntry::make('main_image')
+                    ->label('Main Image')
+                    ->collection('main_image'),
+                SpatieMediaLibraryImageEntry::make('images')->collection('images'),
+                TextEntry::make('document'),
+            ]);
     }
 
     public static function getPages(): array

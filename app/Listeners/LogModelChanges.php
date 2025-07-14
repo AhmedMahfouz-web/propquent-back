@@ -10,7 +10,7 @@ class LogModelChanges
     public function handle($event, $data)
     {
         foreach ($data as $model) {
-            if ($model instanceof Model) {
+                    if ($model instanceof Model && !$model instanceof Log) {
                 $action = $this->getActionFromEvent($event);
                 if ($action) {
                     Log::create([

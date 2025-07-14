@@ -4,13 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Traits\LogsActivity;
 
-class Project extends Model
+class Project extends Model implements HasMedia
 {
-        use HasFactory, LogsActivity;
+        use HasFactory, InteractsWithMedia;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('main_image')->singleFile();
+        $this->addMediaCollection('images');
+    }
+
 
     /**
      * The attributes that are mass assignable.
@@ -37,7 +45,6 @@ class Project extends Model
         'entry_date',
         'exit_date',
         'investment_type',
-        'image_url',
         'document',
     ];
 
@@ -47,14 +54,6 @@ class Project extends Model
     public function developer(): BelongsTo
     {
         return $this->belongsTo(Developer::class);
-    }
-
-    /**
-     * Get the images for the project.
-     */
-    public function images(): HasMany
-    {
-        return $this->hasMany(ProjectImage::class);
     }
 
     /**

@@ -10,7 +10,7 @@ use App\Models\Traits\LogsActivity;
 class ProjectTransaction extends Model
 {
     protected $table = 'project_transaction';
-        use HasFactory, LogsActivity;
+        use HasFactory;
 
     /**
      * The attributes that are mass assignable.

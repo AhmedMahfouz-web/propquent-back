@@ -23,7 +23,6 @@ return new class extends Migration
             $table->integer('bedrooms');
             $table->integer('bathrooms');
             $table->string('floor');
-            $table->decimal('price', 10, 2);
             $table->enum('status', ['pending', 'approved', 'rejected', 'On-Going', 'Exited']);
             $table->string('stage');
             $table->string('target_1')->nullable();

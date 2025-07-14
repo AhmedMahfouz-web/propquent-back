@@ -9,7 +9,7 @@ use App\Models\Traits\LogsActivity;
 
 class Admin extends Authenticatable
 {
-        use HasFactory, SoftDeletes, LogsActivity;
+        use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',

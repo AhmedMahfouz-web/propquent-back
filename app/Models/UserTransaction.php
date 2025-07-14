@@ -9,7 +9,7 @@ use App\Models\Traits\LogsActivity;
 
 class UserTransaction extends Model
 {
-        use HasFactory, LogsActivity;
+        use HasFactory;
 
     protected $fillable = [
         'user_id',
