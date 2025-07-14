@@ -27,7 +27,14 @@ class AuthController extends Controller
             return response()->json(['error' => 'could_not_create_token'], 500);
         }
 
-        return response()->json(compact('token'));
+        $user = JWTAuth::user();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User logged in successfully',
+            'user' => $user,
+            'token' => $token
+        ], 200);
     }
 
     public function register(Request $request)
@@ -53,7 +60,12 @@ class AuthController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
-        return response()->json(compact('user', 'token'), 201);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User registered successfully',
+            'user' => $user,
+            'token' => $token
+        ], 201);
     }
 
     public function logout()
@@ -67,14 +79,22 @@ class AuthController extends Controller
     {
         $token = JWTAuth::refresh(JWTAuth::getToken());
 
-        return response()->json(compact('token'));
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Token refreshed successfully',
+            'token' => $token
+        ]);
     }
 
     public function user()
     {
         $user = JWTAuth::user();
 
-        return response()->json(compact('user'));
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User retrieved successfully',
+            'user' => $user
+        ]);
     }
 
     public function forgotPassword(Request $request)
