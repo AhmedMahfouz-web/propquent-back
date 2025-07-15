@@ -125,7 +125,10 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageUsers::route('/'),
+            'index' => \App\Filament\Resources\UserResource\Pages\ListUsers::route('/'),
+            'create' => \App\Filament\Resources\UserResource\Pages\CreateUser::route('/create'),
+            'edit' => \App\Filament\Resources\UserResource\Pages\EditUser::route('/{record}/edit'),
+            'financials' => \App\Filament\Resources\UserResource\Pages\UserFinancials::route('/{record}/financials'),
         ];
     }
 }

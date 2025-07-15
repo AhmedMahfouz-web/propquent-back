@@ -8,10 +8,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Project extends Model implements HasMedia
 {
-        use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, HasUuids;
 
     public function registerMediaCollections(): void
     {
@@ -19,6 +20,10 @@ class Project extends Model implements HasMedia
         $this->addMediaCollection('images');
     }
 
+    public function images()
+    {
+        return $this->media()->where('collection_name', 'images');
+    }
 
     /**
      * The attributes that are mass assignable.

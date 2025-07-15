@@ -28,7 +28,7 @@ class ProjectResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('developer');
+        return parent::getEloquentQuery()->with(['developer', 'media']);
     }
 
     public static function form(Form $form): Form
