@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('status_changes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained('projects');
+            $table->foreignUuid('project_id')->constrained('projects');
             $table->string('from_status');
             $table->string('to_status');
             $table->timestamp('change_date');
