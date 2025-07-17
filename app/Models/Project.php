@@ -13,6 +13,16 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class Project extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, HasUuids;
+    
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('latest_first', function ($builder) {
+            $builder->orderBy('created_at', 'desc');
+        });
+    }
 
     public function registerMediaCollections(): void
     {

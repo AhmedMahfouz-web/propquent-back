@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     @php
         // 1. Get all available months for the filter dropdown from project transactions.
-        $allMonths = \App\Models\ProjectTransaction::query()
+        $allMonths = App\Models\ProjectTransaction::query()
             ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
             ->distinct()
             ->orderBy('month_date', 'desc')
@@ -21,56 +21,105 @@
             $monthsToShow = $allMonths->take(12); // Default to last 12 months
         }
 
-        // 3. Build and execute the pivot query.
-        $results = [];
+        // 3. Build and execute the query for project transactions using a cursor for memory efficiency.
+        $reportData = ['revenue' => [], 'expense' => []];
         $monthlyTotals = ['revenue' => [], 'expense' => []];
 
         if ($monthsToShow->isNotEmpty()) {
-            $selects = [];
+            // Initialize totals for all months to ensure they exist
             foreach ($monthsToShow as $month) {
-                $monthColumn = 'm_' . date('Y_m', strtotime($month));
-                $selects[] = "SUM(CASE WHEN DATE_FORMAT(pt.transaction_date, '%Y-%m-01') = '{$month}' THEN pt.amount ELSE 0 END) as `{$monthColumn}`";
-                // Initialize totals
                 $monthlyTotals['revenue'][$month] = 0;
                 $monthlyTotals['expense'][$month] = 0;
             }
-            $selectsString = implode(', ', $selects);
 
-            $query = "
-                SELECT
-                    pt.type,
-                    pt.serving as serving_name,
-                    {$selectsString}
-                FROM project_transaction pt
-                WHERE pt.transaction_date BETWEEN '{$monthsToShow->last()}' AND LAST_DAY('{$monthsToShow->first()}')
-                GROUP BY pt.type, pt.serving
-                ORDER BY pt.type, pt.serving
-            ";
+            $projectTransactions = DB::table('project_transaction as pt')
+                ->select(
+                    DB::raw("DATE_FORMAT(pt.transaction_date, '%Y-%m-01') as month_date"),
+                    'pt.type',
+                    'pt.serving as serving_name',
+                    DB::raw('SUM(pt.amount) as total_amount')
+                )
+                ->whereBetween('pt.transaction_date', [
+                    $monthsToShow->last(),
+                    Illuminate\Support\Carbon::parse($monthsToShow->first())->endOfMonth(),
+                ])
+                ->groupBy('month_date', 'pt.type', 'pt.serving')
+                ->orderBy('month_date', 'desc')
+                ->cursor(); // Use a cursor to process results one by one
 
-            $results = DB::select($query);
-
-            // Structure data for the view, ensuring keys always exist
-            $reportData = ['revenue' => [], 'expense' => []];
-            foreach ($results as $row) {
-                $type = strtolower($row->type); // Standardize to lowercase
-                $servingName = $row->serving_name;
-
-                // Skip any unexpected types
+            // Structure data for the view
+            foreach ($projectTransactions as $transaction) {
+                $type = strtolower($transaction->type);
                 if ($type !== 'revenue' && $type !== 'expense') {
                     continue;
                 }
 
+                $servingName = $transaction->serving_name;
+                $month = $transaction->month_date;
+
+                // Ensure the month from the transaction is one of the selected months to show
+                if (!$monthsToShow->contains($month)) {
+                    continue;
+                }
+
                 // Initialize the serving array for the type if it doesn't exist
-        if (!isset($reportData[$type][$servingName])) {
-            $reportData[$type][$servingName] = [];
+                if (!isset($reportData[$type][$servingName])) {
+                    // Initialize all months for this new serving to 0
+                    foreach ($monthsToShow as $m) {
+                        $reportData[$type][$servingName][$m] = 0;
+                    }
+                }
+
+                // Assign the amount and add to monthly totals
+                $reportData[$type][$servingName][$month] = $transaction->total_amount;
+                $monthlyTotals[$type][$month] += $transaction->total_amount;
+            }
         }
 
+        // 4. حساب الماليات للمستخدمين - بسيط وسهل
+        $userFinancials = ['deposits' => [], 'withdrawals' => [], 'net' => []];
+
+        // تهيئة الشهور بصفر
         foreach ($monthsToShow as $month) {
-            $monthColumn = 'm_' . date('Y_m', strtotime($month));
-                    $amount = $row->$monthColumn;
-                    $reportData[$type][$servingName][$month] = $amount;
-                    $monthlyTotals[$type][$month] += $amount;
-                }
+            $userFinancials['deposits'][$month] = 0;
+            $userFinancials['withdrawals'][$month] = 0;
+            $userFinancials['net'][$month] = 0;
+        }
+
+        // جلب كل المعاملات المكتملة من البداية
+        $allTransactions = App\Models\UserTransaction::where('status', 'Done')
+            ->orderBy('transaction_date', 'asc')
+            ->get();
+
+        // حساب الصافي التراكمي من البداية
+        $runningTotal = 0;
+        $monthlyData = [];
+
+        // تجميع المعاملات حسب الشهر
+        foreach ($allTransactions as $transaction) {
+            $month = $transaction->transaction_date->format('Y-m-01');
+            
+            if (!isset($monthlyData[$month])) {
+                $monthlyData[$month] = ['deposits' => 0, 'withdrawals' => 0];
+            }
+            
+            if ($transaction->type == 'Deposit') {
+                $monthlyData[$month]['deposits'] += $transaction->amount;
+            } else {
+                $monthlyData[$month]['withdrawals'] += $transaction->amount;
+            }
+        }
+
+        // حساب الصافي التراكمي لكل شهر
+        foreach ($monthlyData as $month => $data) {
+            $monthNet = $data['deposits'] - $data['withdrawals'];
+            $runningTotal += $monthNet;
+            
+            // إذا كان الشهر في التقرير، احفظ البيانات
+            if ($monthsToShow->contains($month)) {
+                $userFinancials['deposits'][$month] = $data['deposits'];
+                $userFinancials['withdrawals'][$month] = $data['withdrawals'];
+                $userFinancials['net'][$month] = $runningTotal;
             }
         }
     @endphp
@@ -100,67 +149,89 @@
         </div>
     </form>
 
-    {{-- Financial Report Table --}}
+    {{-- Integrated Financial Report Table --}}
     <div class="overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                        Category/Serving</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Category</th>
                     @foreach ($monthsToShow as $month)
-                        <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                            {{ date('F Y', strtotime($month)) }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ date('F Y', strtotime($month)) }}</th>
                     @endforeach
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {{-- User Financials Section --}}
+                @if (!empty($userFinancials['deposits']) || !empty($userFinancials['withdrawals']))
+                    <tr class="bg-blue-50 dark:bg-blue-900/20">
+                        <th colspan="{{ 1 + $monthsToShow->count() }}" class="px-6 py-4 text-left text-lg font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                            @svg('heroicon-o-user-group', 'h-6 w-6')
+                            <span>User Financials</span>
+                        </th>
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700 dark:text-gray-300 pl-12">Total Deposits</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ Illuminate\Support\Number::currency($userFinancials['deposits'][$month] ?? 0, 'USD') }}</td>
+                        @endforeach
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700 dark:text-gray-300 pl-12">Total Withdrawals</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ Illuminate\Support\Number::currency($userFinancials['withdrawals'][$month] ?? 0, 'USD') }}</td>
+                        @endforeach
+                    </tr>
+                    <tr class="bg-blue-50 dark:bg-blue-900/20 font-semibold">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-800 dark:text-blue-200 pl-12">Net User Deposit</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-800 dark:text-blue-200">{{ Illuminate\Support\Number::currency($userFinancials['net'][$month] ?? 0, 'USD') }}</td>
+                        @endforeach
+                    </tr>
+                    <tr class="h-6"><td colspan="{{ 1 + $monthsToShow->count() }}"></td></tr>
+                @endif
+
+                {{-- Revenue and Expense Sections --}}
                 @foreach (['revenue', 'expense'] as $type)
                     @if (!empty($reportData[$type]))
                         @php
-                            $servings = $reportData[$type];
-                            $typeTotal = $monthlyTotals[$type];
+                            $sectionColor = $type === 'revenue' ? 'green' : 'red';
+                            $icon = $type === 'revenue' ? 'heroicon-o-banknotes' : 'heroicon-o-credit-card';
                         @endphp
-                        {{-- Section Header --}}
-                        <tr class="bg-gray-100 dark:bg-gray-700/50">
-                            <th colspan="{{ 1 + $monthsToShow->count() }}"
-                                class="px-6 py-3 text-left text-md font-bold text-gray-900 dark:text-white">
-                                {{ ucfirst($type) }}
+                        <tr class="bg-{{ $sectionColor }}-50 dark:bg-{{ $sectionColor }}-900/20">
+                            <th colspan="{{ 1 + $monthsToShow->count() }}" class="px-6 py-4 text-left text-lg font-semibold text-{{ $sectionColor }}-800 dark:text-{{ $sectionColor }}-200 flex items-center gap-2">
+                                @svg($icon, 'h-6 w-6')
+                                <span>{{ ucfirst($type) }}</span>
                             </th>
                         </tr>
-
-                        {{-- Data Rows --}}
-                        @foreach ($servings as $servingName => $monthlyData)
+                        @foreach ($reportData[$type] as $servingName => $monthlyData)
                             <tr class="bg-white dark:bg-gray-800">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $servingName }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">{{ $servingName }}</td>
                                 @foreach ($monthsToShow as $month)
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ \Illuminate\Support\Number::currency($monthlyData[$month] ?? 0, 'USD') }}
-                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ Illuminate\Support\Number::currency($monthlyData[$month] ?? 0, 'USD') }}</td>
                                 @endforeach
                             </tr>
                         @endforeach
-
-                        {{-- Total Row --}}
-                        <tr class="bg-gray-50 dark:bg-gray-700/50 border-b-2 border-gray-300 dark:border-gray-600">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
-                                Total {{ ucfirst($type) }}</td>
+                        <tr class="bg-{{ $sectionColor }}-50 dark:bg-{{ $sectionColor }}-900/20 font-semibold">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-{{ $sectionColor }}-800 dark:text-{{ $sectionColor }}-200 pl-12">Total {{ ucfirst($type) }}</td>
                             @foreach ($monthsToShow as $month)
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
-                                    {{ \Illuminate\Support\Number::currency($typeTotal[$month] ?? 0, 'USD') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-{{ $sectionColor }}-800 dark:text-{{ $sectionColor }}-200">{{ Illuminate\Support\Number::currency($monthlyTotals[$type][$month] ?? 0, 'USD') }}</td>
                             @endforeach
                         </tr>
+                        @if (!$loop->last)
+                            <tr class="h-6"><td colspan="{{ 1 + $monthsToShow->count() }}"></td></tr>
+                        @endif
                     @endif
                 @endforeach
 
                 {{-- No Data Message --}}
-                @if (empty($reportData['revenue']) && empty($reportData['expense']))
-                    <tr class="bg-white dark:bg-gray-800">
-                        <td colspan="{{ 1 + $monthsToShow->count() }}"
-                            class="px-6 py-4 text-center text-sm text-gray-500">No transaction data found for the
-                            selected period.</td>
+                @if (empty($reportData['revenue']) && empty($reportData['expense']) && empty($userFinancials['deposits']) && empty($userFinancials['withdrawals']))
+                    <tr>
+                        <td colspan="{{ 1 + $monthsToShow->count() }}" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                @svg('heroicon-o-chart-pie', 'h-12 w-12 text-gray-400')
+                                <p class="mt-4 text-lg">No financial data found for the selected period.</p>
+                            </div>
+                        </td>
                     </tr>
                 @endif
             </tbody>

@@ -10,7 +10,30 @@ use App\Models\Traits\LogsActivity;
 class ProjectTransaction extends Model
 {
     protected $table = 'project_transaction';
-        use HasFactory;
+    use HasFactory;
+    
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('latest_first', function ($builder) {
+            $builder->orderBy('transaction_date', 'desc')->orderBy('created_at', 'desc');
+        });
+        
+        // Add validation to prevent foreign key constraint violations
+        static::creating(function ($transaction) {
+            if ($transaction->project_key && !Project::where('key', $transaction->project_key)->exists()) {
+                throw new \InvalidArgumentException("Project with key '{$transaction->project_key}' does not exist.");
+            }
+        });
+        
+        static::updating(function ($transaction) {
+            if ($transaction->project_key && !Project::where('key', $transaction->project_key)->exists()) {
+                throw new \InvalidArgumentException("Project with key '{$transaction->project_key}' does not exist.");
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.

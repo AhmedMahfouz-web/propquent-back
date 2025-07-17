@@ -100,13 +100,20 @@ class UserTransactionResource extends Resource
                             ->modalContent(function (UserTransaction $record) {
                                 $user = $record->user;
 
-                                // Calculate Net Deposit efficiently using database queries
-                                $deposits = UserTransaction::where('user_id', $user->id)->where('status', 'Done')->where('type', 'Deposit')->sum('amount');
-                                $withdrawals = UserTransaction::where('user_id', $user->id)->where('status', 'Done')->where('type', 'Withdraw')->sum('amount');
-                                $netDeposit = $deposits - $withdrawals;
+                                // Calculate Net Deposit efficiently using single query with aggregation
+                                $netDepositData = UserTransaction::where('user_id', $user->id)
+                                    ->where('status', 'Done')
+                                    ->selectRaw('SUM(CASE WHEN type = "Deposit" THEN amount ELSE 0 END) as total_deposits')
+                                    ->selectRaw('SUM(CASE WHEN type = "Withdraw" THEN amount ELSE 0 END) as total_withdrawals')
+                                    ->first();
+                                $netDeposit = ($netDepositData->total_deposits ?? 0) - ($netDepositData->total_withdrawals ?? 0);
 
-                                // Get Last 5 Transactions efficiently
-                                $lastTransactions = $user->transactions()->latest('transaction_date')->take(5)->get();
+                                // Get Last 5 Transactions efficiently with limited fields
+                                $lastTransactions = $user->transactions()
+                                    ->select('id', 'type', 'amount', 'status', 'transaction_date', 'description')
+                                    ->latest('transaction_date')
+                                    ->limit(5)
+                                    ->get();
 
                                 return Infolist::make()
                                     ->record($user)

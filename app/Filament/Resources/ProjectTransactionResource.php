@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProjectTransactionResource\Pages;
 use App\Filament\Resources\ProjectTransactionResource\RelationManagers;
 use App\Models\ProjectTransaction;
+use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -31,9 +32,14 @@ class ProjectTransactionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('project_key')
+                Forms\Components\Select::make('project_key')
+                    ->label('Project')
+                    ->options(function () {
+                        return Project::all()->pluck('title', 'key')->toArray();
+                    })
+                    ->searchable()
                     ->required()
-                    ->maxLength(255),
+                    ->placeholder('Select a project'),
                 Forms\Components\Select::make('type')
                     ->options([
                         'Expense' => 'Expense',

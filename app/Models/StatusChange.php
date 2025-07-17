@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StatusChange extends Model
 {
     use HasFactory;
+    
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('latest_first', function ($builder) {
+            $builder->orderBy('change_date', 'desc')->orderBy('created_at', 'desc');
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
