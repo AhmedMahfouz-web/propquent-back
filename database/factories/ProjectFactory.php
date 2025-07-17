@@ -30,7 +30,6 @@ class ProjectFactory extends Factory
             'bathrooms' => $this->faker->numberBetween(1, 5),
             'floor' => $this->faker->word(),
             'location' => $this->faker->address(),
-            'price' => $this->faker->randomFloat(2, 100000, 10000000),
             'status' => $this->faker->randomElement(['On-Going', 'Exited']),
             'stage' => $this->faker->word(),
             'target_1' => $this->faker->word(),
