@@ -18,12 +18,12 @@ class DatabaseSeeder extends Seeder
             DeveloperSeeder::class,
             ProjectSeeder::class,
             ProjectImageSeeder::class,
-            ProjectTransactionSeeder::class,
+            // ProjectTransactionSeeder::class,
             ReferralSeeder::class,
             StatusChangeSeeder::class,
             TransactionWhatSeeder::class,
             UserSeeder::class,
-            UserTransactionSeeder::class,
+            // UserTransactionSeeder::class,
         ]);
     }
 }
