@@ -1,0 +1,489 @@
+/**
+ * Theme Support CSS for Filament Admin Panel
+ * Provides smooth transitions and theme-specific styles
+ */
+
+/* Root variables for theme colors */
+:root {
+    --theme-transition-duration: 0.3s;
+    --theme-transition-timing: ease-in-out;
+}
+
+/* Smooth transitions for theme changes */
+* {
+    transition: background-color var(--theme-transition-duration)
+            var(--theme-transition-timing),
+        border-color var(--theme-transition-duration)
+            var(--theme-transition-timing),
+        color var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Theme-specific overrides */
+[data-theme="blue"] {
+    --primary-rgb: 59, 130, 246;
+}
+
+[data-theme="green"] {
+    --primary-rgb: 16, 185, 129;
+}
+
+[data-theme="purple"] {
+    --primary-rgb: 139, 92, 246;
+}
+
+[data-theme="orange"] {
+    --primary-rgb: 245, 158, 11;
+}
+
+[data-theme="red"] {
+    --primary-rgb: 239, 68, 68;
+}
+
+[data-theme="indigo"] {
+    --primary-rgb: 99, 102, 241;
+}
+
+[data-theme="pink"] {
+    --primary-rgb: 236, 72, 153;
+}
+
+[data-theme="teal"] {
+    --primary-rgb: 20, 184, 166;
+}
+
+/* Theme button styles */
+[data-theme-button] {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+[data-theme-button]:hover {
+    transform: scale(1.05);
+}
+
+[data-theme-button].active::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid rgb(var(--primary-rgb));
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Theme preview colors */
+.theme-preview {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    position: relative;
+}
+
+.theme-preview.blue {
+    background-color: #3b82f6;
+}
+.theme-preview.green {
+    background-color: #10b981;
+}
+.theme-preview.purple {
+    background-color: #8b5cf6;
+}
+.theme-preview.orange {
+    background-color: #f59e0b;
+}
+.theme-preview.red {
+    background-color: #ef4444;
+}
+.theme-preview.indigo {
+    background-color: #6366f1;
+}
+.theme-preview.pink {
+    background-color: #ec4899;
+}
+.theme-preview.teal {
+    background-color: #14b8a6;
+}
+
+/* Loading state for theme changes */
+.theme-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Error state for theme loading */
+.theme-error {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .theme-preview {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+
+    [data-theme-button]:hover {
+        transform: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .theme-preview {
+        border-width: 3px;
+        border-color: currentColor;
+    }
+
+    [data-theme-button].active::after {
+        border-width: 3px;
+    }
+}
+
+/* Focus styles for accessibility */
+[data-theme-button]:focus {
+    outline: 2px solid rgb(var(--primary-rgb));
+    outline-offset: 2px;
+}
+
+/* Custom scrollbar for theme panels */
+.theme-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.theme-panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.theme-panel::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-rgb), 0.5);
+    border-radius: 3px;
+}
+
+.theme-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--primary-rgb), 0.7);
+}
+
+/* Animation for theme switching */
+@keyframes themeSwitch {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.theme-switching {
+    animation: themeSwitch 0.3s ease-in-out;
+}
+
+/* Filament-specific theme overrides */
+.fi-main {
+    transition: background-color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-sidebar {
+    transition: background-color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-topbar {
+    transition: background-color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+/* Button and form element theme support */
+.fi-btn-primary {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-input {
+    transition: border-color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+/* Card and panel theme support */
+.fi-section {
+    transition: background-color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-card {
+    transition: background-color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+/* Enhanced Filament Component Theme Support */
+
+/* Navigation theme support */
+.fi-sidebar-nav {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-sidebar-nav-item {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-sidebar-nav-item-active {
+    background-color: rgba(var(--primary-rgb), 0.1) !important;
+    border-color: rgb(var(--primary-rgb)) !important;
+}
+
+.fi-sidebar-nav-item:hover {
+    background-color: rgba(var(--primary-rgb), 0.05) !important;
+}
+
+/* Enhanced button theme support */
+.fi-btn-primary {
+    background-color: rgb(var(--primary-rgb)) !important;
+    border-color: rgb(var(--primary-rgb)) !important;
+}
+
+.fi-btn-primary:hover {
+    background-color: rgba(var(--primary-rgb), 0.9) !important;
+}
+
+.fi-btn-primary:focus {
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2) !important;
+}
+
+/* Enhanced form element theme support */
+.fi-input:focus {
+    border-color: rgb(var(--primary-rgb)) !important;
+    box-shadow: 0 0 0 1px rgb(var(--primary-rgb)) !important;
+}
+
+.fi-select:focus {
+    border-color: rgb(var(--primary-rgb)) !important;
+    box-shadow: 0 0 0 1px rgb(var(--primary-rgb)) !important;
+}
+
+.fi-textarea:focus {
+    border-color: rgb(var(--primary-rgb)) !important;
+    box-shadow: 0 0 0 1px rgb(var(--primary-rgb)) !important;
+}
+
+/* Checkbox and radio theme support */
+.fi-checkbox:checked {
+    background-color: rgb(var(--primary-rgb)) !important;
+    border-color: rgb(var(--primary-rgb)) !important;
+}
+
+.fi-radio:checked {
+    background-color: rgb(var(--primary-rgb)) !important;
+    border-color: rgb(var(--primary-rgb)) !important;
+}
+
+/* Toggle switch theme support */
+.fi-toggle:checked {
+    background-color: rgb(var(--primary-rgb)) !important;
+}
+
+/* Table theme support */
+.fi-table {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-table-row:hover {
+    background-color: rgba(var(--primary-rgb), 0.02) !important;
+}
+
+.fi-table-row-selected {
+    background-color: rgba(var(--primary-rgb), 0.05) !important;
+}
+
+.fi-table-header {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+/* Badge and status theme support */
+.fi-badge-primary {
+    background-color: rgb(var(--primary-rgb)) !important;
+    color: white !important;
+}
+
+.fi-badge-outline-primary {
+    border-color: rgb(var(--primary-rgb)) !important;
+    color: rgb(var(--primary-rgb)) !important;
+}
+
+/* Tab theme support */
+.fi-tabs-tab-active {
+    border-color: rgb(var(--primary-rgb)) !important;
+    color: rgb(var(--primary-rgb)) !important;
+}
+
+.fi-tabs-tab:hover {
+    color: rgba(var(--primary-rgb), 0.8) !important;
+}
+
+/* Modal and dropdown theme support */
+.fi-modal {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-dropdown {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-dropdown-item:hover {
+    background-color: rgba(var(--primary-rgb), 0.05) !important;
+}
+
+.fi-dropdown-item-active {
+    background-color: rgba(var(--primary-rgb), 0.1) !important;
+    color: rgb(var(--primary-rgb)) !important;
+}
+
+/* Notification theme support */
+.fi-notification {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-notification-info {
+    border-left-color: rgb(var(--primary-rgb)) !important;
+}
+
+/* Progress bar theme support */
+.fi-progress-bar {
+    background-color: rgb(var(--primary-rgb)) !important;
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+/* Link theme support */
+.fi-link {
+    color: rgb(var(--primary-rgb)) !important;
+    transition: color var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-link:hover {
+    color: rgba(var(--primary-rgb), 0.8) !important;
+}
+
+/* Widget theme support */
+.fi-widget {
+    transition: all var(--theme-transition-duration)
+        var(--theme-transition-timing);
+}
+
+.fi-widget-stat-value {
+    color: rgb(var(--primary-rgb)) !important;
+}
+
+/* Action button theme support */
+.fi-action-button-primary {
+    background-color: rgb(var(--primary-rgb)) !important;
+    border-color: rgb(var(--primary-rgb)) !important;
+}
+
+.fi-action-button-primary:hover {
+    background-color: rgba(var(--primary-rgb), 0.9) !important;
+}
+
+/* Pagination theme support */
+.fi-pagination-item-active {
+    background-color: rgb(var(--primary-rgb)) !important;
+    border-color: rgb(var(--primary-rgb)) !important;
+    color: white !important;
+}
+
+.fi-pagination-item:hover {
+    background-color: rgba(var(--primary-rgb), 0.1) !important;
+    border-color: rgba(var(--primary-rgb), 0.3) !important;
+}
+
+/* Search input theme support */
+.fi-global-search-input:focus {
+    border-color: rgb(var(--primary-rgb)) !important;
+    box-shadow: 0 0 0 1px rgb(var(--primary-rgb)) !important;
+}
+
+/* Breadcrumb theme support */
+.fi-breadcrumb-item-active {
+    color: rgb(var(--primary-rgb)) !important;
+}
+
+.fi-breadcrumb-separator {
+    color: rgba(var(--primary-rgb), 0.5) !important;
+}
+
+/* Fallback styles for theme loading errors */
+.theme-fallback {
+    --primary-rgb: 59, 130, 246; /* Blue fallback */
+}
+
+.theme-loading-error .fi-btn-primary {
+    background-color: #6b7280 !important;
+    border-color: #6b7280 !important;
+}
+
+.theme-loading-error .fi-input:focus {
+    border-color: #6b7280 !important;
+    box-shadow: 0 0 0 1px #6b7280 !important;
+}
+
+/* Theme transition states */
+.theme-transitioning * {
+    transition-duration: 0.15s !important;
+}
+
+.theme-transition-complete * {
+    transition-duration: var(--theme-transition-duration) !important;
+}
+
+/* Custom Filament overrides for better theme integration */
+[x-data] {
+    transition: color var(--theme-transition-duration)
+            var(--theme-transition-timing),
+        background-color var(--theme-transition-duration)
+            var(--theme-transition-timing),
+        border-color var(--theme-transition-duration)
+            var(--theme-transition-timing);
+}
+
+/* Ensure theme colors work with dark mode */
+.dark [data-theme] {
+    --primary-rgb: var(--primary-rgb);
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+    .fi-btn-primary {
+        border-width: 2px !important;
+    }
+
+    .fi-input:focus {
+        border-width: 2px !important;
+    }
+
+    .fi-tabs-tab-active {
+        border-width: 3px !important;
+    }
+}
