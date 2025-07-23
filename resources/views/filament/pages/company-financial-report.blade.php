@@ -122,7 +122,27 @@
         }
     }
 
-    // 6. Calculate Profit
+    // 6. Calculate Cash
+    $cash = [];
+    $previousMonthCash = 0;
+
+    foreach (array_reverse($monthsToShow->toArray()) as $month) {
+        $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+        $expense = $monthlyTotals['expense'][$month] ?? 0;
+        $deposits = $userFinancials['deposits'][$month] ?? 0;
+        $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
+
+        $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+        $previousMonthCash = $cash[$month];
+    }
+
+    // 7. Calculate Equity Total
+    $equityTotal = [];
+    foreach ($monthsToShow as $month) {
+        $equityTotal[$month] = ($evaluation['total'][$month] ?? 0) + ($cash[$month] ?? 0);
+    }
+
+    // 8. Calculate Profit
     $profit = ['asset' => [], 'operation' => [], 'total' => []];
 
     // Initialize profit arrays
@@ -296,34 +316,34 @@
                     <tr class="bg-purple-50 dark:bg-purple-900/20">
                         <th colspan="{{ 1 + $monthsToShow->count() }}"
                             class="px-6 py-4 text-left text-lg font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2">
-                            @svg('heroicon-o-calculator', 'h-6 w-6')
+                            @svg('heroicon-o-scale', 'h-6 w-6')
                             <span>Evaluation</span>
                         </th>
                     </tr>
                     <tr class="bg-white dark:bg-gray-800">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                            Asset Evaluation</td>
+                            Evaluation Asset</td>
                         @foreach ($monthsToShow as $month)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                {{ Illuminate\Support\Number::currency($evaluation['asset'][$month], 'USD') }}
+                                {{ Illuminate\Support\Number::currency($evaluation['total'][$month] ?? 0, 'USD') }}
                             </td>
                         @endforeach
                     </tr>
                     <tr class="bg-white dark:bg-gray-800">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                            Operation Evaluation</td>
+                            Cash</td>
                         @foreach ($monthsToShow as $month)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                {{ Illuminate\Support\Number::currency($evaluation['operation'][$month], 'USD') }}
+                                {{ Illuminate\Support\Number::currency($cash[$month] ?? 0, 'USD') }}
                             </td>
                         @endforeach
                     </tr>
                     <tr class="bg-purple-50 dark:bg-purple-900/20 font-semibold">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-purple-800 dark:text-purple-200 pl-12">
-                            Total Evaluation</td>
+                            Equity Total</td>
                         @foreach ($monthsToShow as $month)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-purple-800 dark:text-purple-200">
-                                {{ Illuminate\Support\Number::currency($evaluation['total'][$month], 'USD') }}
+                                {{ Illuminate\Support\Number::currency($equityTotal[$month] ?? 0, 'USD') }}
                             </td>
                         @endforeach
                     </tr>
