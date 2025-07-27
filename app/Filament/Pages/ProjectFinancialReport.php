@@ -17,17 +17,39 @@ class ProjectFinancialReport extends Page
     #[Url]
     public $search = '';
 
+    #[Url]
     public $perPage = 25;
+
+    #[Url]
+    public $sortDirection = 'desc';
+
+    #[Url]
+    public $startMonth = '';
+
+    #[Url]
+    public $endMonth = '';
+
+    public $availableMonths = [];
 
     public $allMonths = [];
 
     public function mount(): void
     {
-        $this->allMonths = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        $this->availableMonths = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
             ->distinct()
             ->orderBy('month_date', 'asc')
             ->pluck('month_date')
             ->toArray();
+
+        if (empty($this->startMonth) && !empty($this->availableMonths)) {
+            $this->startMonth = $this->availableMonths[0];
+        }
+
+        if (empty($this->endMonth) && !empty($this->availableMonths)) {
+            $this->endMonth = end($this->availableMonths);
+        }
+
+        $this->updateMonths();
     }
 
     public function updatedSearch(): void
@@ -40,10 +62,37 @@ class ProjectFinancialReport extends Page
         $this->resetPage();
     }
 
+    public function updatedStartMonth(): void
+    {
+        $this->updateMonths();
+    }
+
+    public function updatedEndMonth(): void
+    {
+        $this->updateMonths();
+    }
+
+    protected function updateMonths(): void
+    {
+        $this->allMonths = collect($this->availableMonths)->filter(function ($month) {
+            return $month >= $this->startMonth && $month <= $this->endMonth;
+        })->sortDesc()->values()->toArray();
+    }
+
+    public function sortBy(string $field): void
+    {
+        if ($this->sortDirection === 'asc') {
+            $this->sortDirection = 'desc';
+        } else {
+            $this->sortDirection = 'asc';
+        }
+    }
+
     public function getProjectsProperty()
     {
         return Project::query()
             ->when($this->search, fn ($query) => $query->where('title', 'like', '%' . $this->search . '%'))
+            ->orderBy('created_at', $this->sortDirection)
             ->paginate($this->perPage);
     }
 
@@ -52,7 +101,9 @@ class ProjectFinancialReport extends Page
         $projects = $this->projects;
         $projectKeys = $projects->pluck('key')->toArray();
 
-        $transactions = ProjectTransaction::select(
+        $transactions = ProjectTransaction::query()
+            ->whereBetween(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01")'), [$this->startMonth, $this->endMonth])
+            ->select(
             'project_key',
             DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'),
             DB::raw('SUM(CASE WHEN financial_type = \'revenue\' THEN amount ELSE 0 END) as total_revenue'),

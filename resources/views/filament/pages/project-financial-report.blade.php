@@ -1,25 +1,49 @@
 <x-filament-panels::page>
-    <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800">
-        <div>
-            <x-filament::input type="text" wire:model.live.debounce.300ms="search" placeholder="Search projects..." />
-        </div>
-        <div>
-            <x-filament::input.select wire:model.live="perPage">
-                <option value="10">10 per page</option>
-                <option value="25">25 per page</option>
-                <option value="50">50 per page</option>
-                <option value="{{ $this->projects->total() }}">All</option>
-            </x-filament::input.select>
-        </div>
+    <div class="p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div>
+                <x-filament::input type="text" wire:model.live.debounce.300ms="search" placeholder="Search projects..." />
+            </div>
+                    <div>
+                <x-filament::input.select wire:model.live="startMonth">
+                    @foreach ($availableMonths as $month)
+                        <option value="{{ $month }}">{{ date('M Y', strtotime($month)) }}</option>
+                    @endforeach
+                </x-filament::input.select>
+            </div>
+            <div>
+                <x-filament::input.select wire:model.live="endMonth">
+                    @foreach ($availableMonths as $month)
+                        <option value="{{ $month }}">{{ date('M Y', strtotime($month)) }}</option>
+                    @endforeach
+                </x-filament::input.select>
+            </div>
+            <div>
+                <x-filament::input.select wire:model.live="perPage">
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="{{ $this->projects->total() }}">All</option>
+                </x-filament::input.select>
+            </div>
+            </div>
     </div>
 
     <div class="mt-4 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th
+                                        <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
-                        Project</th>
+                        <button wire:click="sortBy('created_at')" class="flex items-center">
+                            Project
+                            @if ($sortDirection === 'asc')
+                                <x-heroicon-s-chevron-up class="w-4 h-4 ml-1" />
+                            @else
+                                <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
+                            @endif
+                        </button>
+                    </th>
                     <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                         Metric</th>
