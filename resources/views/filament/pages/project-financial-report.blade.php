@@ -38,12 +38,12 @@
                     @php
                         $projectData = $this->financialSummary[$project->key] ?? null;
                         $metrics = [
+                            'evaluation_asset' => 'Evaluation Asset',
                             'revenue' => 'Revenue',
                             'expense' => 'Expense',
                             'profit_operation' => 'Profit Operation',
                             'profit_asset' => 'Profit Asset',
                             'profit' => 'Total Profit',
-                            'evaluation_asset' => 'Evaluation Asset',
                         ];
                         $rowspan = count($metrics);
                     @endphp

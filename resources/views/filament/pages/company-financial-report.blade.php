@@ -317,7 +317,7 @@
                         <th colspan="{{ 1 + $monthsToShow->count() }}"
                             class="px-6 py-4 text-left text-lg font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2">
                             @svg('heroicon-o-scale', 'h-6 w-6')
-                            <span>Evaluation</span>
+                            <span>Equity</span>
                         </th>
                     </tr>
                     <tr class="bg-white dark:bg-gray-800">
