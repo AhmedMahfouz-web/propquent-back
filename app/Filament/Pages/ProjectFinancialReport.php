@@ -94,8 +94,10 @@ class ProjectFinancialReport extends Page
                 ->select(
                     'project_key',
                     DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'),
-                    DB::raw('SUM(CASE WHEN financial_type = \'revenue\' THEN amount ELSE 0 END) as total_revenue'),
-                    DB::raw('SUM(CASE WHEN financial_type = \'expense\' THEN amount ELSE 0 END) as total_expense')
+                    DB::raw("SUM(CASE WHEN financial_type = 'revenue' AND serving = 'operation' THEN amount ELSE 0 END) as revenue_operation"),
+                    DB::raw("SUM(CASE WHEN financial_type = 'revenue' AND serving = 'asset' THEN amount ELSE 0 END) as revenue_asset"),
+                    DB::raw("SUM(CASE WHEN financial_type = 'expense' AND serving = 'operation' THEN amount ELSE 0 END) as expense_operation"),
+                    DB::raw("SUM(CASE WHEN financial_type = 'expense' AND serving = 'asset' THEN amount ELSE 0 END) as expense_asset")
                 )
                 ->groupBy('project_key', 'month_date')
                 ->get()
@@ -111,29 +113,44 @@ class ProjectFinancialReport extends Page
                     'title' => $project->title,
                     'status' => $project->status,
                     'months' => [],
-                    'totals' => ['revenue' => 0, 'expense' => 0, 'profit' => 0, 'profit_operation' => 0, 'profit_asset' => 0, 'evaluation_asset' => 0]
+                    'totals' => [
+                        'revenue_operation' => 0, 'revenue_asset' => 0, 'expense_operation' => 0, 'expense_asset' => 0,
+                        'profit_operation' => 0, 'profit_asset' => 0, 'total_profit' => 0, 'evaluation_asset' => 0
+                    ]
                 ];
 
                 $previousMonthEvaluationAsset = 0;
                 foreach ($chronologicalMonths as $month) {
                     $monthData = $projectTransactions->where('month_date', $month)->first();
-                    $revenue = $monthData->total_revenue ?? 0;
-                    $expense = $monthData->total_expense ?? 0;
-                    $evaluationAsset = max(0, $previousMonthEvaluationAsset + $expense - $revenue);
-                    $profitOperation = $revenue - $expense;
-                    $profitAsset = 0; // Placeholder
+
+                    $revenue_operation = $monthData->revenue_operation ?? 0;
+                    $revenue_asset = $monthData->revenue_asset ?? 0;
+                    $expense_operation = $monthData->expense_operation ?? 0;
+                    $expense_asset = $monthData->expense_asset ?? 0;
+
+                    $profitOperation = $revenue_operation - $expense_operation;
+                    $profitAsset = $revenue_asset - $expense_asset;
                     $totalProfit = $profitOperation + $profitAsset;
+                    $evaluationAsset = max(0, $previousMonthEvaluationAsset + ($expense_operation + $expense_asset) - ($revenue_operation + $revenue_asset));
 
                     $projectData['months'][$month] = [
-                        'revenue' => $revenue, 'expense' => $expense, 'profit' => $totalProfit,
-                        'evaluation_asset' => $evaluationAsset, 'profit_asset' => $profitAsset, 'profit_operation' => $profitOperation
+                        'revenue_operation' => $revenue_operation,
+                        'revenue_asset' => $revenue_asset,
+                        'expense_operation' => $expense_operation,
+                        'expense_asset' => $expense_asset,
+                        'profit_operation' => $profitOperation,
+                        'profit_asset' => $profitAsset,
+                        'total_profit' => $totalProfit,
+                        'evaluation_asset' => $evaluationAsset,
                     ];
 
-                    $projectData['totals']['revenue'] += $revenue;
-                    $projectData['totals']['expense'] += $expense;
-                    $projectData['totals']['profit'] += $totalProfit;
+                    $projectData['totals']['revenue_operation'] += $revenue_operation;
+                    $projectData['totals']['revenue_asset'] += $revenue_asset;
+                    $projectData['totals']['expense_operation'] += $expense_operation;
+                    $projectData['totals']['expense_asset'] += $expense_asset;
                     $projectData['totals']['profit_operation'] += $profitOperation;
                     $projectData['totals']['profit_asset'] += $profitAsset;
+                    $projectData['totals']['total_profit'] += $totalProfit;
                     $previousMonthEvaluationAsset = $evaluationAsset;
                 }
                 $projectData['totals']['evaluation_asset'] = $previousMonthEvaluationAsset;
