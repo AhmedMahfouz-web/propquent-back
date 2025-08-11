@@ -54,7 +54,8 @@
                 $financialSummary = $reportData['financialSummary'];
                 $allMonths = $reportData['allMonths'];
             @endphp
-            <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
+            <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800"
+                wire:key="financial-report-{{ $refreshCounter }}">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -114,11 +115,36 @@
                                         @endif
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $label }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right font-bold">
-                                            ${{ number_format($projectData['totals'][$key], 2) }}
+                                            @if ($key === 'evaluation_asset')
+                                                @php
+                                                    $totalEvaluation = 0;
+                                                    foreach ($allMonths as $month) {
+                                                        $totalEvaluation += \App\Models\ProjectEvaluation::getEvaluationForMonth(
+                                                            $project->key,
+                                                            $month,
+                                                        );
+                                                    }
+                                                @endphp
+                                                ${{ number_format($totalEvaluation, 2) }}
+                                            @else
+                                                ${{ number_format($projectData['totals'][$key], 2) }}
+                                            @endif
                                         </td>
                                         @foreach ($allMonths as $month)
                                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                                ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
+                                                @if ($key === 'evaluation_asset')
+                                                    @livewire(
+                                                        'quick-evaluation-edit',
+                                                        [
+                                                            'projectKey' => $project->key,
+                                                            'month' => $month,
+                                                            'projectTitle' => $projectData['title'],
+                                                        ],
+                                                        key($project->key . '-' . $month . '-eval')
+                                                    )
+                                                @else
+                                                    ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
+                                                @endif
                                             </td>
                                         @endforeach
                                     </tr>

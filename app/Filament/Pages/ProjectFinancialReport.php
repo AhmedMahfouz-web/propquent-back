@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use Illuminate\Support\Facades\DB;
+use Filament\Notifications\Notification;
 
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -30,6 +31,9 @@ class ProjectFinancialReport extends Page
     public $endMonth = '';
 
     public $readyToLoad = false;
+    public $refreshCounter = 0;
+
+    protected $listeners = ['evaluation-updated' => 'refreshReportData'];
 
     public function loadData(): void
     {
@@ -79,7 +83,7 @@ class ProjectFinancialReport extends Page
 
         // 2. Get paginated projects
         $projects = Project::query()
-            ->when($this->search, fn ($query) => $query->where('title', 'like', '%' . $this->search . '%'))
+            ->when($this->search, fn($query) => $query->where('title', 'like', '%' . $this->search . '%'))
             ->orderBy('created_at', $this->sortDirection)
             ->paginate($this->perPage);
 
@@ -114,8 +118,14 @@ class ProjectFinancialReport extends Page
                     'status' => $project->status,
                     'months' => [],
                     'totals' => [
-                        'revenue_operation' => 0, 'revenue_asset' => 0, 'expense_operation' => 0, 'expense_asset' => 0,
-                        'profit_operation' => 0, 'profit_asset' => 0, 'total_profit' => 0, 'evaluation_asset' => 0
+                        'revenue_operation' => 0,
+                        'revenue_asset' => 0,
+                        'expense_operation' => 0,
+                        'expense_asset' => 0,
+                        'profit_operation' => 0,
+                        'profit_asset' => 0,
+                        'total_profit' => 0,
+                        'evaluation_asset' => 0
                     ]
                 ];
 
@@ -171,6 +181,31 @@ class ProjectFinancialReport extends Page
             $this->resetPage();
         }
     }
+
+    public function refreshReportData($projectKey = null, $month = null): void
+    {
+        // Increment refresh counter to force re-render
+        $this->refreshCounter++;
+
+        // Clear any cached computed properties
+        if (property_exists($this, 'computedPropertyCache')) {
+            unset($this->computedPropertyCache['reportData']);
+        }
+
+        // Reset the ready to load flag to force data reload
+        $this->readyToLoad = false;
+        $this->loadData();
+
+        // Optional: Show a brief notification that data was refreshed
+        Notification::make()
+            ->title('Report Updated')
+            ->body('Financial data refreshed after evaluation update.')
+            ->success()
+            ->duration(2000)
+            ->send();
+    }
+
+
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 

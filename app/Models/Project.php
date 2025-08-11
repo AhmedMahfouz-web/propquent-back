@@ -191,6 +191,11 @@ class Project extends Model implements HasMedia
         return $this->hasMany(ProjectImage::class);
     }
 
+    public function evaluations(): HasMany
+    {
+        return $this->hasMany(ProjectEvaluation::class, 'project_key', 'key');
+    }
+
     /**
      * Get the display identifier for the project (project_key if available, otherwise UUID).
      */
@@ -214,7 +219,7 @@ class Project extends Model implements HasMedia
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
     }
 
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(300)
