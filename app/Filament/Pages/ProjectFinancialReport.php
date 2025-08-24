@@ -6,23 +6,30 @@ use Filament\Pages\Page;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Filament\Notifications\Notification;
 
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
-class ProjectFinancialReport extends Page
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
+
+class ProjectFinancialReport extends Page implements HasForms
 {
-    use WithPagination;
+    use WithPagination, InteractsWithForms;
+
+    public $perPage = 10;
+
+    public bool $readyToLoad = false;
 
     #[Url]
     public $search = '';
-
-    #[Url]
-    public $perPage = 25;
-
-    #[Url]
-    public $sortDirection = 'desc';
 
     #[Url]
     public $startMonth = '';
@@ -30,182 +37,223 @@ class ProjectFinancialReport extends Page
     #[Url]
     public $endMonth = '';
 
-    public $readyToLoad = false;
+    #[Url]
+    public $sortDirection = 'desc';
+
+    #[Url]
+    public $status = '';
+
+    #[Url]
+    public $stage = '';
+
+    #[Url]
+    public $type = '';
+
+    #[Url]
+    public $investment_type = '';
+
+    #[Url]
+    public $selectedMetrics = [];
+
     public $refreshCounter = 0;
 
+
     protected $listeners = ['evaluation-updated' => 'refreshReportData'];
+
+    public function mount(): void
+    {
+        $availableMonths = $this->getAvailableMonthsProperty();
+        $this->startMonth = !empty($this->startMonth) ? $this->startMonth : ($availableMonths[0] ?? '');
+        $this->endMonth = !empty($this->endMonth) ? $this->endMonth : (end($availableMonths) ?: '');
+
+        // Default to all metrics if none selected
+        if (empty($this->selectedMetrics)) {
+            $this->selectedMetrics = array_keys($this->getAvailableMetrics());
+        }
+
+        $this->form->fill([
+            'search' => $this->search,
+            'startMonth' => $this->startMonth,
+            'endMonth' => $this->endMonth,
+            'status' => $this->status,
+            'stage' => $this->stage,
+            'type' => $this->type,
+            'investment_type' => $this->investment_type,
+            'selectedMetrics' => $this->selectedMetrics,
+            'perPage' => $this->perPage,
+        ]);
+    }
+
+    public function form(Form $form): Form
+    {
+        $monthOptions = $this->getAvailableMonthsProperty();
+        $metricOptions = $this->getAvailableMetrics();
+
+        return $form
+            ->schema([
+                Section::make('Filters')
+                    ->columns(4)
+                    ->schema([
+                        TextInput::make('search')->label('Search Projects')->live(onBlur: true),
+                        Select::make('startMonth')->label('Start Month')->options($monthOptions)->live(),
+                        Select::make('endMonth')->label('End Month')->options($monthOptions)->live(),
+                        Select::make('perPage')->label('Items Per Page')->options([10 => 10, 25 => 25, 50 => 50, 'all' => 'All'])->live(),
+                        Select::make('selectedMetrics')
+                            ->label('Show Metrics')
+                            ->options($metricOptions)
+                            ->multiple()
+                            ->columnSpanFull()
+                            ->live(),
+                        Select::make('status')->label('Status')->options(Project::getAvailableStatuses())->live(),
+                        Select::make('stage')->label('Stage')->options(Project::getAvailableStages())->live(),
+                        Select::make('type')->label('Type')->options(Project::getAvailablePropertyTypes())->live(),
+                        Select::make('investment_type')->label('Investment Type')->options(Project::getAvailableInvestmentTypes())->live(),
+                    ]),
+            ]);
+    }
 
     public function loadData(): void
     {
         $this->readyToLoad = true;
     }
 
-    public function mount(): void
+    public function updated($property): void
     {
-        $availableMonths = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        if (in_array(str_replace('data.', '', $property), ['search', 'startMonth', 'endMonth', 'status', 'stage', 'type', 'investment_type', 'selectedMetrics', 'perPage', 'sortDirection'])) {
+            $this->resetPage();
+        }
+    }
+
+    public function refreshReportData(): void
+    {
+        unset($this->computedPropertyCache['reportData']);
+        Notification::make()->title('Report Updated')->success()->send();
+    }
+
+    public function getAvailableMonthsProperty(): array
+    {
+        $months = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
             ->distinct()
             ->orderBy('month_date', 'asc')
             ->pluck('month_date')
             ->toArray();
-
-        if (empty($this->startMonth) && !empty($availableMonths)) {
-            $this->startMonth = $availableMonths[0];
-        }
-
-        if (empty($this->endMonth) && !empty($availableMonths)) {
-            $this->endMonth = end($availableMonths);
-        }
+        return array_combine($months, array_map(fn($m) => date('M Y', strtotime($m)), $months));
     }
 
-    public function getAvailableMonthsProperty()
-    {
-        return ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
-            ->distinct()
-            ->orderBy('month_date', 'asc')
-            ->pluck('month_date')
-            ->toArray();
-    }
-
-    public function getReportDataProperty()
+    #[Computed]
+    public function reportData(): array
     {
         if (!$this->readyToLoad) {
             return [
-                'projects' => Project::query()->whereRaw('false')->paginate($this->perPage),
+                'projects' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage),
+                'projectsData' => [],
                 'financialSummary' => [],
                 'allMonths' => [],
             ];
         }
 
-        // 1. Get available months and filter them
-        $filteredMonths = collect($this->availableMonths)->filter(function ($month) {
-            return $month >= $this->startMonth && $month <= $this->endMonth;
-        })->sortDesc()->values();
+        $projectsQuery = Project::query()
+            ->when($this->search, fn($q, $s) => $q->where('title', 'like', "%$s%")->orWhere('key', 'like', "%$s%"))
+            ->when($this->status, fn($q, $s) => $q->where('status', $s))
+            ->when($this->stage, fn($q, $s) => $q->where('stage', $s))
+            ->when($this->type, fn($q, $s) => $q->where('type', $s))
+            ->when($this->investment_type, fn($q, $s) => $q->where('investment_type', $s));
 
-        // 2. Get paginated projects
-        $projects = Project::query()
-            ->when($this->search, fn($query) => $query->where('title', 'like', '%' . $this->search . '%'))
+        $allMonths = $this->getMonthsInRange();
+        $financialSummary = $this->calculateFinancialSummary((clone $projectsQuery), $allMonths);
+
+        $projects = (clone $projectsQuery)
+            ->with(['transactions', 'statusChanges', 'evaluations'])
             ->orderBy('created_at', $this->sortDirection)
             ->paginate($this->perPage);
 
-        $projectKeys = $projects->pluck('key')->toArray();
-        $summary = [];
-
-        if (!empty($projectKeys)) {
-            // 3. Get all transactions for the visible projects and date range
-            $transactions = ProjectTransaction::query()
-                ->whereIn('project_key', $projectKeys)
-                ->whereBetween(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01")'), [$this->startMonth, $this->endMonth])
-                ->select(
-                    'project_key',
-                    DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'),
-                    DB::raw("SUM(CASE WHEN financial_type = 'revenue' AND serving = 'operation' THEN amount ELSE 0 END) as revenue_operation"),
-                    DB::raw("SUM(CASE WHEN financial_type = 'revenue' AND serving = 'asset' THEN amount ELSE 0 END) as revenue_asset"),
-                    DB::raw("SUM(CASE WHEN financial_type = 'expense' AND serving = 'operation' THEN amount ELSE 0 END) as expense_operation"),
-                    DB::raw("SUM(CASE WHEN financial_type = 'expense' AND serving = 'asset' THEN amount ELSE 0 END) as expense_asset")
-                )
-                ->groupBy('project_key', 'month_date')
-                ->get()
-                ->groupBy('project_key');
-
-            // 4. Process summary
-            $chronologicalMonths = $filteredMonths->sort()->values();
-
-            foreach ($projects as $project) {
-                $projectKey = $project->key;
-                $projectTransactions = $transactions->get($projectKey, collect());
-                $projectData = [
-                    'title' => $project->title,
-                    'status' => $project->status,
-                    'months' => [],
-                    'totals' => [
-                        'revenue_operation' => 0,
-                        'revenue_asset' => 0,
-                        'expense_operation' => 0,
-                        'expense_asset' => 0,
-                        'profit_operation' => 0,
-                        'profit_asset' => 0,
-                        'total_profit' => 0,
-                        'evaluation_asset' => 0
-                    ]
-                ];
-
-                $previousMonthEvaluationAsset = 0;
-                foreach ($chronologicalMonths as $month) {
-                    $monthData = $projectTransactions->where('month_date', $month)->first();
-
-                    $revenue_operation = $monthData->revenue_operation ?? 0;
-                    $revenue_asset = $monthData->revenue_asset ?? 0;
-                    $expense_operation = $monthData->expense_operation ?? 0;
-                    $expense_asset = $monthData->expense_asset ?? 0;
-
-                    $profitOperation = $revenue_operation - $expense_operation;
-                    $profitAsset = $revenue_asset - $expense_asset;
-                    $totalProfit = $profitOperation + $profitAsset;
-                    $evaluationAsset = max(0, $previousMonthEvaluationAsset + ($expense_operation + $expense_asset) - ($revenue_operation + $revenue_asset));
-
-                    $projectData['months'][$month] = [
-                        'revenue_operation' => $revenue_operation,
-                        'revenue_asset' => $revenue_asset,
-                        'expense_operation' => $expense_operation,
-                        'expense_asset' => $expense_asset,
-                        'profit_operation' => $profitOperation,
-                        'profit_asset' => $profitAsset,
-                        'total_profit' => $totalProfit,
-                        'evaluation_asset' => $evaluationAsset,
-                    ];
-
-                    $projectData['totals']['revenue_operation'] += $revenue_operation;
-                    $projectData['totals']['revenue_asset'] += $revenue_asset;
-                    $projectData['totals']['expense_operation'] += $expense_operation;
-                    $projectData['totals']['expense_asset'] += $expense_asset;
-                    $projectData['totals']['profit_operation'] += $profitOperation;
-                    $projectData['totals']['profit_asset'] += $profitAsset;
-                    $projectData['totals']['total_profit'] += $totalProfit;
-                    $previousMonthEvaluationAsset = $evaluationAsset;
-                }
-                $projectData['totals']['evaluation_asset'] = $previousMonthEvaluationAsset;
-                $summary[$projectKey] = $projectData;
-            }
+        $projectsData = [];
+        foreach ($projects as $project) {
+            $projectsData[$project->key] = $this->getProjectFinancialData($project, $allMonths);
         }
 
         return [
             'projects' => $projects,
-            'financialSummary' => $summary,
-            'allMonths' => $filteredMonths->toArray(),
+            'projectsData' => $projectsData,
+            'financialSummary' => $financialSummary,
+            'allMonths' => $allMonths,
         ];
     }
 
-    public function updated($property): void
+    private function getMonthsInRange(): array
     {
-        if (in_array($property, ['search', 'perPage', 'startMonth', 'endMonth', 'sortDirection'])) {
-            $this->resetPage();
+        $start = new \DateTime($this->startMonth);
+        $end = new \DateTime($this->endMonth);
+        $interval = new \DateInterval('P1M');
+        $period = new \DatePeriod($start, $interval, $end->modify('+1 month'));
+        $months = [];
+        foreach ($period as $dt) {
+            $months[] = $dt->format('Y-m-01');
         }
+        return $months;
     }
 
-    public function refreshReportData($projectKey = null, $month = null): void
+    private function getProjectFinancialData(Project $project, array $allMonths): array
     {
-        // Increment refresh counter to force re-render
-        $this->refreshCounter++;
-
-        // Clear any cached computed properties
-        if (property_exists($this, 'computedPropertyCache')) {
-            unset($this->computedPropertyCache['reportData']);
+        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'expense_operation', 'expense_asset', 'profit_operation', 'profit_asset', 'total_profit'], 0)];
+        foreach ($allMonths as $month) {
+            $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
-
-        // Reset the ready to load flag to force data reload
-        $this->readyToLoad = false;
-        $this->loadData();
-
-        // Optional: Show a brief notification that data was refreshed
-        Notification::make()
-            ->title('Report Updated')
-            ->body('Financial data refreshed after evaluation update.')
-            ->success()
-            ->duration(2000)
-            ->send();
+        foreach ($project->transactions as $transaction) {
+            $month = date('Y-m-01', strtotime($transaction->transaction_date));
+            if (isset($data['months'][$month])) {
+                $key = $transaction->type . '_' . $transaction->category;
+                if (!isset($data['months'][$month][$key])) {
+                    $data['months'][$month][$key] = 0;
+                }
+                $data['months'][$month][$key] += $transaction->amount;
+            }
+        }
+        foreach ($data['months'] as &$monthData) {
+            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
+            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
+            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            foreach ($data['totals'] as $key => &$total) {
+                $total += $monthData[$key];
+            }
+        }
+        return $data;
     }
 
+    private function calculateFinancialSummary($projectsQuery, array $allMonths): array
+    {
+        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'expense_operation', 'expense_asset', 'profit_operation', 'profit_asset', 'total_profit', 'evaluation_asset'], 0), 'months' => []];
+        foreach ($allMonths as $month) {
+            $summary['months'][$month] = $summary['totals'];
+        }
+        $projectKeys = (clone $projectsQuery)->pluck('key');
+        $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)->get();
+        foreach ($transactions as $transaction) {
+            $month = date('Y-m-01', strtotime($transaction->transaction_date));
+            if (isset($summary['months'][$month])) {
+                $key = $transaction->type . '_' . $transaction->category;
+                if (!isset($summary['months'][$month][$key])) {
+                    $summary['months'][$month][$key] = 0;
+                }
+                $summary['months'][$month][$key] += $transaction->amount;
+            }
+        }
+        foreach ($summary['months'] as &$monthData) {
+            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
+            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
+            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            foreach ($summary['totals'] as $key => &$total) {
+                $total += $monthData[$key];
+            }
+        }
+        return $summary;
+    }
 
+    public function sortBy($field): void
+    {
+        $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        $this->resetPage();
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
@@ -222,5 +270,19 @@ class ProjectFinancialReport extends Page
     public static function getNavigationBadge(): ?string
     {
         return null;
+    }
+
+    private function getAvailableMetrics(): array
+    {
+        return [
+            'evaluation_asset' => 'Evaluation Asset',
+            'revenue_operation' => 'Revenue Operation',
+            'revenue_asset' => 'Revenue Asset',
+            'expense_operation' => 'Expense Operation',
+            'expense_asset' => 'Expense Asset',
+            'profit_operation' => 'Profit Operation',
+            'profit_asset' => 'Profit Asset',
+            'total_profit' => 'Total Profit',
+        ];
     }
 }

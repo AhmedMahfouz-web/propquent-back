@@ -8,10 +8,44 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable, SoftDeletes;
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->custom_id)) {
+                $user->custom_id = static::generateCustomId();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique custom ID in the format inv-1, inv-2, etc.
+     */
+    protected static function generateCustomId(): string
+    {
+        $lastUser = DB::table('users')
+            ->whereNotNull('custom_id')
+            ->where('custom_id', 'like', 'inv-%')
+            ->orderByRaw('CAST(SUBSTRING(custom_id, 5) AS UNSIGNED) DESC')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastUser && preg_match('/inv-(\d+)/', $lastUser->custom_id, $matches)) {
+            $nextNumber = (int)$matches[1] + 1;
+        }
+
+        return 'inv-' . $nextNumber;
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +66,7 @@ class User extends Authenticatable implements JWTSubject
         'last_login_at',
         'theme_color',
         'custom_theme_color',
+        'custom_id',
     ];
 
     /**

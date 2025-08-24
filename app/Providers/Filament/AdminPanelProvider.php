@@ -30,9 +30,9 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('admins')
             ->authPasswordBroker('users')
             ->brandName('PROPQUENT Investment Platform')
-            ->brandLogo(asset('images/logo.png'))
+            ->brandLogo(app()->runningInConsole() ? null : asset('images/logo.png'))
             ->brandLogoHeight('2rem')
-            ->favicon(asset('images/favicon.ico'))
+            ->favicon(app()->runningInConsole() ? null : asset('images/favicon.ico'))
             ->colors([
                 'primary' => Color::Blue,
                 'gray' => Color::Slate,
