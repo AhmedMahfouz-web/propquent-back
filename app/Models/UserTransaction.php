@@ -119,4 +119,43 @@ class UserTransaction extends Model
     {
         return ucfirst($this->transaction_type);
     }
+
+    /**
+     * Get available transaction types
+     */
+    public static function getAvailableTransactionTypes(): array
+    {
+        return [
+            self::TYPE_DEPOSIT => 'Deposit',
+            self::TYPE_WITHDRAWAL => 'Withdrawal',
+        ];
+    }
+
+    /**
+     * Get available statuses
+     */
+    public static function getAvailableStatuses(): array
+    {
+        return [
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_DONE => 'Done',
+            self::STATUS_CANCELLED => 'Cancelled',
+        ];
+    }
+
+    /**
+     * Get available methods
+     */
+    public static function getAvailableMethods(): array
+    {
+        return [
+            'bank_transfer' => 'Bank Transfer',
+            'credit_card' => 'Credit Card',
+            'cash' => 'Cash',
+            'cheque' => 'Cheque',
+            'wire_transfer' => 'Wire Transfer',
+            'paypal' => 'PayPal',
+            'stripe' => 'Stripe',
+        ];
+    }
 }

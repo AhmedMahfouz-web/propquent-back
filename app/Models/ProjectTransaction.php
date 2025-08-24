@@ -20,7 +20,7 @@ class ProjectTransaction extends Model
      */
     public static function getAvailableFinancialTypes(): array
     {
-        return SystemConfiguration::getOptions('transaction_types');
+        return SystemConfiguration::getOptions('project_transaction_types');
     }
 
     /**
@@ -83,10 +83,8 @@ class ProjectTransaction extends Model
 
     protected $fillable = [
         'project_key',
-        'type',
         'financial_type',
         'serving',
-        'what_id',
         'amount',
         'transaction_category',
         'due_date',
@@ -121,10 +119,6 @@ class ProjectTransaction extends Model
         return $this->belongsTo(Project::class, 'project_key', 'key');
     }
 
-    public function transactionWhat(): BelongsTo
-    {
-        return $this->belongsTo(TransactionWhat::class, 'what_id');
-    }
 
     /**
      * Scope a query to only include revenue transactions.
@@ -197,20 +191,6 @@ class ProjectTransaction extends Model
      */
     protected function validateTransaction(): void
     {
-        // Check for circular references in related transactions
-        if ($this->project_key && $this->what_id) {
-            $relatedTransactions = static::where('project_key', $this->project_key)
-                ->where('what_id', $this->what_id)
-                ->where('id', '!=', $this->id ?? 0)
-                ->count();
-
-            if ($relatedTransactions > 10) {
-                throw ValidationException::withMessages([
-                    'transaction' => 'Too many related transactions detected. Possible circular reference.'
-                ]);
-            }
-        }
-
         // Validate amount is positive
         if ($this->amount && $this->amount <= 0) {
             throw ValidationException::withMessages([

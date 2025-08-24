@@ -19,16 +19,6 @@ class UserTransactionSeeder extends Seeder
         $faker = Faker::create();
         $users = User::all();
 
-        // Get dynamic configuration options
-        $transactionTypes = $this->getConfigurationOptions('user_transaction_types');
-        $transactionStatuses = $this->getConfigurationOptions('transaction_statuses');
-        $transactionMethods = $this->getConfigurationOptions('transaction_methods');
-
-        if (empty($transactionTypes) || empty($transactionStatuses) || empty($transactionMethods)) {
-            $this->command->error('Please run SystemConfigurationSeeder first.');
-            return;
-        }
-
         foreach ($users as $user) {
             // Create between 1 and 10 transactions for each user
             $numberOfTransactions = $faker->numberBetween(1, 10);
@@ -38,14 +28,14 @@ class UserTransactionSeeder extends Seeder
                 
                 UserTransaction::create([
                     'user_id' => $user->id,
-                    'transaction_type' => $faker->randomElement(['deposit', 'withdraw']),
+                    'transaction_type' => $faker->randomElement([UserTransaction::TYPE_DEPOSIT, UserTransaction::TYPE_WITHDRAWAL]),
                     'amount' => $faker->randomFloat(2, 10, 5000),
                     'transaction_date' => $transactionDate,
                     'actual_date' => $faker->optional(0.8)->dateTimeBetween($transactionDate, 'now'),
-                    'method' => $faker->randomElement($transactionMethods),
+                    'method' => $faker->randomElement(array_keys(UserTransaction::getAvailableMethods())),
                     'reference_no' => 'UTX-' . $faker->unique()->numerify('##########'),
                     'note' => $faker->optional(0.5)->sentence,
-                    'status' => $faker->randomElement($transactionStatuses),
+                    'status' => $faker->randomElement([UserTransaction::STATUS_PENDING, UserTransaction::STATUS_DONE, UserTransaction::STATUS_CANCELLED]),
                     'created_at' => $transactionDate,
                     'updated_at' => $transactionDate,
                 ]);

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('project_transactions', function (Blueprint $table) {
             $table->id();
             $table->string('project_key');
-            $table->string('type');
+            $table->string('financial_type');
             $table->string('serving')->nullable();
             $table->foreignId('what_id')->constrained('transaction_whats')->onDelete('cascade');
             $table->decimal('amount', 15, 2);

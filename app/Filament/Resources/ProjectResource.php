@@ -24,11 +24,11 @@ class ProjectResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Basic Information')
                     ->schema([
-                        Forms\Components\TextInput::make('project_key')
+                        Forms\Components\TextInput::make('key')
                             ->label('Project Key')
                             ->placeholder('e.g., PROP-001, VILLA-DUBAI-01')
                             ->helperText('Optional human-readable identifier (3-50 characters, alphanumeric, hyphens, underscores)')
-                            ->rules(['nullable', 'unique:projects,project_key', 'regex:/^[a-zA-Z0-9_-]{3,50}$/'])
+                            ->rules(['nullable', 'unique:projects,key', 'regex:/^[a-zA-Z0-9_-]{3,50}$/'])
                             ->validationMessages([
                                 'unique' => 'This project key is already in use.',
                                 'regex' => 'Project key must be 3-50 characters long and contain only letters, numbers, hyphens, and underscores.',
@@ -36,7 +36,7 @@ class ProjectResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (string $state = null, Forms\Set $set, Forms\Get $get) {
                                 if ($state && !Project::validateProjectKey($state)) {
-                                    $set('project_key', null);
+                                    $set('key', null);
                                 }
                             }),
 
@@ -46,7 +46,7 @@ class ProjectResource extends Resource
                             ->columnSpanFull(),
 
                         Forms\Components\Select::make('developer_id')
-                            ->relationship('developer', 'name', fn ($query) => $query->active())
+                            ->relationship('developer', 'name', fn($query) => $query->active())
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -195,7 +195,7 @@ class ProjectResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('developer')
-                    ->relationship('developer', 'name', fn ($query) => $query->active())
+                    ->relationship('developer', 'name', fn($query) => $query->active())
                     ->searchable()
                     ->preload(),
 

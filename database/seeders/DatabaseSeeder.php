@@ -30,9 +30,8 @@ class DatabaseSeeder extends Seeder
             DeveloperSeeder::class,
             SystemConfigurationSeeder::class,
             UserSeeder::class,
-            TransactionWhatsSeeder::class, // Populates transaction categories
             ProjectSeeder::class,
-            ProjectTransactionSeeder::class,
+            ProjectTransactionSeeder::class, // Temporarily disabled
             UserTransactionSeeder::class,
         ]);
     }

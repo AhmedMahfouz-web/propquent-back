@@ -17,6 +17,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Illuminate\Support\Carbon;
 
 class UserFinancialReport extends Page implements HasForms
@@ -49,6 +51,19 @@ class UserFinancialReport extends Page implements HasForms
     protected static ?string $navigationGroup = 'Financial Reports';
     protected static ?string $title = 'User Financial Report';
     protected static ?int $navigationSort = 2;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            ExportAction::make()
+                ->exports([
+                    ExcelExport::make()
+                        ->fromTable()
+                        ->withFilename(fn () => 'user-financial-report-' . date('Y-m-d'))
+                        ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                ])
+        ];
+    }
 
     public function mount(): void
     {

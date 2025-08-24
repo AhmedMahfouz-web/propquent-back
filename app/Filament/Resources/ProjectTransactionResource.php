@@ -4,12 +4,15 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProjectTransactionResource\Pages;
 use App\Models\ProjectTransaction;
+use App\Imports\ProjectTransactionImport;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Actions\ImportAction;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProjectTransactionResource extends Resource
 {
@@ -262,6 +265,40 @@ class ProjectTransactionResource extends Resource
                                 fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
                             );
                     }),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('import')
+                    ->label('Import Excel')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->form([
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Excel File')
+                            ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])
+                            ->required()
+                            ->helperText('Upload an Excel file with columns: project_key, type, category, amount, transaction_date, description')
+                    ])
+                    ->action(function (array $data) {
+                        try {
+                            $filePath = storage_path('app/public/' . $data['file']);
+                            Excel::import(new ProjectTransactionImport, $filePath);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Import Successful')
+                                ->body('Project transactions have been imported successfully.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Import Failed')
+                                ->body('Error: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Tables\Actions\Action::make('downloadTemplate')
+                    ->label('Download Template')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(asset('templates/project-transactions-template.xlsx'))
+                    ->openUrlInNewTab()
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

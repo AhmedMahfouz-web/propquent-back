@@ -19,6 +19,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use pxlrbt\FilamentExcel\Actions\Pages\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ProjectFinancialReport extends Page implements HasForms
 {
@@ -270,6 +272,19 @@ class ProjectFinancialReport extends Page implements HasForms
     public static function getNavigationBadge(): ?string
     {
         return null;
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            ExportAction::make()
+                ->exports([
+                    ExcelExport::make()
+                        ->fromTable()
+                        ->withFilename(fn () => 'project-financial-report-' . date('Y-m-d'))
+                        ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                ])
+        ];
     }
 
     private function getAvailableMetrics(): array

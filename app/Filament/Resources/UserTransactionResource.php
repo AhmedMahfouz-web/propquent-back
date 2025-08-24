@@ -4,12 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserTransactionResource\Pages;
 use App\Models\UserTransaction;
+use App\Imports\UserTransactionImport;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserTransactionResource extends Resource
 {
@@ -33,19 +35,11 @@ class UserTransactionResource extends Resource
                             ->preload()
                             ->required()
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\Select::make('type')
-                            ->options([
-                                'deposit' => 'Deposit',
-                                'withdrawal' => 'Withdrawal',
-                                'payment' => 'Payment',
-                                'refund' => 'Refund',
-                                'bonus' => 'Bonus',
-                                'penalty' => 'Penalty',
-                                'commission' => 'Commission',
-                            ])
+                            ->options(fn() => UserTransaction::getAvailableTransactionTypes())
                             ->required(),
-                        
+
                         Forms\Components\TextInput::make('amount')
                             ->numeric()
                             ->prefix('$')
@@ -58,32 +52,20 @@ class UserTransactionResource extends Resource
                 Forms\Components\Section::make('Payment Information')
                     ->schema([
                         Forms\Components\Select::make('method')
-                            ->options([
-                                'cash' => 'Cash',
-                                'bank_transfer' => 'Bank Transfer',
-                                'cheque' => 'Cheque',
-                                'card' => 'Card',
-                                'wire_transfer' => 'Wire Transfer',
-                                'cryptocurrency' => 'Cryptocurrency',
-                                'paypal' => 'PayPal',
-                                'stripe' => 'Stripe',
-                            ])
-                            ->searchable()
-                            ->nullable(),
-                        
+                            ->options(fn() => UserTransaction::getAvailableMethods())
+                            ->nullable()
+                            ->searchable(),
+
                         Forms\Components\TextInput::make('reference_no')
                             ->label('Reference Number')
                             ->maxLength(255)
                             ->nullable(),
-                        
+
                         Forms\Components\Select::make('status')
                             ->options([
                                 'pending' => 'Pending',
                                 'completed' => 'Completed',
                                 'cancelled' => 'Cancelled',
-                                'failed' => 'Failed',
-                                'processing' => 'Processing',
-                                'on_hold' => 'On Hold',
                             ])
                             ->default('pending')
                             ->required(),
@@ -95,7 +77,7 @@ class UserTransactionResource extends Resource
                         Forms\Components\DatePicker::make('transaction_date')
                             ->required()
                             ->default(today()),
-                        
+
                         Forms\Components\DatePicker::make('actual_date')
                             ->nullable()
                             ->helperText('Date when transaction was actually processed'),
@@ -120,24 +102,19 @@ class UserTransactionResource extends Resource
                     ->searchable(['full_name', 'email'])
                     ->sortable()
                     ->limit(25),
-                
+
                 Tables\Columns\TextColumn::make('user.email')
                     ->searchable()
                     ->toggleable()
                     ->limit(30),
-                
+
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors([
                         'success' => 'deposit',
-                        'danger' => 'withdrawal',
-                        'primary' => 'payment',
-                        'warning' => 'refund',
-                        'info' => 'bonus',
-                        'secondary' => 'penalty',
-                        'gray' => 'commission',
+                        'danger' => 'withdraw',
                     ])
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('amount')
                     ->money('USD')
                     ->sortable()
@@ -147,11 +124,11 @@ class UserTransactionResource extends Resource
                         Tables\Columns\Summarizers\Average::make()
                             ->money('USD'),
                     ])
-                    ->color(fn (string $state): string => match (true) {
+                    ->color(fn(string $state): string => match (true) {
                         str_contains($state, '-') => 'danger',
                         default => 'success',
                     }),
-                
+
                 Tables\Columns\TextColumn::make('method')
                     ->badge()
                     ->colors([
@@ -164,38 +141,35 @@ class UserTransactionResource extends Resource
                         'gray' => ['paypal', 'stripe'],
                     ])
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('reference_no')
                     ->label('Reference')
                     ->searchable()
                     ->toggleable()
                     ->copyable(),
-                
+
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'warning' => 'pending',
                         'success' => 'completed',
                         'danger' => 'cancelled',
-                        'secondary' => 'failed',
-                        'info' => 'processing',
-                        'gray' => 'on_hold',
                     ])
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('actual_date')
                     ->date()
                     ->sortable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -206,40 +180,16 @@ class UserTransactionResource extends Resource
                     ->relationship('user', 'full_name')
                     ->searchable()
                     ->preload(),
-                
+
                 Tables\Filters\SelectFilter::make('type')
-                    ->options([
-                        'deposit' => 'Deposit',
-                        'withdrawal' => 'Withdrawal',
-                        'payment' => 'Payment',
-                        'refund' => 'Refund',
-                        'bonus' => 'Bonus',
-                        'penalty' => 'Penalty',
-                        'commission' => 'Commission',
-                    ]),
-                
+                    ->options(fn() => UserTransaction::getAvailableTransactionTypes()),
+
                 Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
-                        'failed' => 'Failed',
-                        'processing' => 'Processing',
-                        'on_hold' => 'On Hold',
-                    ]),
-                
+                    ->options(fn() => UserTransaction::getAvailableStatuses()),
+
                 Tables\Filters\SelectFilter::make('method')
-                    ->options([
-                        'cash' => 'Cash',
-                        'bank_transfer' => 'Bank Transfer',
-                        'cheque' => 'Cheque',
-                        'card' => 'Card',
-                        'wire_transfer' => 'Wire Transfer',
-                        'cryptocurrency' => 'Cryptocurrency',
-                        'paypal' => 'PayPal',
-                        'stripe' => 'Stripe',
-                    ]),
-                
+                    ->options(fn() => UserTransaction::getAvailableMethods()),
+
                 Tables\Filters\Filter::make('amount_range')
                     ->form([
                         Forms\Components\TextInput::make('amount_from')
@@ -255,14 +205,14 @@ class UserTransactionResource extends Resource
                         return $query
                             ->when(
                                 $data['amount_from'],
-                                fn (Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
+                                fn(Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
                             )
                             ->when(
                                 $data['amount_to'],
-                                fn (Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
+                                fn(Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
                             );
                     }),
-                
+
                 Tables\Filters\Filter::make('date_range')
                     ->form([
                         Forms\Components\DatePicker::make('date_from')
@@ -274,13 +224,47 @@ class UserTransactionResource extends Resource
                         return $query
                             ->when(
                                 $data['date_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('transaction_date', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '>=', $date),
                             )
                             ->when(
                                 $data['date_to'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
                             );
                     }),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('import')
+                    ->label('Import Excel')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->form([
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Excel File')
+                            ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])
+                            ->required()
+                            ->helperText('Upload an Excel file with columns: user_id, type, amount, transaction_date, description, status')
+                    ])
+                    ->action(function (array $data) {
+                        try {
+                            $filePath = storage_path('app/public/' . $data['file']);
+                            Excel::import(new UserTransactionImport, $filePath);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Import Successful')
+                                ->body('User transactions have been imported successfully.')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Import Failed')
+                                ->body('Error: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Tables\Actions\Action::make('downloadTemplate')
+                    ->label('Download Template')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(asset('templates/user-transactions-template.xlsx'))
+                    ->openUrlInNewTab()
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

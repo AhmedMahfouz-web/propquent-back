@@ -55,11 +55,11 @@ class ProjectTransactionSeeder extends Seeder
             return;
         }
 
-        // Get dynamic configuration options
-        $transactionTypes = $this->getConfigurationOptions('project_transaction_types');
-        $transactionStatuses = $this->getConfigurationOptions('transaction_statuses');
-        $transactionMethods = $this->getConfigurationOptions('transaction_methods');
-        $transactionServing = $this->getConfigurationOptions('transaction_serving');
+        // Use default options instead of configuration
+        $transactionTypes = $this->getDefaultOptions('project_transaction_types');
+        $transactionStatuses = $this->getDefaultOptions('transaction_statuses');
+        $transactionMethods = $this->getDefaultOptions('transaction_methods');
+        $transactionServing = $this->getDefaultOptions('transaction_serving');
 
         $this->command->info('Creating realistic transaction data...');
 
@@ -123,7 +123,7 @@ class ProjectTransactionSeeder extends Seeder
         $baseCount = self::MIN_TRANSACTIONS_PER_PROJECT;
 
         // More transactions for older projects
-        $ageBonus = min(floor($projectAgeMonths / 2), 4);
+        $ageBonus = min(floor((int) $projectAgeMonths / 2), 4);
 
         // More transactions for exited projects (complete lifecycle)
         $statusBonus = $status === 'exited' ? 2 : 0;
@@ -144,21 +144,44 @@ class ProjectTransactionSeeder extends Seeder
     ): ProjectTransaction {
         $investmentAmount = $this->calculateInvestmentAmount($faker, $project);
 
-        return ProjectTransaction::create([
-            'project_key' => $project->key,
-            'financial_type' => 'expense', // Mapped from 'investment'
-            'amount' => $investmentAmount,
-            'what_id' => $faker->numberBetween(1, 10),
-            'transaction_date' => $project->created_at->addDays($faker->numberBetween(0, 7)),
-            'due_date' => $project->created_at->addDays($faker->numberBetween(30, 60)),
-            'status' => 'done',
-            'method' => $faker->randomElement($transactionMethods),
-            'serving' => $faker->randomElement($transactionServing),
-            'reference_no' => $this->generateReferenceNumber($faker),
-            'note' => "Initial project funding",
-            'created_at' => $project->created_at,
-            'updated_at' => $project->created_at,
-        ]);
+        try {
+            $maxDate = Carbon::now()->subDays(1);
+            $transactionDate = $project->created_at->copy()->addDays($faker->numberBetween(0, 7));
+            $dueDate = $project->created_at->copy()->addDays($faker->numberBetween(30, 60));
+            
+            // Ensure dates are not in the future
+            if ($transactionDate->gt($maxDate)) {
+                $transactionDate = $maxDate;
+            }
+            if ($dueDate->gt($maxDate)) {
+                $dueDate = $maxDate;
+            }
+            
+            return ProjectTransaction::create([
+                'project_key' => $project->key,
+                'financial_type' => 'expense', // Mapped from 'investment'
+                'amount' => $investmentAmount,
+                'transaction_date' => $transactionDate,
+                'due_date' => $dueDate,
+                'status' => 'done',
+                'method' => $faker->randomElement($transactionMethods),
+                'serving' => $faker->randomElement($transactionServing),
+                'reference_no' => $this->generateReferenceNumber($faker),
+                'note' => "Initial project funding",
+                'created_at' => $transactionDate,
+                'updated_at' => $transactionDate,
+            ]);
+        } catch (\Exception $e) {
+            $this->command->error("Error creating initial investment for project {$project->key}: " . $e->getMessage());
+            $this->command->error("Data: " . json_encode([
+                'project_key' => $project->key,
+                'financial_type' => 'expense',
+                'amount' => $investmentAmount,
+                'method' => $faker->randomElement($transactionMethods),
+                'serving' => $faker->randomElement($transactionServing),
+            ]));
+            throw $e;
+        }
     }
 
     /**
@@ -188,21 +211,33 @@ class ProjectTransactionSeeder extends Seeder
 
         $financialType = $this->mapToFinancialType($type);
 
-        return ProjectTransaction::create([
-            'project_key' => $project->key,
-            'financial_type' => $financialType,
-            'amount' => $amount,
-            'what_id' => $faker->numberBetween(1, 10),
-            'transaction_date' => $transactionDate,
-            'due_date' => $this->calculateDueDate($faker, $transactionDate, $type),
-            'status' => $status,
-            'method' => $this->selectPaymentMethod($faker, $amount),
-            'serving' => $faker->randomElement($transactionServing),
-            'reference_no' => $this->generateReferenceNumber($faker),
-            'note' => $faker->optional(0.4)->sentence(),
-            'created_at' => $transactionDate,
-            'updated_at' => $transactionDate->addDays($faker->numberBetween(0, 5)),
-        ]);
+        try {
+            return ProjectTransaction::create([
+                'project_key' => $project->key,
+                'financial_type' => $financialType,
+                'amount' => $amount,
+                'transaction_date' => $transactionDate,
+                'due_date' => $this->calculateDueDate($faker, $transactionDate, $type),
+                'status' => $status,
+                'method' => $this->selectPaymentMethod($faker, $amount),
+                'serving' => $faker->randomElement($transactionServing),
+                'reference_no' => $this->generateReferenceNumber($faker),
+                'note' => $faker->optional(0.4)->sentence(),
+                'created_at' => $transactionDate,
+                'updated_at' => $transactionDate->addDays($faker->numberBetween(0, 5)),
+            ]);
+        } catch (\Exception $e) {
+            $this->command->error("Error creating realistic transaction for project {$project->key}: " . $e->getMessage());
+            $this->command->error("Data: " . json_encode([
+                'project_key' => $project->key,
+                'financial_type' => $financialType,
+                'amount' => $amount,
+                'method' => $this->selectPaymentMethod($faker, $amount),
+                'serving' => $faker->randomElement($transactionServing),
+                'status' => $status,
+            ]));
+            throw $e;
+        }
     }
 
     /**
@@ -216,20 +251,31 @@ class ProjectTransactionSeeder extends Seeder
     ): ProjectTransaction {
         $exitAmount = $this->calculateExitAmount($faker, $project, $totalInvestments);
 
+        $maxDate = Carbon::now()->subDays(1);
+        $exitDate = $project->exit_date ?? $project->updated_at;
+        $dueDate = $exitDate->copy()->addDays(30);
+        
+        // Ensure dates are not in the future
+        if ($exitDate->gt($maxDate)) {
+            $exitDate = $maxDate;
+        }
+        if ($dueDate->gt($maxDate)) {
+            $dueDate = $maxDate;
+        }
+
         return ProjectTransaction::create([
             'project_key' => $project->key,
             'financial_type' => 'revenue', // Mapped from 'sale'
             'amount' => $exitAmount,
-            'what_id' => $faker->numberBetween(1, 10),
-            'transaction_date' => $project->exit_date ?? $project->updated_at,
-            'due_date' => ($project->exit_date ?? $project->updated_at)->addDays(30),
+            'transaction_date' => $exitDate,
+            'due_date' => $dueDate,
             'status' => 'done',
             'method' => $faker->randomElement(['bank_transfer', 'wire_transfer']),
             'serving' => $faker->randomElement($transactionServing),
             'reference_no' => $this->generateReferenceNumber($faker),
             'note' => "Final project sale transaction",
-            'created_at' => $project->exit_date ?? $project->updated_at,
-            'updated_at' => $project->exit_date ?? $project->updated_at,
+            'created_at' => $exitDate,
+            'updated_at' => $exitDate,
         ]);
     }
 
@@ -287,13 +333,25 @@ class ProjectTransactionSeeder extends Seeder
         $projectStart = $project->created_at;
         $projectEnd = $project->exit_date ?? Carbon::now();
 
+        // Ensure we don't generate future dates
+        $maxDate = Carbon::now()->subDays(1);
+        if ($projectEnd->gt($maxDate)) {
+            $projectEnd = $maxDate;
+        }
+        if ($projectStart->gt($maxDate)) {
+            $projectStart = $maxDate->copy()->subMonths(6);
+        }
+
         $totalDays = $projectStart->diffInDays($projectEnd);
         $transactionDay = ($index / $total) * $totalDays;
 
         // Add some randomness
         $randomOffset = $faker->numberBetween(-7, 7);
 
-        return $projectStart->copy()->addDays($transactionDay + $randomOffset);
+        $calculatedDate = $projectStart->copy()->addDays($transactionDay + $randomOffset);
+        
+        // Ensure the calculated date is not in the future
+        return $calculatedDate->gt($maxDate) ? $maxDate : $calculatedDate;
     }
 
     /**
@@ -488,7 +546,7 @@ class ProjectTransactionSeeder extends Seeder
             'project_transaction_types' => ['investment', 'expense', 'revenue', 'maintenance', 'fee'],
             'transaction_statuses' => ['done', 'pending', 'cancelled'],
             'transaction_methods' => ['bank_transfer', 'wire_transfer', 'check', 'cash', 'credit_card'],
-            'transaction_serving' => ['asset', 'operation', 'development', 'management'],
+            'transaction_serving' => ['asset', 'operation'],
             default => ['default'],
         };
     }
