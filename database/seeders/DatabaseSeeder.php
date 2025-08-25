@@ -26,13 +26,13 @@ class DatabaseSeeder extends Seeder
         ]);
 
 
-        $this->call([
-            DeveloperSeeder::class,
-            SystemConfigurationSeeder::class,
-            UserSeeder::class,
-            ProjectSeeder::class,
-            ProjectTransactionSeeder::class, // Temporarily disabled
-            UserTransactionSeeder::class,
-        ]);
+        // $this->call([
+        //     DeveloperSeeder::class,
+        //     SystemConfigurationSeeder::class,
+        //     UserSeeder::class,
+        //     ProjectSeeder::class,
+        //     ProjectTransactionSeeder::class, // Temporarily disabled
+        //     UserTransactionSeeder::class,
+        // ]);
     }
 }
