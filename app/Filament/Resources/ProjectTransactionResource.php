@@ -20,6 +20,8 @@ class ProjectTransactionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
+    protected static ?string $navigationLabel = 'Project Transactions';
+
     protected static ?string $navigationGroup = 'Transactions';
 
     protected static ?int $navigationSort = 1;
@@ -31,10 +33,16 @@ class ProjectTransactionResource extends Resource
                 Forms\Components\Section::make('Transaction Details')
                     ->schema([
                         Forms\Components\Select::make('project_key')
-                            ->relationship('project', 'title', fn(Builder $query) => $query->with('developer'))
-                            ->getOptionLabelFromRecordUsing(fn($record) => "{$record->title} ({$record->developer->name})")
-                            ->searchable(['title', 'key'])
-                            ->preload()
+                            ->label('Project')
+                            ->options(function () {
+                                return \App\Models\Project::with('developer')
+                                    ->get()
+                                    ->mapWithKeys(function ($project) {
+                                        return [$project->key => "{$project->title} ({$project->developer->name})"];
+                                    })
+                                    ->toArray();
+                            })
+                            ->searchable()
                             ->required()
                             ->columnSpanFull(),
 
@@ -47,29 +55,11 @@ class ProjectTransactionResource extends Resource
                             ->options(fn() => ProjectTransaction::getAvailableServingTypes())
                             ->nullable(),
 
-                        Forms\Components\Select::make('what_id')
-                            ->relationship('transactionWhat', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required()
+                        Forms\Components\TextInput::make('transaction_category')
                             ->label('Transaction Category')
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
-                                    ->required()
-                                    ->maxLength(255),
-                                Forms\Components\Textarea::make('description')
-                                    ->maxLength(65535),
-                                Forms\Components\Select::make('category')
-                                    ->options([
-                                        'payment' => 'Payment',
-                                        'fee' => 'Fee',
-                                        'charge' => 'Charge',
-                                        'deposit' => 'Deposit',
-                                    ])
-                                    ->nullable(),
-                                Forms\Components\Toggle::make('is_active')
-                                    ->default(true),
-                            ]),
+                            ->maxLength(255)
+                            ->placeholder('Enter transaction category')
+                            ->nullable(),
                     ])
                     ->columns(2),
 
@@ -127,7 +117,75 @@ class ProjectTransactionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\SelectColumn::make('project_key')
+                    ->label('Project')
+                    ->options(function () {
+                        return \App\Models\Project::with('developer')
+                            ->get()
+                            ->mapWithKeys(function ($project) {
+                                return [$project->key => "{$project->title} ({$project->developer->name})"];
+                            })
+                            ->toArray();
+                    })
+                    ->rules(['required', 'exists:projects,key'])
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\SelectColumn::make('financial_type')
+                    ->label('Type')
+                    ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
+                    ->rules(['required'])
+                    ->selectablePlaceholder(false),
+
+                Tables\Columns\SelectColumn::make('serving')
+                    ->options(fn() => ProjectTransaction::getAvailableServingTypes())
+                    ->placeholder('Select serving...')
+                    ->selectablePlaceholder(false),
+
+                Tables\Columns\TextInputColumn::make('amount')
+                    ->type('number')
+                    ->step(0.01)
+                    ->rules(['required', 'numeric', 'min:0.01'])
+                    ->placeholder('0.00')
+                    ->sortable(),
+
+                Tables\Columns\SelectColumn::make('method')
+                    ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
+                    ->placeholder('Select method...')
+                    ->selectablePlaceholder(false),
+
+                Tables\Columns\TextInputColumn::make('reference_no')
+                    ->label('Reference')
+                    ->placeholder('Reference number...')
+                    ->rules(['max:255']),
+
+                Tables\Columns\SelectColumn::make('status')
+                    ->options(fn() => ProjectTransaction::getAvailableStatuses())
+                    ->rules(['required'])
+                    ->selectablePlaceholder(false),
+
+                Tables\Columns\TextInputColumn::make('transaction_date')
+                    ->type('date')
+                    ->rules(['required', 'date'])
+                    ->placeholder('YYYY-MM-DD')
+                    ->sortable(),
+
+                Tables\Columns\TextInputColumn::make('due_date')
+                    ->type('date')
+                    ->rules(['nullable', 'date'])
+                    ->placeholder('YYYY-MM-DD'),
+
+                Tables\Columns\TextInputColumn::make('actual_date')
+                    ->type('date')
+                    ->rules(['nullable', 'date'])
+                    ->placeholder('YYYY-MM-DD'),
+
+                Tables\Columns\TextInputColumn::make('note')
+                    ->placeholder('Add note...')
+                    ->rules(['max:65535']),
+                // Read-only columns for existing records
                 Tables\Columns\TextColumn::make('project.title')
+                    ->label('Project Title')
                     ->searchable()
                     ->sortable()
                     ->limit(30)
@@ -137,72 +195,13 @@ class ProjectTransactionResource extends Resource
                             return null;
                         }
                         return $state;
-                    }),
+                    })
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('project.developer.name')
                     ->label('Developer')
                     ->searchable()
                     ->toggleable(),
-
-                Tables\Columns\BadgeColumn::make('financial_type')
-                    ->label('Type')
-                    ->colors([
-                        'success' => 'revenue',
-                        'danger' => 'expense',
-                    ])
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('serving')
-                    ->badge()
-                    ->colors([
-                        'primary' => 'asset',
-                        'info' => 'operation',
-                    ])
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('transactionWhat.name')
-                    ->label('Category')
-                    ->searchable()
-                    ->limit(20),
-
-                Tables\Columns\TextColumn::make('amount')
-                    ->money('USD')
-                    ->sortable()
-                    ->summarize([
-                        Tables\Columns\Summarizers\Sum::make()
-                            ->money('USD'),
-                    ]),
-
-                Tables\Columns\TextColumn::make('method')
-                    ->badge()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('reference_no')
-                    ->label('Reference')
-                    ->searchable()
-                    ->toggleable(),
-
-                Tables\Columns\BadgeColumn::make('status')
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'done',
-                        'danger' => 'cancelled',
-                    ])
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('due_date')
-                    ->date()
-                    ->sortable()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('actual_date')
-                    ->date()
-                    ->sortable()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('transaction_date')
-                    ->date()
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -267,6 +266,7 @@ class ProjectTransactionResource extends Resource
                     }),
             ])
             ->headerActions([
+                Tables\Actions\CreateAction::make(),
                 Tables\Actions\Action::make('import')
                     ->label('Import Excel')
                     ->icon('heroicon-o-arrow-up-tray')
@@ -301,10 +301,9 @@ class ProjectTransactionResource extends Resource
                     ->openUrlInNewTab()
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+            ->recordUrl(null) // Disable row click navigation to allow inline editing
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

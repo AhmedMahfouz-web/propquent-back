@@ -16,7 +16,7 @@ class DeveloperResource extends Resource
 {
     protected static ?string $model = Developer::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $navigationGroup = 'Real Estate';
 

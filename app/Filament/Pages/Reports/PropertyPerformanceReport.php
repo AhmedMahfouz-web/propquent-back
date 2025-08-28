@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
 class PropertyPerformanceReport extends Page implements HasTable
 {
     use InteractsWithTable;
+    
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static string $view = 'filament.pages.reports.property-performance-report';

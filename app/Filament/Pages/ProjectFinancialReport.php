@@ -267,7 +267,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     protected static ?string $navigationGroup = 'Financial Reports';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationBadge(): ?string
     {

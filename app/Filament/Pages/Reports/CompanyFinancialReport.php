@@ -10,5 +10,5 @@ class CompanyFinancialReport extends Page
     protected static string $view = 'filament.pages.company-financial-report';
     protected static ?string $navigationGroup = 'Financial Reports';
     protected static ?string $title = 'Company Financial Report';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 }

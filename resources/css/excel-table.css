@@ -1,0 +1,26 @@
+/* Basic Excel-like table styling */
+/* Apply Excel-like styles directly to the project transactions table */
+body.filament-resources-project-transaction-resource-pages-list-project-transactions .fi-ta-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+body.filament-resources-project-transaction-resource-pages-list-project-transactions .fi-ta-table th,
+body.filament-resources-project-transaction-resource-pages-list-project-transactions .fi-ta-table td {
+    border: 1px solid #ccc !important; /* Use !important to override Filament's default styles */
+    padding: 8px;
+    text-align: left;
+}
+
+body.filament-resources-project-transaction-resource-pages-list-project-transactions .fi-ta-table th {
+    background-color: #f2f2f2 !important;
+    font-weight: bold;
+}
+
+body.filament-resources-project-transaction-resource-pages-list-project-transactions .fi-ta-table tr:nth-child(even) td {
+    background-color: #f9f9f9 !important;
+}
+
+body.filament-resources-project-transaction-resource-pages-list-project-transactions .fi-ta-table tr:hover td {
+    background-color: #e9e9e9 !important;
+}

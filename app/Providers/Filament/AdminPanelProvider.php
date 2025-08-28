@@ -29,28 +29,31 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->authGuard('admins')
             ->authPasswordBroker('users')
-            ->brandName('PROPQUENT Investment Platform')
-            ->brandLogo(app()->runningInConsole() ? null : asset('images/logo.png'))
+            ->brandName('PROPQUENT')
+            ->brandLogo(app()->runningInConsole() ? null : asset('favicon.ico'))
             ->brandLogoHeight('2rem')
-            ->favicon(app()->runningInConsole() ? null : asset('images/favicon.ico'))
+            ->favicon(app()->runningInConsole() ? null : asset('    favicon.ico'))
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Sky,
                 'gray' => Color::Slate,
                 'success' => Color::Green,
                 'warning' => Color::Amber,
                 'danger' => Color::Red,
-                'info' => Color::Sky,
+                'info' => Color::Blue,
             ])
             ->font('Inter')
             ->navigationGroups([
-                NavigationGroup::make('Properties')
+                NavigationGroup::make('Financial Reports')
+                    ->icon('heroicon-o-chart-bar')
+                    ->collapsible(),
+                NavigationGroup::make('Transactions')
+                    ->icon('heroicon-o-banknotes')
+                    ->collapsible(),
+                NavigationGroup::make('Real Estate')
                     ->icon('heroicon-o-building-office-2')
                     ->collapsible(),
                 NavigationGroup::make('User Management')
                     ->icon('heroicon-o-users')
-                    ->collapsible(),
-                NavigationGroup::make('Help & Documentation')
-                    ->icon('heroicon-o-question-mark-circle')
                     ->collapsible(),
                 NavigationGroup::make('Settings')
                     ->icon('heroicon-o-cog-6-tooth')

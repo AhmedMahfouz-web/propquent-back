@@ -96,6 +96,26 @@ class ProjectTransaction extends Model
         'note',
     ];
 
+    /**
+     * Get validation rules for the model
+     */
+    public static function getValidationRules(): array
+    {
+        return [
+            'project_key' => 'required|exists:projects,key',
+            'financial_type' => 'required|in:' . implode(',', array_keys(self::getAvailableFinancialTypes())),
+            'serving' => 'nullable|in:' . implode(',', array_keys(self::getAvailableServingTypes())),
+            'amount' => 'required|numeric|min:0.01',
+            'transaction_date' => 'required|date',
+            'due_date' => 'nullable|date',
+            'actual_date' => 'nullable|date',
+            'method' => 'nullable|in:' . implode(',', array_keys(self::getAvailableTransactionMethods())),
+            'reference_no' => 'nullable|string|max:255',
+            'status' => 'required|in:' . implode(',', array_keys(self::getAvailableStatuses())),
+            'note' => 'nullable|string|max:65535',
+        ];
+    }
+
     protected $casts = [
         'amount' => 'decimal:2',
         'due_date' => 'date',
@@ -201,7 +221,7 @@ class ProjectTransaction extends Model
         // Validate dates are logical
         if ($this->due_date && $this->actual_date && $this->actual_date < $this->due_date) {
             // This is just a warning, not an error
-            \Log::warning('Actual date is before due date for transaction', [
+            Log::warning('Actual date is before due date for transaction', [
                 'transaction_id' => $this->id,
                 'due_date' => $this->due_date,
                 'actual_date' => $this->actual_date

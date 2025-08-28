@@ -21,13 +21,7 @@ class SystemConfigurationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static ?string $navigationLabel = 'Settings';
-
-    protected static ?string $modelLabel = 'Setting';
-
-    protected static ?string $pluralModelLabel = 'Settings';
-
-    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationGroup = 'Settings';
 
     protected static ?int $navigationSort = 99;
 

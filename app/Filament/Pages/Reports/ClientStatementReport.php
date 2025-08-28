@@ -15,9 +15,9 @@ class ClientStatementReport extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.reports.client-statement-report';
-    protected static ?string $navigationGroup = 'Financial Reports';
+    protected static ?string $navigationGroup = null;
     protected static ?string $title = 'Client Statement Report';
-    protected static ?int $navigationSort = 5;
+    protected static bool $shouldRegisterNavigation = false;
 
     // Disable this report from navigation
     public static function shouldRegisterNavigation(): bool

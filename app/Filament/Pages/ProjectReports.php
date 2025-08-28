@@ -22,6 +22,8 @@ class ProjectReports extends Page
 
     protected static ?int $navigationSort = 2;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string $view = 'filament.pages.project-reports';
 
     public ?array $filters = [];

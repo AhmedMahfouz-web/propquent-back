@@ -3,17 +3,11 @@
 namespace App\Filament\Resources\ProjectTransactionResource\Pages;
 
 use App\Filament\Resources\ProjectTransactionResource;
-use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\Page;
 
-class ListProjectTransactions extends ListRecords
+class ListProjectTransactions extends Page
 {
     protected static string $resource = ProjectTransactionResource::class;
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\CreateAction::make(),
-        ];
-    }
+    
+    protected static string $view = 'filament.resources.project-transaction-resource.pages.list-project-transactions';
 }
