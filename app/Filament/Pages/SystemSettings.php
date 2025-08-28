@@ -23,6 +23,8 @@ class SystemSettings extends Page
 
     protected static ?int $navigationSort = 99;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string $view = 'filament.pages.system-settings';
 
     public static function canAccess(): bool

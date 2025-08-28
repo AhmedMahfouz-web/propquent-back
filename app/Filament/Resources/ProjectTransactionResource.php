@@ -266,7 +266,9 @@ class ProjectTransactionResource extends Resource
                     }),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Add New Row')
+                    ->keyBindings(['ctrl+n', 'cmd+n']),
                 Tables\Actions\Action::make('import')
                     ->label('Import Excel')
                     ->icon('heroicon-o-arrow-up-tray')
