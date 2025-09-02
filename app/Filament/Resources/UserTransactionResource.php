@@ -62,12 +62,7 @@ class UserTransactionResource extends Resource
                             ->nullable(),
 
                         Forms\Components\Select::make('status')
-                            ->options([
-                                'pending' => 'Pending',
-                                'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
-                            ])
-                            ->default('pending')
+                            ->options(fn() => UserTransaction::getAvailableStatuses())
                             ->required(),
                     ])
                     ->columns(3),
