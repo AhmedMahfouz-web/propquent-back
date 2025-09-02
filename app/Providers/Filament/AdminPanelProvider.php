@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('PROPQUENT')
             ->brandLogo(app()->runningInConsole() ? null : asset('favicon.ico'))
             ->brandLogoHeight('2rem')
-            ->favicon(app()->runningInConsole() ? null : asset('    favicon.ico'))
+            ->favicon(app()->runningInConsole() ? null : asset('favicon.ico'))
             ->colors([
                 'primary' => Color::Sky,
                 'gray' => Color::Slate,

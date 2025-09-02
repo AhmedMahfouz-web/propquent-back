@@ -17,7 +17,7 @@ class ProjectResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
     protected static ?string $navigationGroup = 'Real Estate';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -29,18 +29,13 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('key')
                             ->label('Project Key')
                             ->placeholder('e.g., PROP-001, VILLA-DUBAI-01')
-                            ->helperText('Optional human-readable identifier (3-50 characters, alphanumeric, hyphens, underscores)')
-                            ->rules(['nullable', 'unique:projects,key', 'regex:/^[a-zA-Z0-9_-]{3,50}$/'])
+                            ->helperText('Optional human-readable identifier (1-50 characters, alphanumeric)')
+                            ->rules(['unique:projects,key', 'regex:/^[a-zA-Z0-9]{1,50}$/'])
                             ->validationMessages([
                                 'unique' => 'This project key is already in use.',
-                                'regex' => 'Project key must be 3-50 characters long and contain only letters, numbers, hyphens, and underscores.',
-                            ])
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $state = null, Forms\Set $set, Forms\Get $get) {
-                                if ($state && !Project::validateProjectKey($state)) {
-                                    $set('key', null);
-                                }
-                            }),
+                                'regex' => 'Project key must be 1-50 characters long and contain only letters, numbers.',
+                            ]),
+                        // ->live(onBlur: true),
 
                         Forms\Components\TextInput::make('title')
                             ->required()
@@ -124,12 +119,11 @@ class ProjectResource extends Resource
                     ->width(50)
                     ->circular(),
 
-                Tables\Columns\TextColumn::make('project_key')
+                Tables\Columns\TextColumn::make('key')
                     ->label('Project Key')
                     ->searchable()
                     ->sortable()
                     ->placeholder('Auto-generated')
-                    ->getStateUsing(fn(Project $record) => $record->getDisplayIdentifier())
                     ->badge()
                     ->color('primary'),
 

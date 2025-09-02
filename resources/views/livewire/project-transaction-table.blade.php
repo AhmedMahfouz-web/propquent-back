@@ -50,61 +50,61 @@
         </div>
 
     <!-- Filament Table -->
-    <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10 dark:border-t-white/10">
-        <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5" id="transaction-table">
+    <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10 dark:border-t-white/10" style="min-height: 400px;">
+        <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5" id="transaction-table" style="min-width: 1400px;">
             <thead class="fi-ta-header divide-y divide-gray-200 dark:divide-white/5">
                 <tr class="fi-ta-header-row">
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 200px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Project</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Type</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Serving</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Amount</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Method</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Reference</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Status</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Date</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Due Date</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Actual Date</span>
                         </span>
                     </th>
-                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                    <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 200px;">
                         <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                             <span class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Notes</span>
                         </span>
@@ -200,21 +200,27 @@
                         </select>
                     </td>
                     <td class="border p-0 bg-yellow-50 dark:bg-yellow-900/30 {{ in_array('transaction_date', $validationErrors) ? 'border-red-500 border-2' : 'border-gray-300 dark:border-gray-600' }}">
-                        <input type="date" 
+                        <input type="text" 
+                               pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                               placeholder="YYYY-MM-DD"
                                wire:change="updateDraftRow('{{ $rowId }}', 'transaction_date', $event.target.value)"
                                value="{{ $row['transaction_date'] }}"
                                data-row="{{ $rowId }}" data-col="7"
                                class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                     </td>
                     <td class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
-                        <input type="date" 
+                        <input type="text" 
+                               pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                               placeholder="YYYY-MM-DD"
                                wire:change="updateDraftRow('{{ $rowId }}', 'due_date', $event.target.value)"
                                value="{{ $row['due_date'] }}"
                                data-row="{{ $rowId }}" data-col="8"
                                class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                     </td>
                     <td class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
-                        <input type="date" 
+                        <input type="text" 
+                               pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                               placeholder="YYYY-MM-DD"
                                wire:change="updateDraftRow('{{ $rowId }}', 'actual_date', $event.target.value)"
                                value="{{ $row['actual_date'] }}"
                                data-row="{{ $rowId }}" data-col="9"
@@ -312,21 +318,27 @@
                         </select>
                     </td>
                     <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
-                        <input type="date" 
+                        <input type="text" 
+                               pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                               placeholder="YYYY-MM-DD"
                                wire:change="updateExistingRow({{ $transaction['id'] }}, 'transaction_date', $event.target.value)"
                                value="{{ $transaction['transaction_date'] }}"
                                data-row="existing-{{ $transaction['id'] }}" data-col="7"
                                class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                     </td>
                     <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
-                        <input type="date" 
+                        <input type="text" 
+                               pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                               placeholder="YYYY-MM-DD"
                                wire:change="updateExistingRow({{ $transaction['id'] }}, 'due_date', $event.target.value)"
                                value="{{ $transaction['due_date'] }}"
                                data-row="existing-{{ $transaction['id'] }}" data-col="8"
                                class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                     </td>
                     <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
-                        <input type="date" 
+                        <input type="text" 
+                               pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                               placeholder="YYYY-MM-DD"
                                wire:change="updateExistingRow({{ $transaction['id'] }}, 'actual_date', $event.target.value)"
                                value="{{ $transaction['actual_date'] }}"
                                data-row="existing-{{ $transaction['id'] }}" data-col="9"

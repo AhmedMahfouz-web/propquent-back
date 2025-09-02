@@ -91,15 +91,21 @@ class ProjectTransactionResource extends Resource
 
                 Forms\Components\Section::make('Date Information')
                     ->schema([
-                        Forms\Components\DatePicker::make('due_date')
+                        Forms\Components\TextInput::make('due_date')
+                            ->placeholder('YYYY-MM-DD')
+                            ->rules(['nullable', 'date_format:Y-m-d'])
                             ->nullable(),
 
-                        Forms\Components\DatePicker::make('actual_date')
+                        Forms\Components\TextInput::make('actual_date')
+                            ->placeholder('YYYY-MM-DD')
+                            ->rules(['nullable', 'date_format:Y-m-d'])
                             ->nullable(),
 
-                        Forms\Components\DatePicker::make('transaction_date')
+                        Forms\Components\TextInput::make('transaction_date')
+                            ->placeholder('YYYY-MM-DD')
+                            ->rules(['required', 'date_format:Y-m-d'])
                             ->required()
-                            ->default(today()),
+                            ->default(today()->format('Y-m-d')),
                     ])
                     ->columns(3),
 
@@ -116,6 +122,12 @@ class ProjectTransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->contentGrid([
+                'md' => 1,
+                'xl' => 1,
+            ])
+            ->striped()
+            ->defaultPaginationPageOption(25)
             ->columns([
                 Tables\Columns\SelectColumn::make('project_key')
                     ->label('Project')
@@ -128,14 +140,17 @@ class ProjectTransactionResource extends Resource
                             ->toArray();
                     })
                     ->rules(['required', 'exists:projects,key'])
+                    ->selectablePlaceholder(false)
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->width(200),
 
                 Tables\Columns\SelectColumn::make('financial_type')
                     ->label('Type')
                     ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
                     ->rules(['required'])
-                    ->selectablePlaceholder(false),
+                    ->selectablePlaceholder(false)
+                    ->width(120),
 
                 Tables\Columns\SelectColumn::make('serving')
                     ->options(fn() => ProjectTransaction::getAvailableServingTypes())
@@ -143,11 +158,15 @@ class ProjectTransactionResource extends Resource
                     ->selectablePlaceholder(false),
 
                 Tables\Columns\TextInputColumn::make('amount')
-                    ->type('number')
-                    ->step(0.01)
+                    ->extraInputAttributes([
+                        'type' => 'number',
+                        'step' => '0.01',
+                        'required' => true
+                    ])
                     ->rules(['required', 'numeric', 'min:0.01'])
                     ->placeholder('0.00')
-                    ->sortable(),
+                    ->sortable()
+                    ->width(120),
 
                 Tables\Columns\SelectColumn::make('method')
                     ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
@@ -157,32 +176,48 @@ class ProjectTransactionResource extends Resource
                 Tables\Columns\TextInputColumn::make('reference_no')
                     ->label('Reference')
                     ->placeholder('Reference number...')
-                    ->rules(['max:255']),
+                    ->rules(['max:255'])
+                    ->width(150),
 
                 Tables\Columns\SelectColumn::make('status')
                     ->options(fn() => ProjectTransaction::getAvailableStatuses())
                     ->rules(['required'])
-                    ->selectablePlaceholder(false),
+                    ->selectablePlaceholder(false)
+                    ->width(120),
 
                 Tables\Columns\TextInputColumn::make('transaction_date')
-                    ->type('date')
-                    ->rules(['required', 'date'])
+                    ->rules(['required', 'date_format:Y-m-d'])
                     ->placeholder('YYYY-MM-DD')
+                    ->extraInputAttributes([
+                        'type' => 'text',
+                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}',
+                        'required' => true
+                    ])
+                    ->width(150)
                     ->sortable(),
 
                 Tables\Columns\TextInputColumn::make('due_date')
-                    ->type('date')
-                    ->rules(['nullable', 'date'])
-                    ->placeholder('YYYY-MM-DD'),
+                    ->rules(['nullable', 'date_format:Y-m-d'])
+                    ->placeholder('YYYY-MM-DD')
+                    ->extraInputAttributes([
+                        'type' => 'text',
+                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                    ])
+                    ->width(150),
 
                 Tables\Columns\TextInputColumn::make('actual_date')
-                    ->type('date')
-                    ->rules(['nullable', 'date'])
-                    ->placeholder('YYYY-MM-DD'),
+                    ->rules(['nullable', 'date_format:Y-m-d'])
+                    ->placeholder('YYYY-MM-DD')
+                    ->extraInputAttributes([
+                        'type' => 'text',
+                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                    ])
+                    ->width(150),
 
                 Tables\Columns\TextInputColumn::make('note')
                     ->placeholder('Add note...')
-                    ->rules(['max:65535']),
+                    ->rules(['max:65535'])
+                    ->width(200),
                 // Read-only columns for existing records
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project Title')

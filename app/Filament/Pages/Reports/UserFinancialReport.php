@@ -409,28 +409,7 @@ class UserFinancialReport extends Page implements HasForms
             });
         }
 
-        // Only join with transactions if we have users that match search criteria
-        // and we need to filter by transaction dates
-        if (!empty($allMonths)) {
-            $usersQuery->whereExists(function ($query) use ($allMonths) {
-                $query->select(DB::raw(1))
-                    ->from('user_transactions as ut')
-                    ->whereColumn('ut.user_id', 'users.id')
-                    ->where('ut.status', UserTransaction::STATUS_DONE)
-                    ->whereBetween('ut.transaction_date', [
-                        end($allMonths),
-                        Carbon::parse($allMonths[0])->endOfMonth(),
-                    ]);
-            });
-        } else {
-            // If no date filter, just check if user has any transactions
-            $usersQuery->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('user_transactions as ut')
-                    ->whereColumn('ut.user_id', 'users.id')
-                    ->where('ut.status', UserTransaction::STATUS_DONE);
-            });
-        }
+        // No longer filter by transaction existence - show all users
 
         // Optimized sorting
         switch ($this->sortBy) {

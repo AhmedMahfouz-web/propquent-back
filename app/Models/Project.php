@@ -143,9 +143,6 @@ class Project extends Model implements HasMedia
             if (empty($project->id)) {
                 $project->id = (string) Str::uuid();
             }
-            if (empty($project->key)) {
-                $project->key = $project->id;
-            }
 
             // Validate project_key if provided
             if ($project->project_key && !self::validateProjectKey($project->project_key)) {
@@ -186,10 +183,6 @@ class Project extends Model implements HasMedia
         return $this->hasMany(StatusChange::class);
     }
 
-    public function images(): HasMany
-    {
-        return $this->hasMany(ProjectImage::class);
-    }
 
     public function evaluations(): HasMany
     {

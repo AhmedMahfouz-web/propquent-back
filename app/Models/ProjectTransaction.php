@@ -20,7 +20,7 @@ class ProjectTransaction extends Model
      */
     public static function getAvailableFinancialTypes(): array
     {
-        return SystemConfiguration::getOptions('project_transaction_types');
+        return SystemConfiguration::getOptions('transaction_types');
     }
 
     /**

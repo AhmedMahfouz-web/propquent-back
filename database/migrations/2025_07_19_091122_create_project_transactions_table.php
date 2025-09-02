@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('transaction_date');
             $table->string('method')->nullable();
             $table->string('reference_no')->nullable();
-            $table->string('status')->default('pending');
+            $table->string('status');
             $table->text('note')->nullable();
             $table->timestamps();
 

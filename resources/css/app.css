@@ -9,3 +9,44 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Filament Table Validation Styling */
+.fi-ta-cell input:invalid,
+.fi-ta-cell select:invalid,
+.fi-ta-cell input[aria-invalid="true"],
+.fi-ta-cell select[aria-invalid="true"] {
+    @apply border-red-500 ring-red-500 focus:border-red-500 focus:ring-red-500;
+}
+
+/* Required field styling */
+.fi-ta-cell input[required]:invalid,
+.fi-ta-cell select[required]:invalid {
+    @apply border-red-500 ring-red-500;
+}
+
+/* Date format validation styling */
+.fi-ta-cell input[pattern]:invalid {
+    @apply border-red-500 ring-red-500;
+}
+
+/* Table horizontal scrolling and cell width styling */
+.fi-ta {
+    overflow-x: auto;
+    min-width: 100%;
+}
+
+.fi-ta-table {
+    min-width: max-content;
+    width: auto;
+}
+
+.fi-ta-cell {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+.fi-ta-cell input,
+.fi-ta-cell select {
+    width: 100%;
+    min-width: inherit;
+}
