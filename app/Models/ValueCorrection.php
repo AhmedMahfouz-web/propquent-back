@@ -8,22 +8,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class ProjectEvaluation extends Model
+class ValueCorrection extends Model
 {
     use HasFactory;
 
-    protected $table = 'value_corrections';
-
     protected $fillable = [
         'project_key',
-        'evaluation_date',
-        'evaluation_amount',
+        'correction_date',
+        'correction_amount',
         'notes',
     ];
 
     protected $casts = [
-        'evaluation_date' => 'date',
-        'evaluation_amount' => 'decimal:2',
+        'correction_date' => 'date',
+        'correction_amount' => 'decimal:2',
     ];
 
     public function project(): BelongsTo
@@ -32,7 +30,7 @@ class ProjectEvaluation extends Model
     }
 
     /**
-     * Parse month string to evaluation date
+     * Parse month string to correction date
      */
     private static function parseMonthToDate(string $month): string
     {
@@ -55,36 +53,36 @@ class ProjectEvaluation extends Model
     }
 
     /**
-     * Get evaluation for a specific project and month
+     * Get value correction for a specific project and month
      */
-    public static function getEvaluationForMonth(string $projectKey, string $month): float
+    public static function getCorrectionForMonth(string $projectKey, string $month): float
     {
-        $evaluationDate = self::parseMonthToDate($month);
+        $correctionDate = self::parseMonthToDate($month);
 
-        $evaluation = self::where('project_key', $projectKey)
-            ->whereDate('evaluation_date', $evaluationDate)
+        $correction = self::where('project_key', $projectKey)
+            ->whereDate('correction_date', $correctionDate)
             ->first();
 
-        return $evaluation ? (float) $evaluation->evaluation_amount : 0;
+        return $correction ? (float) $correction->correction_amount : 0;
     }
 
     /**
-     * Set evaluation for a specific project and month
+     * Set value correction for a specific project and month
      */
-    public static function setEvaluationForMonth(string $projectKey, string $month, float $amount, ?string $notes = null): self
+    public static function setCorrectionForMonth(string $projectKey, string $month, float $amount, ?string $notes = null): self
     {
-        $evaluationDate = self::parseMonthToDate($month);
+        $correctionDate = self::parseMonthToDate($month);
 
-        return DB::transaction(function () use ($projectKey, $evaluationDate, $amount, $notes) {
+        return DB::transaction(function () use ($projectKey, $correctionDate, $amount, $notes) {
             // First try to find existing record
             $existing = self::where('project_key', $projectKey)
-                ->whereDate('evaluation_date', $evaluationDate)
+                ->whereDate('correction_date', $correctionDate)
                 ->first();
 
             if ($existing) {
                 // Update existing record
                 $existing->update([
-                    'evaluation_amount' => $amount,
+                    'correction_amount' => $amount,
                     'notes' => $notes,
                 ]);
                 return $existing;
@@ -92,8 +90,8 @@ class ProjectEvaluation extends Model
                 // Create new record
                 return self::create([
                     'project_key' => $projectKey,
-                    'evaluation_date' => $evaluationDate,
-                    'evaluation_amount' => $amount,
+                    'correction_date' => $correctionDate,
+                    'correction_amount' => $amount,
                     'notes' => $notes,
                 ]);
             }

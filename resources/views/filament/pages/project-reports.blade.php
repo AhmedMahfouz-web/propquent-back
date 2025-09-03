@@ -445,16 +445,52 @@
             background-color: rgba(59, 130, 246, 0.05) !important;
         }
 
+        /* Reduce overall font size */
+        .project-report-table {
+            font-size: 0.8rem;
+        }
+
+        /* Project name column styling */
+        .project-name-cell {
+            max-width: 220px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        .project-name-cell::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .project-name-cell::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 2px;
+        }
+
+        .project-name-cell::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 2px;
+        }
+
+        .project-name-cell::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
         /* Responsive improvements */
         @media (max-width: 768px) {
             .project-report-table {
-                font-size: 0.875rem;
+                font-size: 0.75rem;
             }
 
             .project-report-table th,
             .project-report-table td {
                 padding: 0.5rem 0.25rem;
                 min-width: 80px;
+            }
+
+            .project-name-cell {
+                max-width: 180px;
             }
         }
 

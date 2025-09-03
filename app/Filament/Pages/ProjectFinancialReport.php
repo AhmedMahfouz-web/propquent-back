@@ -60,7 +60,7 @@ class ProjectFinancialReport extends Page implements HasForms
     public $refreshCounter = 0;
 
 
-    protected $listeners = ['evaluation-updated' => 'refreshReportData'];
+    protected $listeners = ['correction-updated' => 'refreshReportData'];
 
     public function mount(): void
     {
@@ -165,7 +165,7 @@ class ProjectFinancialReport extends Page implements HasForms
         $financialSummary = $this->calculateFinancialSummary((clone $projectsQuery), $allMonths);
 
         $projects = (clone $projectsQuery)
-            ->with(['transactions', 'statusChanges', 'evaluations'])
+            ->with(['transactions', 'statusChanges', 'valueCorrections'])
             ->orderBy('created_at', $this->sortDirection)
             ->paginate($this->perPage);
 
@@ -197,7 +197,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function getProjectFinancialData(Project $project, array $allMonths): array
     {
-        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'expense_operation', 'expense_asset', 'profit_operation', 'profit_asset', 'total_profit'], 0)];
+        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'evaluation_asset'], 0)];
         foreach ($allMonths as $month) {
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
@@ -211,10 +211,20 @@ class ProjectFinancialReport extends Page implements HasForms
                 $data['months'][$month][$key] += $transaction->amount;
             }
         }
-        foreach ($data['months'] as &$monthData) {
+        foreach ($data['months'] as $month => &$monthData) {
+            // Calculate derived metrics
             $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
             $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
             $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            
+            // Calculate new total fields
+            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
+            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
+            
+            // Calculate Evaluation Asset = Total Asset Expenses - Total Asset Revenues + Value Correction
+            $valueCorrection = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
+            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $valueCorrection;
+            
             foreach ($data['totals'] as $key => &$total) {
                 $total += $monthData[$key];
             }
@@ -224,7 +234,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function calculateFinancialSummary($projectsQuery, array $allMonths): array
     {
-        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'expense_operation', 'expense_asset', 'profit_operation', 'profit_asset', 'total_profit', 'evaluation_asset'], 0), 'months' => []];
+        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'evaluation_asset'], 0), 'months' => []];
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
@@ -240,10 +250,23 @@ class ProjectFinancialReport extends Page implements HasForms
                 $summary['months'][$month][$key] += $transaction->amount;
             }
         }
-        foreach ($summary['months'] as &$monthData) {
+        foreach ($summary['months'] as $month => &$monthData) {
+            // Calculate derived metrics
             $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
             $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
             $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            
+            // Calculate new total fields
+            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
+            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
+            
+            // Calculate total evaluation asset for all projects in this month
+            $totalValueCorrection = 0;
+            foreach ($projectKeys as $projectKey) {
+                $totalValueCorrection += \App\Models\ValueCorrection::getCorrectionForMonth($projectKey, $month);
+            }
+            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $totalValueCorrection;
+            
             foreach ($summary['totals'] as $key => &$total) {
                 $total += $monthData[$key];
             }
@@ -293,8 +316,10 @@ class ProjectFinancialReport extends Page implements HasForms
             'evaluation_asset' => 'Evaluation Asset',
             'revenue_operation' => 'Revenue Operation',
             'revenue_asset' => 'Revenue Asset',
+            'revenue_total' => 'Revenue Total',
             'expense_operation' => 'Expense Operation',
             'expense_asset' => 'Expense Asset',
+            'expense_total' => 'Expense Total',
             'profit_operation' => 'Profit Operation',
             'profit_asset' => 'Profit Asset',
             'total_profit' => 'Total Profit',

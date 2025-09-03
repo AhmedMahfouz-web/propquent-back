@@ -23,8 +23,10 @@
                     'evaluation_asset' => 'Evaluation Asset',
                     'revenue_operation' => 'Revenue Operation',
                     'revenue_asset' => 'Revenue Asset',
+                    'revenue_total' => 'Revenue Total',
                     'expense_operation' => 'Expense Operation',
                     'expense_asset' => 'Expense Asset',
+                    'expense_total' => 'Expense Total',
                     'profit_operation' => 'Profit Operation',
                     'profit_asset' => 'Profit Asset',
                     'total_profit' => 'Total Profit',
@@ -38,7 +40,7 @@
                 }
             @endphp
             <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th
@@ -46,7 +48,8 @@
                                 Code
                             </th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10">
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
+                                style="max-width: 220px;">
                                 <button wire:click="sortBy('created_at')" class="flex items-center">
                                     Project
                                     @if ($sortDirection === 'asc')
@@ -82,40 +85,27 @@
                                             <div class="font-mono text-sm">{{ $projectData['key'] }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-12 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                    <td class="px-6 py-4 align-top border-r dark:border-gray-600 sticky left-12 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} project-name-cell">
                                         @if ($loop->first)
-                                            <div class="font-bold text-lg">{{ $projectData['title'] }}</div>
-                                            <div class="text-sm text-gray-500">{{ $projectData['status'] }}</div>
+                                            <div class="font-bold text-sm">{{ $projectData['title'] }}</div>
+                                            <div class="text-xs text-gray-500">{{ $projectData['status'] }}</div>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">{{ $label }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
-                                        @if ($key === 'evaluation_asset')
-                                            @php
-                                                $totalEvaluation = 0;
-                                                foreach ($allMonths as $month) {
-                                                    $totalEvaluation += \App\Models\ProjectEvaluation::getEvaluationForMonth(
-                                                        $projectData['key'],
-                                                        $month,
-                                                    );
-                                                }
-                                            @endphp
-                                            ${{ number_format($totalEvaluation, 2) }}
-                                        @else
-                                            ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
-                                        @endif
+                                        ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
                                     </td>
                                     @foreach ($allMonths as $month)
                                         <td class="px-6 py-4 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                             @if ($key === 'evaluation_asset')
                                                 @livewire(
-                                                    'quick-evaluation-edit',
+                                                    'quick-value-correction-edit',
                                                     [
                                                         'projectKey' => $projectData['key'],
                                                         'month' => $month,
                                                         'projectTitle' => $projectData['title'],
                                                     ],
-                                                    key($projectData['key'] . '-' . $month . '-eval')
+                                                    key($projectData['key'] . '-' . $month . '-correction')
                                                 )
                                             @else
                                                 ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
@@ -152,3 +142,41 @@
         </div>
     </div>
 </x-filament-panels::page>
+
+@push('styles')
+<style>
+    /* Project name column styling */
+    .project-name-cell {
+        max-width: 220px;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+    }
+
+    .project-name-cell::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .project-name-cell::-webkit-scrollbar-track {
+        background: #f7fafc;
+        border-radius: 2px;
+    }
+
+    .project-name-cell::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 2px;
+    }
+
+    .project-name-cell::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .project-name-cell {
+            max-width: 180px;
+        }
+    }
+</style>
+@endpush

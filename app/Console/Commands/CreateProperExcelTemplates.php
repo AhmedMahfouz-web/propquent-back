@@ -29,10 +29,10 @@ class CreateProperExcelTemplates extends Command
                     ['Sarah Johnson', 'sarah.johnson@example.com', 'securepass456', 'local', '', true, '971507654321', 'UAE', '', true, '2024-02-20 14:45:00', 'green', '#10B981', 'inv-101']
                 ]
             ],
-            'project-evaluations-template.xlsx' => [
-                'headings' => ['project_key', 'project_title', 'evaluation_date', 'evaluation_amount', 'notes'],
+            'value-corrections-template.xlsx' => [
+                'headings' => ['project_key', 'project_title', 'correction_date', 'correction_amount', 'notes'],
                 'data' => [
-                    ['PROP-001', '', '2024-01-01', 250000.50, 'Initial evaluation for Q1 2024'],
+                    ['PROP-001', '', '2024-01-01', 250000.50, 'Initial value correction for Q1 2024'],
                     ['', 'Sample Villa Project', '2024-02-01', 275000.75, 'Monthly revaluation - market improvement'],
                     ['PROP-002', '', '2024-01-01', 150000.00, 'Downtown apartment evaluation']
                 ]

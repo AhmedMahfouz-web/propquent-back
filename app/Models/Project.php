@@ -107,6 +107,7 @@ class Project extends Model implements HasMedia
         'title',
         'developer_id',
         'location',
+        'map_location',
         'type',
         'unit_no',
         'project',
@@ -123,6 +124,10 @@ class Project extends Model implements HasMedia
         'exit_date',
         'investment_type',
         'document',
+        'reservation_date',
+        'contract_date',
+        'years_of_installment',
+        'total_contract_value',
     ];
 
     protected $rules = [
@@ -131,10 +136,15 @@ class Project extends Model implements HasMedia
 
     protected $casts = [
         'area' => 'decimal:2',
+        'garden_area' => 'decimal:2',
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
+        'years_of_installment' => 'integer',
+        'total_contract_value' => 'decimal:2',
         'entry_date' => 'date',
         'exit_date' => 'date',
+        'reservation_date' => 'date',
+        'contract_date' => 'date',
     ];
 
     protected static function booted(): void
@@ -184,9 +194,9 @@ class Project extends Model implements HasMedia
     }
 
 
-    public function evaluations(): HasMany
+    public function valueCorrections(): HasMany
     {
-        return $this->hasMany(ProjectEvaluation::class, 'project_key', 'key');
+        return $this->hasMany(ValueCorrection::class, 'project_key', 'key');
     }
 
     /**

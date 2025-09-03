@@ -51,6 +51,11 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('location')
                             ->maxLength(255),
 
+                        Forms\Components\Textarea::make('map_location')
+                            ->label('Map Location')
+                            ->placeholder('Enter map coordinates, address, or location details')
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('type')
                             ->options(fn() => Project::getAvailablePropertyTypes())
                             ->searchable(),
@@ -64,6 +69,12 @@ class ProjectResource extends Resource
                 Forms\Components\Section::make('Property Details')
                     ->schema([
                         Forms\Components\TextInput::make('area')
+                            ->numeric()
+                            ->suffix('sqm')
+                            ->step(0.01),
+
+                        Forms\Components\TextInput::make('garden_area')
+                            ->label('Garden Area')
                             ->numeric()
                             ->suffix('sqm')
                             ->step(0.01),
@@ -95,6 +106,31 @@ class ProjectResource extends Resource
                             ->nullable(),
                     ])
                     ->columns(3),
+
+                Forms\Components\Section::make('Contract Information')
+                    ->schema([
+                        Forms\Components\DatePicker::make('reservation_date')
+                            ->label('Reservation Date')
+                            ->displayFormat('d/m/Y'),
+
+                        Forms\Components\DatePicker::make('contract_date')
+                            ->label('Contract Date')
+                            ->displayFormat('d/m/Y'),
+
+                        Forms\Components\TextInput::make('years_of_installment')
+                            ->label('Years of Installment')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(20)
+                            ->suffix('years'),
+
+                        Forms\Components\TextInput::make('total_contract_value')
+                            ->label('Total Contract Value')
+                            ->numeric()
+                            ->prefix('$')
+                            ->step(0.01),
+                    ])
+                    ->columns(2),
 
                 Forms\Components\Section::make('Project Images')
                     ->schema([
@@ -157,6 +193,12 @@ class ProjectResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
+                Tables\Columns\TextColumn::make('garden_area')
+                    ->label('Garden Area')
+                    ->suffix(' sqm')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('bedrooms')
                     ->sortable()
                     ->toggleable(),
@@ -164,6 +206,24 @@ class ProjectResource extends Resource
                 Tables\Columns\TextColumn::make('bathrooms')
                     ->sortable()
                     ->toggleable(),
+
+                Tables\Columns\TextColumn::make('total_contract_value')
+                    ->label('Contract Value')
+                    ->money('USD')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('reservation_date')
+                    ->label('Reservation')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('years_of_installment')
+                    ->label('Installment Years')
+                    ->suffix(' years')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
