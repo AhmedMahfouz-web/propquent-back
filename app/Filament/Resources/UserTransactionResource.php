@@ -36,7 +36,8 @@ class UserTransactionResource extends Resource
                             ->required()
                             ->columnSpanFull(),
 
-                        Forms\Components\Select::make('type')
+                        Forms\Components\Select::make('transaction_type')
+                            ->label('Type')
                             ->options(fn() => UserTransaction::getAvailableTransactionTypes())
                             ->required(),
 
