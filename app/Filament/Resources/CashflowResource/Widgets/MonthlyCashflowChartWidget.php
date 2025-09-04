@@ -13,7 +13,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '400px';
+    protected static ?string $maxHeight = '600px';
 
     public ?string $filter = '12';
 
@@ -128,6 +128,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
+            'aspectRatio' => 2.5, // Makes chart taller
         ];
     }
 }
