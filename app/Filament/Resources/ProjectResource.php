@@ -51,11 +51,6 @@ class ProjectResource extends Resource
                         Forms\Components\TextInput::make('location')
                             ->maxLength(255),
 
-                        Forms\Components\Textarea::make('map_location')
-                            ->label('Map Location')
-                            ->placeholder('Enter map coordinates, address, or location details')
-                            ->columnSpanFull(),
-
                         Forms\Components\Select::make('type')
                             ->options(fn() => Project::getAvailablePropertyTypes())
                             ->searchable(),
