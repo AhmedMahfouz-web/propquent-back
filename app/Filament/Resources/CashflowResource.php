@@ -1,0 +1,330 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\CashflowResource\Pages;
+use App\Models\Project;
+use App\Models\ProjectTransaction;
+use App\Models\UserTransaction;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
+class CashflowResource extends Resource
+{
+    protected static ?string $model = Project::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+
+    protected static ?string $navigationLabel = 'Cashflow Analysis';
+
+    protected static ?string $modelLabel = 'Cashflow';
+
+    protected static ?string $pluralModelLabel = 'Cashflow Analysis';
+
+    protected static ?int $navigationSort = 6;
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                // This resource is read-only, no form needed
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('key')
+                    ->label('Project Key')
+                    ->searchable()
+                    ->sortable(),
+                
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Project Title')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(30),
+                
+                Tables\Columns\TextColumn::make('developer.name')
+                    ->label('Developer')
+                    ->sortable(),
+                
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'active' => 'success',
+                        'completed' => 'info',
+                        'exited' => 'warning',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+                
+                Tables\Columns\TextColumn::make('total_revenue')
+                    ->label('Total Revenue')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success'),
+                
+                Tables\Columns\TextColumn::make('total_expenses')
+                    ->label('Total Expenses')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('danger'),
+                
+                Tables\Columns\TextColumn::make('net_cashflow')
+                    ->label('Net Cashflow')
+                    ->money('USD')
+                    ->sortable()
+                    ->color(fn ($record) => $record->net_cashflow >= 0 ? 'success' : 'danger'),
+                
+                Tables\Columns\TextColumn::make('unpaid_installments')
+                    ->label('Unpaid Installments')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('warning'),
+                
+                Tables\Columns\TextColumn::make('next_installment_date')
+                    ->label('Next Installment')
+                    ->date()
+                    ->sortable(),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options(Project::getAvailableStatuses()),
+                
+                Tables\Filters\SelectFilter::make('developer')
+                    ->relationship('developer', 'name'),
+                
+                Tables\Filters\Filter::make('date_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('From Date'),
+                        Forms\Components\DatePicker::make('until')
+                            ->label('Until Date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
+                                    $q->where('transaction_date', '>=', $date);
+                                }),
+                            )
+                            ->when(
+                                $data['until'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
+                                    $q->where('transaction_date', '<=', $date);
+                                }),
+                            );
+                    }),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    // No bulk actions for read-only resource
+                ]),
+            ])
+            ->defaultSort('net_cashflow', 'desc')
+            ->poll('30s'); // Auto-refresh every 30 seconds
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListCashflows::route('/'),
+            'view' => Pages\ViewCashflow::route('/{record}'),
+        ];
+    }
+
+    /**
+     * Get optimized cashflow data with performance considerations
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        // Don't cache the query builder itself, just the data
+        return parent::getEloquentQuery()
+            ->with(['developer', 'transactions' => function ($query) {
+                $query->where('status', 'done')
+                      ->select(['id', 'project_key', 'financial_type', 'amount', 'transaction_date', 'due_date', 'status']);
+            }])
+            ->withCount([
+                'transactions as total_revenue' => function ($query) {
+                    $query->where('financial_type', 'revenue')
+                          ->where('status', 'done')
+                          ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as total_expenses' => function ($query) {
+                    $query->where('financial_type', 'expense')
+                          ->where('status', 'done')
+                          ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as unpaid_installments' => function ($query) {
+                    $query->where('status', 'pending')
+                          ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                }
+            ])
+            ->selectRaw('
+                projects.*,
+                (
+                    COALESCE((
+                        SELECT SUM(amount) 
+                        FROM project_transactions 
+                        WHERE project_transactions.project_key = projects.key 
+                        AND financial_type = "revenue" 
+                        AND status = "done"
+                    ), 0) - 
+                    COALESCE((
+                        SELECT SUM(amount) 
+                        FROM project_transactions 
+                        WHERE project_transactions.project_key = projects.key 
+                        AND financial_type = "expense" 
+                        AND status = "done"
+                    ), 0)
+                ) as net_cashflow,
+                (
+                    SELECT MIN(transaction_date)
+                    FROM project_transactions 
+                    WHERE project_transactions.project_key = projects.key 
+                    AND status = "pending"
+                    AND transaction_date > CURDATE()
+                ) as next_installment_date
+            ');
+    }
+
+    /**
+     * Get overall company cashflow summary
+     */
+    public static function getCompanyCashflowSummary(): array
+    {
+        return Cache::remember('company_cashflow_summary', now()->addMinutes(10), function () {
+            // Get project transactions summary - convert to array to avoid PDO serialization
+            $projectSummary = DB::table('project_transactions')
+                ->where('status', 'done')
+                ->selectRaw('
+                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as total_revenue,
+                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as total_expenses
+                ')
+                ->first();
+
+            // Get user transactions summary - convert to array to avoid PDO serialization
+            $userSummary = DB::table('user_transactions')
+                ->where('status', 'done')
+                ->selectRaw('
+                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as total_deposits,
+                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as total_withdrawals
+                ')
+                ->first();
+
+            $totalRevenue = (float) ($projectSummary->total_revenue ?? 0);
+            $totalExpenses = (float) ($projectSummary->total_expenses ?? 0);
+            $totalDeposits = (float) ($userSummary->total_deposits ?? 0);
+            $totalWithdrawals = (float) ($userSummary->total_withdrawals ?? 0);
+
+            $currentAvailableCash = $totalRevenue + $totalDeposits - $totalExpenses - $totalWithdrawals;
+
+            return [
+                'current_available_cash' => (float) $currentAvailableCash,
+                'total_revenue' => $totalRevenue,
+                'total_expenses' => $totalExpenses,
+                'total_deposits' => $totalDeposits,
+                'total_withdrawals' => $totalWithdrawals,
+                'net_project_cashflow' => (float) ($totalRevenue - $totalExpenses),
+                'net_user_cashflow' => (float) ($totalDeposits - $totalWithdrawals),
+            ];
+        });
+    }
+
+    /**
+     * Get monthly cashflow data for chart
+     */
+    public static function getMonthlyCashflowData(int $months = 12): array
+    {
+        return Cache::remember("monthly_cashflow_data_{$months}", now()->addMinutes(15), function () use ($months) {
+            $startDate = now()->subMonths($months)->startOfMonth();
+            $endDate = now()->endOfMonth();
+
+            // Get monthly project transactions - convert to array to avoid PDO serialization
+            $monthlyProjectData = collect(DB::table('project_transactions')
+                ->where('status', 'done')
+                ->whereBetween('transaction_date', [$startDate, $endDate])
+                ->selectRaw('
+                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
+                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
+                ')
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get()
+                ->toArray())
+                ->keyBy('month');
+
+            // Get monthly user transactions - convert to array to avoid PDO serialization
+            $monthlyUserData = collect(DB::table('user_transactions')
+                ->where('status', 'done')
+                ->whereBetween('transaction_date', [$startDate, $endDate])
+                ->selectRaw('
+                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
+                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
+                ')
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get()
+                ->toArray())
+                ->keyBy('month');
+
+            // Generate all months in range
+            $monthlyData = [];
+            $currentMonth = $startDate->copy();
+            $runningBalance = 0;
+
+            while ($currentMonth <= $endDate) {
+                $monthKey = $currentMonth->format('Y-m');
+                
+                $projectData = $monthlyProjectData->get($monthKey);
+                $userData = $monthlyUserData->get($monthKey);
+                
+                $revenue = $projectData->revenue ?? 0;
+                $expenses = $projectData->expenses ?? 0;
+                $deposits = $userData->deposits ?? 0;
+                $withdrawals = $userData->withdrawals ?? 0;
+                
+                $monthlyNet = $revenue + $deposits - $expenses - $withdrawals;
+                $runningBalance += $monthlyNet;
+                
+                $monthlyData[] = [
+                    'month' => $monthKey,
+                    'month_label' => $currentMonth->format('M Y'),
+                    'revenue' => (float) $revenue,
+                    'expenses' => (float) $expenses,
+                    'deposits' => (float) $deposits,
+                    'withdrawals' => (float) $withdrawals,
+                    'monthly_net' => (float) $monthlyNet,
+                    'running_balance' => (float) $runningBalance,
+                ];
+                
+                $currentMonth->addMonth();
+            }
+
+            return $monthlyData;
+        });
+    }
+}

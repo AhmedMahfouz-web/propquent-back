@@ -26,6 +26,11 @@ class Developer extends Model
         return $this->hasMany(Project::class);
     }
 
+    public function compounds(): HasMany
+    {
+        return $this->hasMany(Compound::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
