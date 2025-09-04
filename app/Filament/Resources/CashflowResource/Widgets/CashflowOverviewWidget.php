@@ -8,6 +8,10 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class CashflowOverviewWidget extends BaseWidget
 {
+    protected int | string | array $columnSpan = [
+        'md' => 1,
+        'xl' => 2,
+    ];
     protected function getStats(): array
     {
         $summary = CashflowResource::getCompanyCashflowSummary();
