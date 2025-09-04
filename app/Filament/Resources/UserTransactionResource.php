@@ -36,8 +36,7 @@ class UserTransactionResource extends Resource
                             ->required()
                             ->columnSpanFull(),
 
-                        Forms\Components\Select::make('transaction_type')
-                            ->label('Transaction Type')
+                        Forms\Components\Select::make('type')
                             ->options(fn() => UserTransaction::getAvailableTransactionTypes())
                             ->required(),
 
@@ -104,14 +103,10 @@ class UserTransactionResource extends Resource
                     ->toggleable()
                     ->limit(30),
 
-                Tables\Columns\BadgeColumn::make('transaction_type')
-                    ->label('Type')
+                Tables\Columns\BadgeColumn::make('type')
                     ->colors([
                         'success' => 'deposit',
                         'danger' => 'withdraw',
-                        'info' => 'investment',
-                        'warning' => 'dividend',
-                        'gray' => 'fee',
                     ])
                     ->searchable(),
 
@@ -150,10 +145,9 @@ class UserTransactionResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
-                        'warning' => ['pending', 'on_hold'],
-                        'info' => 'processing',
-                        'success' => 'done',
-                        'danger' => ['cancelled', 'failed'],
+                        'warning' => 'pending',
+                        'success' => 'completed',
+                        'danger' => 'cancelled',
                     ])
                     ->sortable(),
 
@@ -182,8 +176,7 @@ class UserTransactionResource extends Resource
                     ->searchable()
                     ->preload(),
 
-                Tables\Filters\SelectFilter::make('transaction_type')
-                    ->label('Transaction Type')
+                Tables\Filters\SelectFilter::make('type')
                     ->options(fn() => UserTransaction::getAvailableTransactionTypes()),
 
                 Tables\Filters\SelectFilter::make('status')
@@ -282,7 +275,7 @@ class UserTransactionResource extends Resource
                         ->color('success')
                         ->action(function ($records) {
                             $records->each(function ($record) {
-                                $record->update(['status' => 'done']);
+                                $record->update(['status' => 'completed']);
                             });
                         })
                         ->requiresConfirmation(),

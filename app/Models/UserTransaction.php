@@ -11,9 +11,11 @@ class UserTransaction extends Model
     use HasFactory;
 
     /**
-     * Legacy constants - kept for backward compatibility
-     * Use database-driven values instead
+     * Transaction types - restricted to deposit and withdrawal only
      */
+    const TYPE_DEPOSIT = 'deposit';
+    const TYPE_WITHDRAWAL = 'withdraw';
+
 
     protected static function booted(): void
     {
@@ -113,51 +115,27 @@ class UserTransaction extends Model
     }
 
     /**
-     * Get available transaction types from database
+     * Get available transaction types
      */
     public static function getAvailableTransactionTypes(): array
     {
-        return UserTransactionType::getOptions();
+        return [
+            self::TYPE_DEPOSIT => 'Deposit',
+            self::TYPE_WITHDRAWAL => 'Withdrawal',
+        ];
     }
 
     /**
-     * Get available statuses from database
+     * Get available statuses
      */
     public static function getAvailableStatuses(): array
     {
-        return UserTransactionStatus::getOptions();
+        return SystemConfiguration::getOptions('transaction_statuses');
     }
 
-    /**
-     * Check if transaction type is valid
-     */
-    public static function isValidTransactionType(string $type): bool
-    {
-        return UserTransactionType::isValidKey($type);
-    }
-
-    /**
-     * Check if status is valid
-     */
     public static function isValidStatus(string $status): bool
     {
-        return UserTransactionStatus::isValidKey($status);
-    }
-
-    /**
-     * Get transaction type relationship
-     */
-    public function transactionType(): BelongsTo
-    {
-        return $this->belongsTo(UserTransactionType::class, 'transaction_type', 'key');
-    }
-
-    /**
-     * Get status relationship
-     */
-    public function transactionStatus(): BelongsTo
-    {
-        return $this->belongsTo(UserTransactionStatus::class, 'status', 'key');
+        return array_key_exists($status, self::getAvailableStatuses());
     }
 
     /**
