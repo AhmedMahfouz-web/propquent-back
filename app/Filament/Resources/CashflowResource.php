@@ -22,9 +22,11 @@ class CashflowResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static ?string $navigationLabel = 'Cashflow Analysis';
-
     protected static ?string $modelLabel = 'Cashflow';
+
+    protected static ?string $navigationGroup = 'Financial Reports';
+
+    protected static ?string $title = 'Cashflow Analysis';
 
     protected static ?string $pluralModelLabel = 'Cashflow Analysis';
 
@@ -46,52 +48,52 @@ class CashflowResource extends Resource
                     ->label('Project Key')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('title')
                     ->label('Project Title')
                     ->searchable()
                     ->sortable()
                     ->limit(30),
-                
+
                 Tables\Columns\TextColumn::make('developer.name')
                     ->label('Developer')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'active' => 'success',
                         'completed' => 'info',
                         'exited' => 'warning',
                         'cancelled' => 'danger',
                         default => 'gray',
                     }),
-                
+
                 Tables\Columns\TextColumn::make('total_revenue')
                     ->label('Total Revenue')
                     ->money('USD')
                     ->sortable()
                     ->color('success'),
-                
+
                 Tables\Columns\TextColumn::make('total_expenses')
                     ->label('Total Expenses')
                     ->money('USD')
                     ->sortable()
                     ->color('danger'),
-                
+
                 Tables\Columns\TextColumn::make('net_cashflow')
                     ->label('Net Cashflow')
                     ->money('USD')
                     ->sortable()
-                    ->color(fn ($record) => $record->net_cashflow >= 0 ? 'success' : 'danger'),
-                
+                    ->color(fn($record) => $record->net_cashflow >= 0 ? 'success' : 'danger'),
+
                 Tables\Columns\TextColumn::make('unpaid_installments')
                     ->label('Unpaid Installments')
                     ->money('USD')
                     ->sortable()
                     ->color('warning'),
-                
+
                 Tables\Columns\TextColumn::make('next_installment_date')
                     ->label('Next Installment')
                     ->date()
@@ -100,10 +102,10 @@ class CashflowResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options(Project::getAvailableStatuses()),
-                
+
                 Tables\Filters\SelectFilter::make('developer')
                     ->relationship('developer', 'name'),
-                
+
                 Tables\Filters\Filter::make('date_range')
                     ->form([
                         Forms\Components\DatePicker::make('from')
@@ -115,13 +117,13 @@ class CashflowResource extends Resource
                         return $query
                             ->when(
                                 $data['from'],
-                                fn (Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
+                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
                                     $q->where('transaction_date', '>=', $date);
                                 }),
                             )
                             ->when(
                                 $data['until'],
-                                fn (Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
+                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
                                     $q->where('transaction_date', '<=', $date);
                                 }),
                             );
@@ -163,46 +165,46 @@ class CashflowResource extends Resource
         return parent::getEloquentQuery()
             ->with(['developer', 'transactions' => function ($query) {
                 $query->where('status', 'done')
-                      ->select(['id', 'project_key', 'financial_type', 'amount', 'transaction_date', 'due_date', 'status']);
+                    ->select(['id', 'project_key', 'financial_type', 'amount', 'transaction_date', 'due_date', 'status']);
             }])
             ->withCount([
                 'transactions as total_revenue' => function ($query) {
                     $query->where('financial_type', 'revenue')
-                          ->where('status', 'done')
-                          ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                        ->where('status', 'done')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
                 'transactions as total_expenses' => function ($query) {
                     $query->where('financial_type', 'expense')
-                          ->where('status', 'done')
-                          ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                        ->where('status', 'done')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
                 'transactions as unpaid_installments' => function ($query) {
                     $query->where('status', 'pending')
-                          ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 }
             ])
             ->selectRaw('
                 projects.*,
                 (
                     COALESCE((
-                        SELECT SUM(amount) 
-                        FROM project_transactions 
-                        WHERE project_transactions.project_key = projects.key 
-                        AND financial_type = "revenue" 
+                        SELECT SUM(amount)
+                        FROM project_transactions
+                        WHERE project_transactions.project_key = projects.key
+                        AND financial_type = "revenue"
                         AND status = "done"
-                    ), 0) - 
+                    ), 0) -
                     COALESCE((
-                        SELECT SUM(amount) 
-                        FROM project_transactions 
-                        WHERE project_transactions.project_key = projects.key 
-                        AND financial_type = "expense" 
+                        SELECT SUM(amount)
+                        FROM project_transactions
+                        WHERE project_transactions.project_key = projects.key
+                        AND financial_type = "expense"
                         AND status = "done"
                     ), 0)
                 ) as net_cashflow,
                 (
                     SELECT MIN(transaction_date)
-                    FROM project_transactions 
-                    WHERE project_transactions.project_key = projects.key 
+                    FROM project_transactions
+                    WHERE project_transactions.project_key = projects.key
                     AND status = "pending"
                     AND transaction_date > CURDATE()
                 ) as next_installment_date
@@ -298,18 +300,18 @@ class CashflowResource extends Resource
 
             while ($currentMonth <= $endDate) {
                 $monthKey = $currentMonth->format('Y-m');
-                
+
                 $projectData = $monthlyProjectData->get($monthKey);
                 $userData = $monthlyUserData->get($monthKey);
-                
+
                 $revenue = $projectData->revenue ?? 0;
                 $expenses = $projectData->expenses ?? 0;
                 $deposits = $userData->deposits ?? 0;
                 $withdrawals = $userData->withdrawals ?? 0;
-                
+
                 $monthlyNet = $revenue + $deposits - $expenses - $withdrawals;
                 $runningBalance += $monthlyNet;
-                
+
                 $monthlyData[] = [
                     'month' => $monthKey,
                     'month_label' => $currentMonth->format('M Y'),
@@ -320,7 +322,7 @@ class CashflowResource extends Resource
                     'monthly_net' => (float) $monthlyNet,
                     'running_balance' => (float) $runningBalance,
                 ];
-                
+
                 $currentMonth->addMonth();
             }
 
