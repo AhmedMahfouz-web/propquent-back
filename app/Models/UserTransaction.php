@@ -143,14 +143,6 @@ class UserTransaction extends Model
      */
     public static function getAvailableMethods(): array
     {
-        return [
-            'bank_transfer' => 'Bank Transfer',
-            'credit_card' => 'Credit Card',
-            'cash' => 'Cash',
-            'cheque' => 'Cheque',
-            'wire_transfer' => 'Wire Transfer',
-            'paypal' => 'PayPal',
-            'stripe' => 'Stripe',
-        ];
+        return SystemConfiguration::getOptions('transaction_methods');
     }
 }
