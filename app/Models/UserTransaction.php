@@ -11,17 +11,9 @@ class UserTransaction extends Model
     use HasFactory;
 
     /**
-     * Transaction types - restricted to deposit and withdrawal only
+     * Legacy constants - kept for backward compatibility
+     * Use database-driven values instead
      */
-    const TYPE_DEPOSIT = 'deposit';
-    const TYPE_WITHDRAWAL = 'withdraw';
-
-    /**
-     * Transaction statuses
-     */
-    const STATUS_DONE = 'done';
-    const STATUS_PENDING = 'pending';
-    const STATUS_CANCELLED = 'cancelled';
 
     protected static function booted(): void
     {
@@ -121,26 +113,51 @@ class UserTransaction extends Model
     }
 
     /**
-     * Get available transaction types
+     * Get available transaction types from database
      */
     public static function getAvailableTransactionTypes(): array
     {
-        return [
-            self::TYPE_DEPOSIT => 'Deposit',
-            self::TYPE_WITHDRAWAL => 'Withdrawal',
-        ];
+        return UserTransactionType::getOptions();
     }
 
     /**
-     * Get available statuses
+     * Get available statuses from database
      */
     public static function getAvailableStatuses(): array
     {
-        return [
-            self::STATUS_PENDING => 'Pending',
-            self::STATUS_DONE => 'Done',
-            self::STATUS_CANCELLED => 'Cancelled',
-        ];
+        return UserTransactionStatus::getOptions();
+    }
+
+    /**
+     * Check if transaction type is valid
+     */
+    public static function isValidTransactionType(string $type): bool
+    {
+        return UserTransactionType::isValidKey($type);
+    }
+
+    /**
+     * Check if status is valid
+     */
+    public static function isValidStatus(string $status): bool
+    {
+        return UserTransactionStatus::isValidKey($status);
+    }
+
+    /**
+     * Get transaction type relationship
+     */
+    public function transactionType(): BelongsTo
+    {
+        return $this->belongsTo(UserTransactionType::class, 'transaction_type', 'key');
+    }
+
+    /**
+     * Get status relationship
+     */
+    public function transactionStatus(): BelongsTo
+    {
+        return $this->belongsTo(UserTransactionStatus::class, 'status', 'key');
     }
 
     /**
