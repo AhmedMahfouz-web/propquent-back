@@ -82,10 +82,18 @@
     $userTransactions = App\Models\UserTransaction::query()
         ->select(
             DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
-            DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as total_deposits"),
-            DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
+            DB::raw(
+                "SUM(CASE WHEN transaction_type = '" .
+                    App\Models\UserTransaction::TYPE_DEPOSIT .
+                    "' THEN amount ELSE 0 END) as total_deposits",
+            ),
+            DB::raw(
+                "SUM(CASE WHEN transaction_type = '" .
+                    App\Models\UserTransaction::TYPE_WITHDRAWAL .
+                    "' THEN amount ELSE 0 END) as total_withdrawals",
+            ),
         )
-        ->where('status', UserTransaction::STATUS_DONE)
+        ->where('status', App\Models\UserTransaction::STATUS_DONE)
         ->whereBetween('transaction_date', [
             $monthsToShow->last(), // Earliest month
             Illuminate\Support\Carbon::parse($monthsToShow->first())->endOfMonth(), // End of the latest month

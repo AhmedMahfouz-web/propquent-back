@@ -389,8 +389,7 @@ class UserFinancialReport extends Page implements HasForms
             if ($monthsToShow->contains($month)) {
                 $userData['deposits'][$month] = $transaction->deposits;
                 $userData['withdrawals'][$month] = $transaction->withdrawals;
-                $userData['equity'][$month] = $transaction->equity;
-                $userData['equity_percentage'][$month] = $transaction->equity_percentage;
+                $userData['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
             }
         }
         // foreach (array_reverse($monthsToShow) as $month) {
