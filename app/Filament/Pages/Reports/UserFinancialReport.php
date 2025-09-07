@@ -372,9 +372,9 @@ class UserFinancialReport extends Page implements HasForms
         //     }
         // }
         // Process months in chronological order (oldest first) for proper equity calculation
-        $monthsInOrder = array_reverse($monthsToShow); // Since $monthsToShow is newest first, reverse it
-        
-        foreach ($monthsInOrder as $month) {
+        // Since $monthsToShow is newest first, reverse it
+
+        foreach ($monthsToShow as $month) {
             $deposits = $userTransactionsData[$month]->deposits ?? 0;
             $withdrawals = $userTransactionsData[$month]->withdrawals ?? 0;
 
