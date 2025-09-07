@@ -349,7 +349,8 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->where('user_id', $user->id)
             ->where('status', UserTransaction::STATUS_DONE)
-            ->groupBy('month_date');
+            ->groupBy('month_date')
+            ->get();
 
         // Only apply date filter if we have months to filter by
         if (!empty($monthsToShow)) {
@@ -378,33 +379,33 @@ class UserFinancialReport extends Page implements HasForms
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
         $previousEquityPercentage = 0;
-        $monthsToShow = UserTransaction::query()
-            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
-            ->distinct()
-            ->orderBy('month_date', 'asc')
-            ->pluck('month_date')
-            ->toArray();
-        foreach ($userTransactionsData as $transaction) {
-            $month = $transaction->month_date;
-            if ($monthsToShow->contains($month)) {
-                $userData['deposits'][$month] = $transaction->deposits;
-                $userData['withdrawals'][$month] = $transaction->withdrawals;
-                $userData['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
-            }
-        }
-        // foreach (array_reverse($monthsToShow) as $month) {
-        //     $deposits = $userTransactionsData[$month]->deposits ?? 0;
-        //     $withdrawals = $userTransactionsData[$month]->withdrawals ?? 0;
-
-        //     $userData['deposits'][$month] = $deposits;
-        //     $userData['withdrawals'][$month] = $withdrawals;
-
-        //     // Simplified equity calculation
-        //     $userData['equity'][$month] = $deposits + $previousEquity - $withdrawals;
-        //     $userData['equity_percentage'][$month] = $previousEquityPercentage; // Simplified
-
-        //     $previousEquity = $userData['equity'][$month];
+        // $monthsToShow = UserTransaction::query()
+        //     ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        //     ->distinct()
+        //     ->orderBy('month_date', 'asc')
+        //     ->pluck('month_date')
+        //     ->toArray();
+        // foreach ($userTransactionsData as $transaction) {
+        //     $month = $transaction->month_date;
+        //     if ($monthsToShow->contains($month)) {
+        //         $userData['deposits'][$month] = $transaction->deposits;
+        //         $userData['withdrawals'][$month] = $transaction->withdrawals;
+        //         $userData['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
+        //     }
         // }
+        foreach (array_reverse($monthsToShow) as $month) {
+            $deposits = $userTransactionsData[$month]->deposits ?? 0;
+            $withdrawals = $userTransactionsData[$month]->withdrawals ?? 0;
+
+            $userData['deposits'][$month] = $deposits;
+            $userData['withdrawals'][$month] = $withdrawals;
+
+            // Simplified equity calculation
+            $userData['equity'][$month] = $deposits + $previousEquity - $withdrawals;
+            $userData['equity_percentage'][$month] = $previousEquityPercentage; // Simplified
+
+            $previousEquity = $userData['equity'][$month];
+        }
 
         return $userData;
     }
