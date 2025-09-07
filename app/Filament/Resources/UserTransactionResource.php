@@ -104,7 +104,8 @@ class UserTransactionResource extends Resource
                     ->toggleable()
                     ->limit(30),
 
-                Tables\Columns\BadgeColumn::make('type')
+                Tables\Columns\TextColumn::make('type')
+                    ->badge()
                     ->colors([
                         'success' => 'deposit',
                         'danger' => 'withdraw',
