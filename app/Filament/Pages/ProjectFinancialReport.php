@@ -128,7 +128,9 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function refreshReportData(): void
     {
-        unset($this->computedPropertyCache['reportData']);
+        // Force refresh by resetting the ready state
+        $this->readyToLoad = false;
+        $this->readyToLoad = true;
         Notification::make()->title('Report Updated')->success()->send();
     }
 
