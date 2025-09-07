@@ -360,22 +360,6 @@ class UserFinancialReport extends Page implements HasForms
             ]);
         }
 
-        // Debug: Log the query
-        \Log::info('UserFinancialReport Query:', [
-            'sql' => $userTransactionsQuery->toSql(),
-            'bindings' => $userTransactionsQuery->getBindings(),
-            'user_id' => $user->id,
-            'months_to_show' => $monthsToShow
-        ]);
-
-        $userTransactionsData = $userTransactionsQuery->get()->keyBy('month_date');
-
-        // Debug: Log the results
-        \Log::info('UserFinancialReport Results:', [
-            'count' => $userTransactionsData->count(),
-            'data' => $userTransactionsData->toArray()
-        ]);
-
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
         $previousEquityPercentage = 0;
