@@ -360,6 +360,9 @@ class UserFinancialReport extends Page implements HasForms
             ]);
         }
 
+        $userTransactionsData = $userTransactionsQuery->get()->keyBy('month_date');
+
+
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
         $previousEquityPercentage = 0;
