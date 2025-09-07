@@ -183,6 +183,11 @@ class Project extends Model implements HasMedia
         return $this->belongsTo(Developer::class);
     }
 
+    public function compound(): BelongsTo
+    {
+        return $this->belongsTo(Compound::class);
+    }
+
     public function transactions(): HasMany
     {
         return $this->hasMany(ProjectTransaction::class, 'project_key', 'key');
