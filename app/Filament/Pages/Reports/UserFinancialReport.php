@@ -371,15 +371,18 @@ class UserFinancialReport extends Page implements HasForms
         //         $userData['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
         //     }
         // }
-        foreach (array_reverse($monthsToShow) as $month) {
+        // Process months in chronological order (oldest first) for proper equity calculation
+        $monthsInOrder = array_reverse($monthsToShow); // Since $monthsToShow is newest first, reverse it
+        
+        foreach ($monthsInOrder as $month) {
             $deposits = $userTransactionsData[$month]->deposits ?? 0;
             $withdrawals = $userTransactionsData[$month]->withdrawals ?? 0;
 
             $userData['deposits'][$month] = $deposits;
             $userData['withdrawals'][$month] = $withdrawals;
 
-            // Simplified equity calculation
-            $userData['equity'][$month] = $deposits + $previousEquity - $withdrawals;
+            // Calculate equity: previous equity + deposits - withdrawals
+            $userData['equity'][$month] = $previousEquity + $deposits - $withdrawals;
             $userData['equity_percentage'][$month] = $previousEquityPercentage; // Simplified
 
             $previousEquity = $userData['equity'][$month];
