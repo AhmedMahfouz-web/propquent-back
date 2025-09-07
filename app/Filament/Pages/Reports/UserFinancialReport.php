@@ -383,9 +383,18 @@ class UserFinancialReport extends Page implements HasForms
 
             // Calculate equity: previous equity + deposits - withdrawals
             $userData['equity'][$month] = $previousEquity + $deposits - $withdrawals;
-            $userData['equity_percentage'][$month] = $previousEquityPercentage; // Simplified
+
+            // Calculate equity percentage (growth from previous month)
+            if ($previousEquity > 0) {
+                $equityGrowth = $userData['equity'][$month] - $previousEquity;
+                $userData['equity_percentage'][$month] = ($equityGrowth / $previousEquity) * 100;
+            } else {
+                // First month or when previous equity is 0
+                $userData['equity_percentage'][$month] = $userData['equity'][$month] > 0 ? 100 : 0;
+            }
 
             $previousEquity = $userData['equity'][$month];
+            $previousEquityPercentage = $userData['equity_percentage'][$month];
         }
 
         return $userData;
