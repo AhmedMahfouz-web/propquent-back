@@ -58,6 +58,7 @@ class ProjectResource extends Resource
                             ->maxLength(255),
 
                         Forms\Components\TextInput::make('map_location')
+                            ->tagSuffix('https://')
                             ->maxLength(255),
 
                         Forms\Components\Select::make('type')
