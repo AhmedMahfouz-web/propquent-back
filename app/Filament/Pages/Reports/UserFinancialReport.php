@@ -340,8 +340,8 @@ class UserFinancialReport extends Page implements HasForms
             $userData['profit_operation'][$month] = 0;
         }
 
-        // Get user transactions
-        $userTransactionsQuery = UserTransaction::query()
+        // Get user transactions - simplified approach matching company report
+        $userTransactionsData = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits"),
@@ -350,17 +350,8 @@ class UserFinancialReport extends Page implements HasForms
             ->where('user_id', $user->id)
             ->where('status', UserTransaction::STATUS_DONE)
             ->groupBy('month_date')
-            ->get();
-
-        // Only apply date filter if we have months to filter by
-        if (!empty($monthsToShow)) {
-            $userTransactionsQuery->whereBetween('transaction_date', [
-                Carbon::parse(end($monthsToShow))->startOfMonth(),
-                Carbon::parse($monthsToShow[0])->endOfMonth(),
-            ]);
-        }
-
-        $userTransactionsData = $userTransactionsQuery->get()->keyBy('month_date');
+            ->get()
+            ->keyBy('month_date');
 
 
         // Calculate equity and profits (simplified version)
