@@ -378,20 +378,34 @@ class UserFinancialReport extends Page implements HasForms
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
         $previousEquityPercentage = 0;
-
-        foreach (array_reverse($monthsToShow) as $month) {
-            $deposits = $userTransactionsData[$month]->deposits ?? 0;
-            $withdrawals = $userTransactionsData[$month]->withdrawals ?? 0;
-
-            $userData['deposits'][$month] = $deposits;
-            $userData['withdrawals'][$month] = $withdrawals;
-
-            // Simplified equity calculation
-            $userData['equity'][$month] = $deposits + $previousEquity - $withdrawals;
-            $userData['equity_percentage'][$month] = $previousEquityPercentage; // Simplified
-
-            $previousEquity = $userData['equity'][$month];
+        $monthsToShow = UserTransaction::query()
+            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+            ->distinct()
+            ->orderBy('month_date', 'asc')
+            ->pluck('month_date')
+            ->toArray();
+        foreach ($userTransactionsData as $transaction) {
+            $month = $transaction->month_date;
+            if ($monthsToShow->contains($month)) {
+                $userData['deposits'][$month] = $transaction->deposits;
+                $userData['withdrawals'][$month] = $transaction->withdrawals;
+                $userData['equity'][$month] = $transaction->equity;
+                $userData['equity_percentage'][$month] = $transaction->equity_percentage;
+            }
         }
+        // foreach (array_reverse($monthsToShow) as $month) {
+        //     $deposits = $userTransactionsData[$month]->deposits ?? 0;
+        //     $withdrawals = $userTransactionsData[$month]->withdrawals ?? 0;
+
+        //     $userData['deposits'][$month] = $deposits;
+        //     $userData['withdrawals'][$month] = $withdrawals;
+
+        //     // Simplified equity calculation
+        //     $userData['equity'][$month] = $deposits + $previousEquity - $withdrawals;
+        //     $userData['equity_percentage'][$month] = $previousEquityPercentage; // Simplified
+
+        //     $previousEquity = $userData['equity'][$month];
+        // }
 
         return $userData;
     }
