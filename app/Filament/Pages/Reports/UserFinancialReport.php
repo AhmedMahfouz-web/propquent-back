@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserTransaction;
 use App\Models\ProjectTransaction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -343,22 +344,36 @@ class UserFinancialReport extends Page implements HasForms
         $userTransactionsQuery = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
-                DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits"),
-                DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals"),
+                DB::raw("SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) as deposits"),
+                DB::raw("SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) as withdrawals"),
             )
             ->where('user_id', $user->id)
-            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('status', 'done')
             ->groupBy('month_date');
 
         // Only apply date filter if we have months to filter by
         if (!empty($monthsToShow)) {
             $userTransactionsQuery->whereBetween('transaction_date', [
-                end($monthsToShow),
+                Carbon::parse(end($monthsToShow))->startOfMonth(),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ]);
         }
 
+        // Debug: Log the query
+        \Log::info('UserFinancialReport Query:', [
+            'sql' => $userTransactionsQuery->toSql(),
+            'bindings' => $userTransactionsQuery->getBindings(),
+            'user_id' => $user->id,
+            'months_to_show' => $monthsToShow
+        ]);
+        
         $userTransactionsData = $userTransactionsQuery->get()->keyBy('month_date');
+        
+        // Debug: Log the results
+        \Log::info('UserFinancialReport Results:', [
+            'count' => $userTransactionsData->count(),
+            'data' => $userTransactionsData->toArray()
+        ]);
 
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
