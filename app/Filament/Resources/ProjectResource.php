@@ -48,7 +48,7 @@ class ProjectResource extends Resource
                             ->preload()
                             ->required(),
 
-                        Forms\Components\TextInput::make('compound_id')
+                        Forms\Components\Select::make('compound_id')
                             ->relationship('compound', 'name')
                             ->searchable()
                             ->preload()
