@@ -197,7 +197,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function getProjectFinancialData(Project $project, array $allMonths): array
     {
-        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'evaluation_asset'], 0)];
+        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset'], 0)];
         foreach ($allMonths as $month) {
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
@@ -221,9 +221,11 @@ class ProjectFinancialReport extends Page implements HasForms
             $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
             $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
             
+            // Get Value Correction from database
+            $monthData['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
+            
             // Calculate Evaluation Asset = Total Asset Expenses - Total Asset Revenues + Value Correction
-            $valueCorrection = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
-            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $valueCorrection;
+            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
             
             foreach ($data['totals'] as $key => &$total) {
                 $total += $monthData[$key];
@@ -234,7 +236,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function calculateFinancialSummary($projectsQuery, array $allMonths): array
     {
-        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'evaluation_asset'], 0), 'months' => []];
+        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset'], 0), 'months' => []];
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
@@ -260,12 +262,14 @@ class ProjectFinancialReport extends Page implements HasForms
             $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
             $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
             
-            // Calculate total evaluation asset for all projects in this month
-            $totalValueCorrection = 0;
+            // Calculate total value correction for all projects in this month
+            $monthData['value_correction'] = 0;
             foreach ($projectKeys as $projectKey) {
-                $totalValueCorrection += \App\Models\ValueCorrection::getCorrectionForMonth($projectKey, $month);
+                $monthData['value_correction'] += \App\Models\ValueCorrection::getCorrectionForMonth($projectKey, $month);
             }
-            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $totalValueCorrection;
+            
+            // Calculate total evaluation asset for all projects in this month
+            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
             
             foreach ($summary['totals'] as $key => &$total) {
                 $total += $monthData[$key];
@@ -313,6 +317,7 @@ class ProjectFinancialReport extends Page implements HasForms
     private function getAvailableMetrics(): array
     {
         return [
+            'value_correction' => 'Value Correction',
             'evaluation_asset' => 'Evaluation Asset',
             'revenue_operation' => 'Revenue Operation',
             'revenue_asset' => 'Revenue Asset',

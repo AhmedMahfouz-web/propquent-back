@@ -20,6 +20,7 @@
 
                 // Filter metrics based on selection
                 $availableMetrics = [
+                    'value_correction' => 'Value Correction',
                     'evaluation_asset' => 'Evaluation Asset',
                     'revenue_operation' => 'Revenue Operation',
                     'revenue_asset' => 'Revenue Asset',
@@ -97,7 +98,7 @@
                                     </td>
                                     @foreach ($allMonths as $month)
                                         <td class="px-6 py-4 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
-                                            @if ($key === 'evaluation_asset')
+                                            @if ($key === 'value_correction')
                                                 @livewire(
                                                     'quick-value-correction-edit',
                                                     [
@@ -107,6 +108,11 @@
                                                     ],
                                                     key($projectData['key'] . '-' . $month . '-correction')
                                                 )
+                                            @elseif ($key === 'evaluation_asset')
+                                                <span class="font-medium text-gray-700 dark:text-gray-300">
+                                                    ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
+                                                </span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 block">(Calculated)</span>
                                             @else
                                                 ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                             @endif
