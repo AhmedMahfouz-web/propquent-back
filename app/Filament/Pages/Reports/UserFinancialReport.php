@@ -353,10 +353,11 @@ class UserFinancialReport extends Page implements HasForms
             ->get()
             ->keyBy('month_date');
 
+        // Calculate company total equity for each month (cash + evaluation)
+        $companyTotalEquity = $this->calculateCompanyTotalEquity($monthsToShow, $companyData);
 
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
-        $previousEquityPercentage = 0;
         // $monthsToShow = UserTransaction::query()
         //     ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
         //     ->distinct()
@@ -384,20 +385,102 @@ class UserFinancialReport extends Page implements HasForms
             // Calculate equity: previous equity + deposits - withdrawals
             $userData['equity'][$month] = $previousEquity + $deposits - $withdrawals;
 
-            // Calculate equity percentage (growth from previous month)
-            if ($previousEquity > 0) {
-                $equityGrowth = $userData['equity'][$month] - $previousEquity;
-                $userData['equity_percentage'][$month] = ($equityGrowth / $previousEquity) * 100;
+            // Calculate equity percentage: investor equity / total company equity * 100
+            $totalEquity = $companyTotalEquity[$month] ?? 0;
+            if ($totalEquity > 0) {
+                $userData['equity_percentage'][$month] = ($userData['equity'][$month] / $totalEquity) * 100;
             } else {
-                // First month or when previous equity is 0
-                $userData['equity_percentage'][$month] = $userData['equity'][$month] > 0 ? 100 : 0;
+                $userData['equity_percentage'][$month] = 0;
             }
 
             $previousEquity = $userData['equity'][$month];
-            $previousEquityPercentage = $userData['equity_percentage'][$month];
         }
 
         return $userData;
+    }
+
+    /**
+     * Calculate company total equity for each month (cash + evaluation)
+     */
+    private function calculateCompanyTotalEquity(array $monthsToShow, array $companyData): array
+    {
+        $reportData = $companyData['reportData'];
+        $monthlyTotals = $companyData['monthlyTotals'];
+        
+        // Calculate user financials (deposits/withdrawals)
+        $userFinancials = ['deposits' => [], 'withdrawals' => [], 'net' => []];
+        
+        // Initialize all months with zero
+        foreach ($monthsToShow as $month) {
+            $userFinancials['deposits'][$month] = 0;
+            $userFinancials['withdrawals'][$month] = 0;
+            $userFinancials['net'][$month] = 0;
+        }
+        
+        $userTransactions = UserTransaction::query()
+            ->select(
+                DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
+                DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as total_deposits"),
+                DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
+            )
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->whereBetween('transaction_date', [
+                end($monthsToShow),
+                Carbon::parse($monthsToShow[0])->endOfMonth(),
+            ])
+            ->groupBy('month_date')
+            ->get();
+
+        foreach ($userTransactions as $transaction) {
+            $month = $transaction->month_date;
+            if (in_array($month, $monthsToShow)) {
+                $userFinancials['deposits'][$month] = $transaction->total_deposits;
+                $userFinancials['withdrawals'][$month] = $transaction->total_withdrawals;
+                $userFinancials['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
+            }
+        }
+
+        // Calculate Evaluation (Expense - Revenue for each serving)
+        $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
+        
+        // Initialize evaluation arrays
+        foreach ($monthsToShow as $month) {
+            $evaluation['asset'][$month] = 0;
+            $evaluation['operation'][$month] = 0;
+            $evaluation['total'][$month] = 0;
+        }
+
+        // Calculate evaluation for each serving
+        foreach (['asset', 'operation'] as $serving) {
+            foreach ($monthsToShow as $month) {
+                $expense = $reportData['expense'][$serving][$month] ?? 0;
+                $revenue = $reportData['revenue'][$serving][$month] ?? 0;
+                $evaluation[$serving][$month] = $expense - $revenue;
+                $evaluation['total'][$month] += $evaluation[$serving][$month];
+            }
+        }
+
+        // Calculate Cash
+        $cash = [];
+        $previousMonthCash = 0;
+
+        foreach (array_reverse($monthsToShow) as $month) {
+            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+            $expense = $monthlyTotals['expense'][$month] ?? 0;
+            $deposits = $userFinancials['deposits'][$month] ?? 0;
+            $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
+
+            $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+            $previousMonthCash = $cash[$month];
+        }
+
+        // Calculate Total Equity (Cash + Evaluation)
+        $equityTotal = [];
+        foreach ($monthsToShow as $month) {
+            $equityTotal[$month] = ($evaluation['total'][$month] ?? 0) + ($cash[$month] ?? 0);
+        }
+
+        return $equityTotal;
     }
 
     /**
