@@ -109,9 +109,11 @@ class CashflowResource extends Resource
                 Tables\Filters\Filter::make('date_range')
                     ->form([
                         Forms\Components\DatePicker::make('from')
-                            ->label('From Date'),
+                            ->label('From Date')
+                            ->default(now()->format('Y-m-d')),
                         Forms\Components\DatePicker::make('until')
-                            ->label('Until Date'),
+                            ->label('Until Date')
+                            ->default(now()->addMonths(6)->format('Y-m-d')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query

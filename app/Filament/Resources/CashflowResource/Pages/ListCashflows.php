@@ -10,10 +10,26 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Carbon\Carbon;
 
 class ListCashflows extends ListRecords
 {
     protected static string $resource = CashflowResource::class;
+
+    public function mount(): void
+    {
+        parent::mount();
+        
+        // Set default date range filter if not already set
+        if (empty($this->tableFilters['date_range']['from']) && empty($this->tableFilters['date_range']['until'])) {
+            $this->tableFilters = array_merge($this->tableFilters ?? [], [
+                'date_range' => [
+                    'from' => Carbon::now()->format('Y-m-d'),
+                    'until' => Carbon::now()->addMonths(6)->format('Y-m-d'),
+                ]
+            ]);
+        }
+    }
 
     protected function getHeaderActions(): array
     {

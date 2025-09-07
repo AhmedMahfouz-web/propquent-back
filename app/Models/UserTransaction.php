@@ -16,6 +16,10 @@ class UserTransaction extends Model
     const TYPE_DEPOSIT = 'deposit';
     const TYPE_WITHDRAWAL = 'withdraw';
 
+    const STATUS_DONE = 'done';
+    const STATUS_PENDING = 'pending';
+    const STATUS_CANCELLED = 'cancelled';
+
 
     protected static function booted(): void
     {
