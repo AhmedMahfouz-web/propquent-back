@@ -49,7 +49,7 @@ class ProjectResource extends Resource
                             ->required(),
 
                         Forms\Components\TextInput::make('compound_id')
-                            ->relationship('compound', 'name', fn($query) => $query->active())
+                            ->relationship('compound', 'name')
                             ->searchable()
                             ->preload()
                             ->required(),
