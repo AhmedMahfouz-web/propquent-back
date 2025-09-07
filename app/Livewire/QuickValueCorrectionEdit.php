@@ -139,8 +139,8 @@ class QuickValueCorrectionEdit extends Component implements HasForms
             // Dispatch to refresh other correction components
             $this->dispatch('correction-updated', projectKey: $this->projectKey, month: $this->month);
 
-            // Dispatch to parent page to refresh the entire report
-            $this->dispatch('correction-updated', projectKey: $this->projectKey, month: $this->month)->to('parent');
+            // Dispatch globally to refresh the entire report
+            $this->dispatch('correction-updated', projectKey: $this->projectKey, month: $this->month);
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')

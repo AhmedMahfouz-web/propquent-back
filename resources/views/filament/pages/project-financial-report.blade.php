@@ -48,8 +48,7 @@
                                 class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
                                 Code
                             </th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
                                 style="max-width: 220px;">
                                 <button wire:click="sortBy('created_at')" class="flex items-center">
                                     Project
@@ -81,23 +80,29 @@
                             @foreach ($metricsToShow as $key => $label)
                                 <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}"
                                     class="bg-white dark:bg-gray-800">
-                                    <td class="px-2 py-4 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                    <td
+                                        class="px-2 py-4 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         @if ($loop->first)
                                             <div class="font-mono text-sm">{{ $projectData['key'] }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 align-top border-r dark:border-gray-600 sticky left-12 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} project-name-cell">
+                                    <td
+                                        class="px-6 py-4 align-top border-r dark:border-gray-600 sticky left-12 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} project-name-cell">
                                         @if ($loop->first)
                                             <div class="font-bold text-sm">{{ $projectData['title'] }}</div>
                                             <div class="text-xs text-gray-500">{{ $projectData['status'] }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">{{ $label }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        {{ $label }}</td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
                                     </td>
                                     @foreach ($allMonths as $month)
-                                        <td class="px-6 py-4 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                             @if ($key === 'value_correction')
                                                 @livewire(
                                                     'quick-value-correction-edit',
@@ -112,7 +117,6 @@
                                                 <span class="font-medium text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                                 </span>
-                                                <span class="text-xs text-gray-500 dark:text-gray-400 block">(Calculated)</span>
                                             @else
                                                 ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                             @endif
@@ -150,39 +154,39 @@
 </x-filament-panels::page>
 
 @push('styles')
-<style>
-    /* Project name column styling */
-    .project-name-cell {
-        max-width: 220px;
-        overflow-x: auto;
-        white-space: nowrap;
-        scrollbar-width: thin;
-        scrollbar-color: #cbd5e0 #f7fafc;
-    }
-
-    .project-name-cell::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    .project-name-cell::-webkit-scrollbar-track {
-        background: #f7fafc;
-        border-radius: 2px;
-    }
-
-    .project-name-cell::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 2px;
-    }
-
-    .project-name-cell::-webkit-scrollbar-thumb:hover {
-        background: #a0aec0;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
+    <style>
+        /* Project name column styling */
         .project-name-cell {
-            max-width: 180px;
+            max-width: 220px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
         }
-    }
-</style>
+
+        .project-name-cell::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .project-name-cell::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 2px;
+        }
+
+        .project-name-cell::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 2px;
+        }
+
+        .project-name-cell::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .project-name-cell {
+                max-width: 180px;
+            }
+        }
+    </style>
 @endpush
