@@ -48,7 +48,16 @@ class ProjectResource extends Resource
                             ->preload()
                             ->required(),
 
+                        Forms\Components\TextInput::make('compound_id')
+                            ->relationship('compound', 'name', fn($query) => $query->active())
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
                         Forms\Components\TextInput::make('location')
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('map_location')
                             ->maxLength(255),
 
                         Forms\Components\Select::make('type')
