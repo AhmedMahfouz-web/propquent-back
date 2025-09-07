@@ -344,11 +344,11 @@ class UserFinancialReport extends Page implements HasForms
         $userTransactionsQuery = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
-                DB::raw("SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) as deposits"),
-                DB::raw("SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) as withdrawals"),
+                DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits"),
+                DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals"),
             )
             ->where('user_id', $user->id)
-            ->where('status', 'done')
+            ->where('status', UserTransaction::STATUS_DONE)
             ->groupBy('month_date');
 
         // Only apply date filter if we have months to filter by
@@ -366,9 +366,9 @@ class UserFinancialReport extends Page implements HasForms
             'user_id' => $user->id,
             'months_to_show' => $monthsToShow
         ]);
-        
+
         $userTransactionsData = $userTransactionsQuery->get()->keyBy('month_date');
-        
+
         // Debug: Log the results
         \Log::info('UserFinancialReport Results:', [
             'count' => $userTransactionsData->count(),
