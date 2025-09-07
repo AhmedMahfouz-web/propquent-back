@@ -59,7 +59,7 @@ class UserFinancialReport extends Page implements HasForms
                 ->exports([
                     ExcelExport::make()
                         ->fromTable()
-                        ->withFilename(fn () => 'user-financial-report-' . date('Y-m-d'))
+                        ->withFilename(fn() => 'user-financial-report-' . date('Y-m-d'))
                         ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
                 ])
         ];
@@ -343,8 +343,8 @@ class UserFinancialReport extends Page implements HasForms
         $userTransactionsQuery = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
-                DB::raw("SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) as deposits"),
-                DB::raw("SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) as withdrawals"),
+                DB::raw("SUM(CASE WHEN transaction_type = " . UserTransaction::TYPE_DEPOSIT . " THEN amount ELSE 0 END) as deposits"),
+                DB::raw("SUM(CASE WHEN transaction_type = " . UserTransaction::TYPE_WITHDRAWAL . " THEN amount ELSE 0 END) as withdrawals"),
             )
             ->where('user_id', $user->id)
             ->where('status', UserTransaction::STATUS_DONE)
