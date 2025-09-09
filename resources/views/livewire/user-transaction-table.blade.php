@@ -51,7 +51,7 @@
                                 <span>Required fields</span>
                             </div>
                         </div>
-                        <p><strong>Required fields:</strong> User, Type, Amount, Date, Status</p>
+                        <p><strong>Auto-save:</strong> All fields must be completed before saving</p>
                         <p><strong>Navigation:</strong> Use arrow keys to move between cells • Click any cell to edit •
                             Changes save automatically</p>
                     </div>

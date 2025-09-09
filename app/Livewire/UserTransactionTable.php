@@ -153,18 +153,18 @@ class UserTransactionTable extends Component
     {
         $row = $this->draftRows[$rowId];
 
-        // Check if required fields are filled
-        $requiredFields = ['user_id', 'transaction_type', 'amount', 'transaction_date', 'status'];
-        $hasAllRequired = true;
+        // Check if ALL fields are filled (including optional ones)
+        $allFields = ['user_id', 'transaction_type', 'amount', 'transaction_date', 'actual_date', 'method', 'reference_no', 'status', 'note'];
+        $hasAllFields = true;
 
-        foreach ($requiredFields as $field) {
-            if (empty($row[$field])) {
-                $hasAllRequired = false;
+        foreach ($allFields as $field) {
+            if (empty($row[$field]) && $row[$field] !== '0') {
+                $hasAllFields = false;
                 break;
             }
         }
 
-        if ($hasAllRequired) {
+        if ($hasAllFields) {
             // Validate the data
             $validator = Validator::make($row, [
                 'user_id' => 'required|exists:users,id',
