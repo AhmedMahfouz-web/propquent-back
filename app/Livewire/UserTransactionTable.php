@@ -125,7 +125,7 @@ class UserTransactionTable extends Component
             'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes)),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
-            'actual_date' => 'nullable|date',
+            'actual_date' => 'required|date',
             'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
             'reference_no' => 'nullable|string|max:255',
             'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
@@ -138,7 +138,7 @@ class UserTransactionTable extends Component
     private function getValidationErrors($row)
     {
         $errors = [];
-        $requiredFields = ['user_id', 'transaction_type', 'amount', 'transaction_date', 'status'];
+        $requiredFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date', 'actual_date'];
 
         foreach ($requiredFields as $field) {
             if (empty($row[$field])) {
@@ -153,25 +153,25 @@ class UserTransactionTable extends Component
     {
         $row = $this->draftRows[$rowId];
 
-        // Check if ALL fields are filled (including optional ones)
-        $allFields = ['user_id', 'transaction_type', 'amount', 'transaction_date', 'actual_date', 'method', 'reference_no', 'status', 'note'];
-        $hasAllFields = true;
+        // Check if core fields are filled (user, type, method, amount, status, date, actual_date)
+        $coreFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date', 'actual_date'];
+        $hasCoreFields = true;
 
-        foreach ($allFields as $field) {
+        foreach ($coreFields as $field) {
             if (empty($row[$field]) && $row[$field] !== '0') {
-                $hasAllFields = false;
+                $hasCoreFields = false;
                 break;
             }
         }
 
-        if ($hasAllFields) {
+        if ($hasCoreFields) {
             // Validate the data
             $validator = Validator::make($row, [
                 'user_id' => 'required|exists:users,id',
                 'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes)),
                 'amount' => 'required|numeric|min:0.01',
                 'transaction_date' => 'required|date',
-                'actual_date' => 'nullable|date',
+                'actual_date' => 'required|date',
                 'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
                 'reference_no' => 'nullable|string|max:255',
                 'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
