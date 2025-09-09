@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('value_corrections', function (Blueprint $table) {
-            // Drop the existing foreign key constraint
-            $table->dropForeign(['project_key']);
-            
-            // Add the foreign key constraint with ON UPDATE CASCADE
+            // When the table was renamed from 'project_evaluations', the foreign key name was not updated.
+            // We must drop it using its original name.
+            $table->dropForeign('project_evaluations_project_key_foreign');
+
+            // Add the new foreign key constraint with ON UPDATE CASCADE
             $table->foreign('project_key')
                   ->references('key')
                   ->on('projects')
@@ -30,7 +31,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('value_corrections', function (Blueprint $table) {
-            // Drop the updated foreign key constraint
+            // Drop the new foreign key constraint (Laravel will guess the name correctly now)
+            $table->dropForeign(['project_key']);
+
+            // Re-add the original foreign key constraint without ON UPDATE CASCADE
+            $table->foreign('project_key')
+                  ->references('key')
+                  ->on('projects')
+                  ->onDelete('cascade');
             $table->dropForeign(['project_key']);
             
             // Restore the original foreign key constraint (without ON UPDATE CASCADE)

@@ -4,10 +4,10 @@
         <!-- Header with Add New Row button -->
         <div class="fi-ta-header-ctn divide-y divide-gray-200 dark:divide-white/10">
             <div class="fi-ta-header-toolbar flex items-center justify-between gap-x-4 px-4 py-3 sm:px-6">
-                <div class="flex shrink-0 items-center gap-x-4">
+                <div class="flex items-center gap-x-4">
                     <h1
                         class="fi-header-heading text-2xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-3xl">
-                        Project Transactions
+                        User Transactions
                     </h1>
                 </div>
                 <div class="flex items-center gap-x-4">
@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <!-- Instructions -->
+        <!-- Info Section -->
         <div class="fi-ta-filters-form fi-fo-component-ctn grid gap-y-4 px-4 py-4 sm:px-6">
             <div class="fi-in-affixes flex items-center gap-x-3">
                 <div class="fi-in-affix flex items-center gap-x-3 text-sm leading-6 text-gray-950 dark:text-white">
@@ -47,11 +47,11 @@
                                 <span>Saved transactions</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <div class="w-4 h-3 border-2 border-danger-500 rounded-sm"></div>
+                                <div class="w-4 h-3 border-2 border-red-500 rounded-sm"></div>
                                 <span>Required fields</span>
                             </div>
                         </div>
-                        <p><strong>Required fields:</strong> Project, Amount, Date, Status</p>
+                        <p><strong>Required fields:</strong> User, Type, Amount, Date, Status</p>
                         <p><strong>Navigation:</strong> Use arrow keys to move between cells • Click any cell to edit •
                             Changes save automatically</p>
                     </div>
@@ -63,21 +63,21 @@
         <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10 dark:border-t-white/10"
             style="min-height: 400px;">
             <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5"
-                id="transaction-table" style="min-width: 1400px;">
+                id="user-transaction-table" style="min-width: 1400px;">
                 <thead class="fi-ta-header divide-y divide-gray-200 dark:divide-white/5">
                     <tr class="fi-ta-header-row">
                         <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
                             style="min-width: 200px;">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
-                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Project</span>
+                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">User</span>
                             </span>
                         </th>
                         <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
                             style="min-width: 120px;">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
-                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Serving</span>
+                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Type</span>
                             </span>
                         </th>
                         <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
@@ -119,14 +119,6 @@
                             style="min-width: 150px;">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
-                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Due
-                                    Date</span>
-                            </span>
-                        </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 150px;">
-                            <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
-                                <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Actual
                                     Date</span>
                             </span>
@@ -155,30 +147,30 @@
                         <tr
                             class="fi-ta-row [@media(hover:hover)]:transition [@media(hover:hover)]:duration-75 hover:bg-gray-50 dark:hover:bg-white/5 {{ count($validationErrors) > 0 ? 'bg-warning-50 dark:bg-warning-400/10' : 'bg-warning-50 dark:bg-warning-400/10' }}">
                             <td
-                                class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3 {{ in_array('project_key', $validationErrors) ? 'ring-2 ring-danger-600 dark:ring-danger-500' : '' }}">
+                                class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3 {{ in_array('user_id', $validationErrors) ? 'ring-2 ring-danger-600 dark:ring-danger-500' : '' }}">
                                 <select
-                                    wire:change="updateDraftRow('{{ $rowId }}', 'project_key', $event.target.value)"
+                                    wire:change="updateDraftRow('{{ $rowId }}', 'user_id', $event.target.value)"
                                     data-row="{{ $rowId }}" data-col="0"
                                     class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6">
-                                    <option value="">Select Project...</option>
-                                    @foreach ($projects as $key => $label)
+                                    <option value="">Select User...</option>
+                                    @foreach ($users as $key => $label)
                                         <option value="{{ $key }}"
-                                            {{ $row['project_key'] == $key ? 'selected' : '' }}>
+                                            {{ $row['user_id'] == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
                                 </select>
                             </td>
                             <td
-                                class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3">
+                                class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3 {{ in_array('transaction_type', $validationErrors) ? 'ring-2 ring-danger-600 dark:ring-danger-500' : '' }}">
                                 <select
-                                    wire:change="updateDraftRow('{{ $rowId }}', 'serving', $event.target.value)"
-                                    data-row="{{ $rowId }}" data-col="2"
+                                    wire:change="updateDraftRow('{{ $rowId }}', 'transaction_type', $event.target.value)"
+                                    data-row="{{ $rowId }}" data-col="1"
                                     class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6">
-                                    <option value="">Serving...</option>
-                                    @foreach ($servingTypes as $key => $label)
+                                    <option value="">Type...</option>
+                                    @foreach ($transactionTypes as $key => $label)
                                         <option value="{{ $key }}"
-                                            {{ $row['serving'] == $key ? 'selected' : '' }}>
+                                            {{ $row['transaction_type'] == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
@@ -189,7 +181,7 @@
                                 <input type="number" step="0.01"
                                     wire:blur="updateDraftRow('{{ $rowId }}', 'amount', $event.target.value)"
                                     value="{{ $row['amount'] }}" placeholder="0.00" data-row="{{ $rowId }}"
-                                    data-col="3"
+                                    data-col="2"
                                     class="fi-input block w-full border-none bg-transparent py-1.5 ps-3 pe-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 text-right">
                             </td>
                             <td
@@ -241,15 +233,8 @@
                             <td
                                 class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
-                                    wire:change="updateDraftRow('{{ $rowId }}', 'due_date', $event.target.value)"
-                                    value="{{ $row['due_date'] }}" data-row="{{ $rowId }}" data-col="8"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
-                            </td>
-                            <td
-                                class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
-                                <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateDraftRow('{{ $rowId }}', 'actual_date', $event.target.value)"
-                                    value="{{ $row['actual_date'] }}" data-row="{{ $rowId }}" data-col="9"
+                                    value="{{ $row['actual_date'] }}" data-row="{{ $rowId }}" data-col="8"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -257,7 +242,7 @@
                                 <input type="text"
                                     wire:blur="updateDraftRow('{{ $rowId }}', 'note', $event.target.value)"
                                     value="{{ $row['note'] }}" placeholder="Note..."
-                                    data-row="{{ $rowId }}" data-col="10"
+                                    data-row="{{ $rowId }}" data-col="9"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -275,12 +260,12 @@
                         <tr class="hover:bg-blue-50 dark:hover:bg-blue-900/30">
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <select
-                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'project_key', $event.target.value)"
+                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'user_id', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="0"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
-                                    @foreach ($projects as $key => $label)
+                                    @foreach ($users as $key => $label)
                                         <option value="{{ $key }}"
-                                            {{ $transaction['project_key'] == $key ? 'selected' : '' }}>
+                                            {{ $transaction['user_id'] == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
@@ -288,26 +273,12 @@
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <select
-                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'financial_type', $event.target.value)"
+                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'transaction_type', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="1"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
-                                    @foreach ($financialTypes as $key => $label)
+                                    @foreach ($transactionTypes as $key => $label)
                                         <option value="{{ $key }}"
-                                            {{ $transaction['financial_type'] == $key ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </td>
-                            <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
-                                <select
-                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'serving', $event.target.value)"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="2"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
-                                    <option value="">Serving...</option>
-                                    @foreach ($servingTypes as $key => $label)
-                                        <option value="{{ $key }}"
-                                            {{ $transaction['serving'] == $key ? 'selected' : '' }}>
+                                            {{ $transaction['transaction_type'] == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
@@ -317,7 +288,7 @@
                                 <input type="number" step="0.01"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'amount', $event.target.value)"
                                     value="{{ $transaction['amount'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="3"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="2"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 text-right focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
@@ -363,23 +334,16 @@
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
-                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'due_date', $event.target.value)"
-                                    value="{{ $transaction['due_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="8"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
-                            </td>
-                            <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
-                                <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'actual_date', $event.target.value)"
                                     value="{{ $transaction['actual_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="9"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="8"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'note', $event.target.value)"
                                     value="{{ $transaction['note'] }}" data-row="existing-{{ $transaction['id'] }}"
-                                    data-col="10"
+                                    data-col="9"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -412,7 +376,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let currentCell = null;
-            const totalCols = 11; // 0-10 columns (excluding actions column)
+            const totalCols = 9; // 0-9 columns (excluding actions column)
 
             // Add keyboard navigation
             document.addEventListener('keydown', function(e) {
@@ -506,7 +470,7 @@
             });
 
             function getPreviousRow(currentRow) {
-                const table = document.getElementById('transaction-table');
+                const table = document.getElementById('user-transaction-table');
                 const rows = Array.from(table.querySelectorAll('tbody tr'));
                 const currentIndex = rows.findIndex(row => {
                     const firstInput = row.querySelector('[data-row]');
@@ -522,7 +486,7 @@
             }
 
             function getNextRow(currentRow) {
-                const table = document.getElementById('transaction-table');
+                const table = document.getElementById('user-transaction-table');
                 const rows = Array.from(table.querySelectorAll('tbody tr'));
                 const currentIndex = rows.findIndex(row => {
                     const firstInput = row.querySelector('[data-row]');
@@ -556,3 +520,5 @@
             }, 100);
         });
     </script>
+
+</div>

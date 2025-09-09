@@ -12,16 +12,6 @@ class ProjectTransaction extends Model
 {
     use HasFactory;
 
-    public const FINANCIAL_TYPE_REVENUE = 'revenue';
-    public const FINANCIAL_TYPE_EXPENSE = 'expense';
-
-    /**
-     * Get available financial types from configuration
-     */
-    public static function getAvailableFinancialTypes(): array
-    {
-        return SystemConfiguration::getOptions('transaction_types');
-    }
 
     /**
      * Get available serving types from configuration
@@ -47,13 +37,6 @@ class ProjectTransaction extends Model
         return SystemConfiguration::getOptions('transaction_methods');
     }
 
-    /**
-     * Check if a financial type is valid
-     */
-    public static function isValidFinancialType(string $type): bool
-    {
-        return array_key_exists($type, self::getAvailableFinancialTypes());
-    }
 
     /**
      * Check if a serving type is valid
@@ -83,7 +66,6 @@ class ProjectTransaction extends Model
 
     protected $fillable = [
         'project_key',
-        'financial_type',
         'serving',
         'amount',
         'transaction_category',
@@ -103,7 +85,6 @@ class ProjectTransaction extends Model
     {
         return [
             'project_key' => 'required|exists:projects,key',
-            'financial_type' => 'required|in:' . implode(',', array_keys(self::getAvailableFinancialTypes())),
             'serving' => 'nullable|in:' . implode(',', array_keys(self::getAvailableServingTypes())),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
@@ -140,21 +121,6 @@ class ProjectTransaction extends Model
     }
 
 
-    /**
-     * Scope a query to only include revenue transactions.
-     */
-    public function scopeRevenue($query)
-    {
-        return $query->where('financial_type', 'revenue');
-    }
-
-    /**
-     * Scope a query to only include expense transactions.
-     */
-    public function scopeExpenses($query)
-    {
-        return $query->where('financial_type', 'expense');
-    }
 
     /**
      * Scope a query to filter by category.
@@ -182,29 +148,6 @@ class ProjectTransaction extends Model
         return $query->forMonth($year, $month);
     }
 
-    /**
-     * Check if this is a revenue transaction.
-     */
-    public function isRevenue(): bool
-    {
-        return $this->financial_type === 'revenue';
-    }
-
-    /**
-     * Check if this is an expense transaction.
-     */
-    public function isExpense(): bool
-    {
-        return $this->financial_type === 'expense';
-    }
-
-    /**
-     * Get the formatted financial type.
-     */
-    public function getFormattedFinancialType(): string
-    {
-        return ucfirst($this->financial_type);
-    }
 
     /**
      * Custom validation to prevent infinite recursion

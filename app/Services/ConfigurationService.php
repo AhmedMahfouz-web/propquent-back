@@ -334,7 +334,7 @@ class ConfigurationService
      */
     private function isTransactionTypeInUse(string $type): bool
     {
-        return DB::table('project_transactions')->where('type', $type)->exists();
+        return DB::table('project_transactions')->where('transaction_type', $type)->exists();
     }
 
     /**

@@ -67,10 +67,7 @@ class ProjectTransactionSeeder extends Seeder
         $transactionsByType = [];
 
         // Pre-calculate total investments to avoid N+1 queries
-        // Pre-calculate total investments to avoid N+1 queries.
-        // Note: 'investment' is mapped to 'expense' under the new schema.
-        $totalInvestments = ProjectTransaction::where('financial_type', 'expense')
-            ->groupBy('project_key')
+        $totalInvestments = ProjectTransaction::groupBy('project_key')
             ->selectRaw('project_key, SUM(amount) as total')
             ->pluck('total', 'project_key');
 
@@ -97,8 +94,7 @@ class ProjectTransactionSeeder extends Seeder
                     $transactionCount
                 );
 
-                $financialType = $transaction->financial_type;
-                $transactionsByType[$financialType] = ($transactionsByType[$financialType] ?? 0) + 1;
+                $transactionsByType['transaction'] = ($transactionsByType['transaction'] ?? 0) + 1;
                 $totalTransactions++;
             }
 
@@ -159,7 +155,6 @@ class ProjectTransactionSeeder extends Seeder
             
             return ProjectTransaction::create([
                 'project_key' => $project->key,
-                'financial_type' => 'expense', // Mapped from 'investment'
                 'amount' => $investmentAmount,
                 'transaction_date' => $transactionDate,
                 'due_date' => $dueDate,
@@ -175,7 +170,6 @@ class ProjectTransactionSeeder extends Seeder
             $this->command->error("Error creating initial investment for project {$project->key}: " . $e->getMessage());
             $this->command->error("Data: " . json_encode([
                 'project_key' => $project->key,
-                'financial_type' => 'expense',
                 'amount' => $investmentAmount,
                 'method' => $faker->randomElement($transactionMethods),
                 'serving' => $faker->randomElement($transactionServing),
@@ -209,12 +203,9 @@ class ProjectTransactionSeeder extends Seeder
         // Select status (more recent transactions more likely to be pending)
         $status = $this->selectTransactionStatus($faker, $transactionDate);
 
-        $financialType = $this->mapToFinancialType($type);
-
         try {
             return ProjectTransaction::create([
                 'project_key' => $project->key,
-                'financial_type' => $financialType,
                 'amount' => $amount,
                 'transaction_date' => $transactionDate,
                 'due_date' => $this->calculateDueDate($faker, $transactionDate, $type),
@@ -230,7 +221,6 @@ class ProjectTransactionSeeder extends Seeder
             $this->command->error("Error creating realistic transaction for project {$project->key}: " . $e->getMessage());
             $this->command->error("Data: " . json_encode([
                 'project_key' => $project->key,
-                'financial_type' => $financialType,
                 'amount' => $amount,
                 'method' => $this->selectPaymentMethod($faker, $amount),
                 'serving' => $faker->randomElement($transactionServing),
@@ -265,7 +255,6 @@ class ProjectTransactionSeeder extends Seeder
 
         return ProjectTransaction::create([
             'project_key' => $project->key,
-            'financial_type' => 'revenue', // Mapped from 'sale'
             'amount' => $exitAmount,
             'transaction_date' => $exitDate,
             'due_date' => $dueDate,
@@ -528,17 +517,6 @@ class ProjectTransactionSeeder extends Seeder
         }
     }
 
-    /**
-     * Get default options if configuration is not available
-     */
-    private function mapToFinancialType(string $type): string
-    {
-        return match ($type) {
-            'revenue', 'profit', 'sale' => 'revenue',
-            'expense', 'fee', 'maintenance', 'investment' => 'expense',
-            default => 'expense',
-        };
-    }
 
     private function getDefaultOptions(string $category): array
     {

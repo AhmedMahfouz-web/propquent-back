@@ -113,19 +113,6 @@ class UserTransactionResource extends Resource
                     ])
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('amount')
-                    ->money('USD')
-                    ->sortable()
-                    ->summarize([
-                        Tables\Columns\Summarizers\Sum::make()
-                            ->money('USD'),
-                        Tables\Columns\Summarizers\Average::make()
-                            ->money('USD'),
-                    ])
-                    ->color(fn(string $state): string => match (true) {
-                        str_contains($state, '-') => 'danger',
-                        default => 'success',
-                    }),
 
                 Tables\Columns\TextColumn::make('method')
                     ->badge()

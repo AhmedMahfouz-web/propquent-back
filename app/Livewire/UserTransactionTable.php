@@ -2,47 +2,57 @@
 
 namespace App\Livewire;
 
-use App\Models\ProjectTransaction;
-use App\Models\Project;
 use Livewire\Component;
-use Illuminate\Support\Facades\Validator;
+use App\Models\UserTransaction;
+use App\Models\User;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Validator;
 
-class ProjectTransactionTable extends Component
+class UserTransactionTable extends Component
 {
     public $transactions = [];
     public $draftRows = [];
-    public $projects = [];
-    public $servingTypes = [];
+    public $users = [];
+    public $transactionTypes = [];
     public $transactionMethods = [];
     public $statuses = [];
 
     public function mount()
     {
         $this->loadData();
-        $this->loadOptions();
     }
 
     public function loadData()
     {
-        $this->transactions = ProjectTransaction::with('project.developer')
-            ->orderBy('transaction_date', 'desc')
+        $this->transactions = UserTransaction::with('user')
             ->get()
-            ->toArray();
-    }
-
-    public function loadOptions()
-    {
-        $this->projects = Project::with('developer')
-            ->get()
-            ->mapWithKeys(function ($project) {
-                return [$project->key => "{$project->title} ({$project->developer->name})"];
+            ->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'user_id' => $transaction->user_id,
+                    'transaction_type' => $transaction->transaction_type,
+                    'amount' => $transaction->amount,
+                    'is_investment' => $transaction->is_investment,
+                    'transaction_date' => $transaction->transaction_date?->format('Y-m-d'),
+                    'actual_date' => $transaction->actual_date?->format('Y-m-d'),
+                    'method' => $transaction->method,
+                    'reference_no' => $transaction->reference_no,
+                    'note' => $transaction->note,
+                    'status' => $transaction->status,
+                    'user_name' => $transaction->user->full_name ?? 'Unknown User',
+                ];
             })
             ->toArray();
 
-        $this->servingTypes = ProjectTransaction::getAvailableServingTypes();
-        $this->transactionMethods = ProjectTransaction::getAvailableTransactionMethods();
-        $this->statuses = ProjectTransaction::getAvailableStatuses();
+        $this->users = User::all()
+            ->mapWithKeys(function ($user) {
+                return [$user->id => $user->full_name . ' (' . $user->custom_id . ')'];
+            })
+            ->toArray();
+
+        $this->transactionTypes = UserTransaction::getAvailableTransactionTypes();
+        $this->transactionMethods = UserTransaction::getAvailableMethods();
+        $this->statuses = UserTransaction::getAvailableStatuses();
     }
 
     public function addNewRow()
@@ -50,17 +60,16 @@ class ProjectTransactionTable extends Component
         $newRowId = 'draft_' . uniqid();
         $this->draftRows[$newRowId] = [
             'id' => $newRowId,
-            'project_key' => '',
-            'serving' => '',
+            'user_id' => '',
+            'transaction_type' => '',
             'amount' => '',
+            'is_investment' => false,
+            'transaction_date' => today()->format('Y-m-d'),
+            'actual_date' => '',
             'method' => '',
             'reference_no' => '',
-            'status' => '',
-            'transaction_date' => now()->format('Y-m-d'),
-            'due_date' => '',
-            'actual_date' => '',
             'note' => '',
-            'is_draft' => true,
+            'status' => 'pending',
         ];
     }
 
@@ -76,10 +85,10 @@ class ProjectTransactionTable extends Component
 
     public function updateExistingRow($transactionId, $field, $value)
     {
-        try {
-            $transaction = ProjectTransaction::find($transactionId);
-            if ($transaction) {
-                // Validate the single field update
+        $transaction = UserTransaction::find($transactionId);
+        if ($transaction) {
+            try {
+                // Validate the field
                 $validator = Validator::make([$field => $value], [
                     $field => $this->getFieldValidationRule($field)
                 ]);
@@ -101,38 +110,38 @@ class ProjectTransactionTable extends Component
                     ->body('Changes saved automatically')
                     ->success()
                     ->send();
+            } catch (\Exception $e) {
+                Notification::make()
+                    ->title('Error')
+                    ->body('Failed to save: ' . $e->getMessage())
+                    ->danger()
+                    ->send();
             }
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Error')
-                ->body('Failed to save: ' . $e->getMessage())
-                ->danger()
-                ->send();
         }
     }
 
     private function getFieldValidationRule($field)
     {
         $rules = [
-            'project_key' => 'required|exists:projects,key',
+            'user_id' => 'required|exists:users,id',
+            'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes)),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
-            'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
-            'serving' => 'nullable|in:' . implode(',', array_keys($this->servingTypes)),
+            'actual_date' => 'nullable|date',
             'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
             'reference_no' => 'nullable|string|max:255',
-            'due_date' => 'nullable|date',
-            'actual_date' => 'nullable|date',
+            'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
             'note' => 'nullable|string|max:65535',
+            'is_investment' => 'boolean',
         ];
 
         return $rules[$field] ?? 'nullable';
     }
 
-    public function getValidationErrors($row)
+    private function getValidationErrors($row)
     {
         $errors = [];
-        $requiredFields = ['project_key', 'financial_type', 'amount', 'transaction_date', 'status'];
+        $requiredFields = ['user_id', 'transaction_type', 'amount', 'transaction_date', 'status'];
 
         foreach ($requiredFields as $field) {
             if (empty($row[$field])) {
@@ -148,7 +157,7 @@ class ProjectTransactionTable extends Component
         $row = $this->draftRows[$rowId];
 
         // Check if required fields are filled
-        $requiredFields = ['project_key', 'amount', 'transaction_date', 'status'];
+        $requiredFields = ['user_id', 'transaction_type', 'amount', 'transaction_date', 'status'];
         $hasAllRequired = true;
 
         foreach ($requiredFields as $field) {
@@ -160,15 +169,26 @@ class ProjectTransactionTable extends Component
 
         if ($hasAllRequired) {
             // Validate the data
-            $validator = Validator::make($row, ProjectTransaction::getValidationRules());
+            $validator = Validator::make($row, [
+                'user_id' => 'required|exists:users,id',
+                'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes)),
+                'amount' => 'required|numeric|min:0.01',
+                'transaction_date' => 'required|date',
+                'actual_date' => 'nullable|date',
+                'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
+                'reference_no' => 'nullable|string|max:255',
+                'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
+                'note' => 'nullable|string|max:65535',
+                'is_investment' => 'boolean',
+            ]);
 
             if (!$validator->fails()) {
                 try {
                     // Remove draft-specific fields
-                    unset($row['id'], $row['is_draft']);
+                    unset($row['id']);
 
                     // Create the transaction
-                    ProjectTransaction::create($row);
+                    UserTransaction::create($row);
 
                     // Remove from draft rows
                     unset($this->draftRows[$rowId]);
@@ -184,7 +204,7 @@ class ProjectTransactionTable extends Component
                 } catch (\Exception $e) {
                     Notification::make()
                         ->title('Error')
-                        ->body('Failed to save transaction: ' . $e->getMessage())
+                        ->body('Failed to save: ' . $e->getMessage())
                         ->danger()
                         ->send();
                 }
@@ -199,7 +219,7 @@ class ProjectTransactionTable extends Component
 
     public function deleteTransaction($transactionId)
     {
-        $transaction = ProjectTransaction::find($transactionId);
+        $transaction = UserTransaction::find($transactionId);
         if ($transaction) {
             $transaction->delete();
             $this->loadData();
@@ -214,6 +234,6 @@ class ProjectTransactionTable extends Component
 
     public function render()
     {
-        return view('livewire.project-transaction-table');
+        return view('livewire.user-transaction-table');
     }
 }
