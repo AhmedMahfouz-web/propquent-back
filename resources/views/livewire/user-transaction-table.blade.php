@@ -188,7 +188,7 @@
                                 class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'method', $event.target.value)"
-                                    data-row="{{ $rowId }}" data-col="4"
+                                    data-row="{{ $rowId }}" data-col="3"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                                     <option value="">Method...</option>
                                     @foreach ($transactionMethods as $key => $label)
@@ -204,14 +204,14 @@
                                 <input type="text"
                                     wire:blur="updateDraftRow('{{ $rowId }}', 'reference_no', $event.target.value)"
                                     value="{{ $row['reference_no'] }}" placeholder="Reference..."
-                                    data-row="{{ $rowId }}" data-col="5"
+                                    data-row="{{ $rowId }}" data-col="4"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
                                 class="border p-0 bg-yellow-50 dark:bg-yellow-900/30 {{ in_array('status', $validationErrors) ? 'border-red-500 border-2' : 'border-gray-300 dark:border-gray-600' }}">
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'status', $event.target.value)"
-                                    data-row="{{ $rowId }}" data-col="6"
+                                    data-row="{{ $rowId }}" data-col="5"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                                     <option value="">Status...</option>
                                     @foreach ($statuses as $key => $label)
@@ -227,14 +227,14 @@
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateDraftRow('{{ $rowId }}', 'transaction_date', $event.target.value)"
                                     value="{{ $row['transaction_date'] }}" data-row="{{ $rowId }}"
-                                    data-col="7"
+                                    data-col="6"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
                                 class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateDraftRow('{{ $rowId }}', 'actual_date', $event.target.value)"
-                                    value="{{ $row['actual_date'] }}" data-row="{{ $rowId }}" data-col="8"
+                                    value="{{ $row['actual_date'] }}" data-row="{{ $rowId }}" data-col="7"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -242,7 +242,7 @@
                                 <input type="text"
                                     wire:blur="updateDraftRow('{{ $rowId }}', 'note', $event.target.value)"
                                     value="{{ $row['note'] }}" placeholder="Note..."
-                                    data-row="{{ $rowId }}" data-col="9"
+                                    data-row="{{ $rowId }}" data-col="8"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -294,7 +294,7 @@
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'method', $event.target.value)"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="4"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="3"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                                     <option value="">Method...</option>
                                     @foreach ($transactionMethods as $key => $label)
@@ -309,13 +309,13 @@
                                 <input type="text"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'reference_no', $event.target.value)"
                                     value="{{ $transaction['reference_no'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="5"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="4"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'status', $event.target.value)"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="6"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="5"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                                     @foreach ($statuses as $key => $label)
                                         <option value="{{ $key }}"
@@ -329,21 +329,21 @@
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'transaction_date', $event.target.value)"
                                     value="{{ $transaction['transaction_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="7"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="6"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'actual_date', $event.target.value)"
                                     value="{{ $transaction['actual_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="8"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="7"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'note', $event.target.value)"
                                     value="{{ $transaction['note'] }}" data-row="existing-{{ $transaction['id'] }}"
-                                    data-col="9"
+                                    data-col="8"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -376,7 +376,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let currentCell = null;
-            const totalCols = 9; // 0-9 columns (excluding actions column)
+            const totalCols = 8; // 0-8 columns (excluding actions column)
 
             // Add keyboard navigation
             document.addEventListener('keydown', function(e) {
