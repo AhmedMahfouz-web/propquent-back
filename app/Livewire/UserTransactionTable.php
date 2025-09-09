@@ -32,7 +32,6 @@ class UserTransactionTable extends Component
                     'user_id' => $transaction->user_id,
                     'transaction_type' => $transaction->transaction_type,
                     'amount' => $transaction->amount,
-                    'is_investment' => $transaction->is_investment,
                     'transaction_date' => $transaction->transaction_date?->format('Y-m-d'),
                     'actual_date' => $transaction->actual_date?->format('Y-m-d'),
                     'method' => $transaction->method,
@@ -63,7 +62,6 @@ class UserTransactionTable extends Component
             'user_id' => '',
             'transaction_type' => '',
             'amount' => '',
-            'is_investment' => false,
             'transaction_date' => today()->format('Y-m-d'),
             'actual_date' => '',
             'method' => '',
@@ -132,7 +130,6 @@ class UserTransactionTable extends Component
             'reference_no' => 'nullable|string|max:255',
             'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
             'note' => 'nullable|string|max:65535',
-            'is_investment' => 'boolean',
         ];
 
         return $rules[$field] ?? 'nullable';
@@ -179,7 +176,6 @@ class UserTransactionTable extends Component
                 'reference_no' => 'nullable|string|max:255',
                 'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
                 'note' => 'nullable|string|max:65535',
-                'is_investment' => 'boolean',
             ]);
 
             if (!$validator->fails()) {
