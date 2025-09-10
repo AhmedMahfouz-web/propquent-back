@@ -74,225 +74,276 @@
                 <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading projects...</span>
             </div>
         @else
-            <!-- Project Status Table -->
+            <!-- Project Status Table with Foldable Sections -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">
+                <div class="project-status-table-container">
+                    <table class="project-status-table">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th
-                                    class="sticky left-0 bg-gray-50 dark:bg-gray-700 px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 min-w-[120px]">
-                                    Project
+                                <!-- Fixed Project Column -->
+                                <th class="project-column-header">
+                                    <div class="flex items-center space-x-2">
+                                        <span>Project</span>
+                                    </div>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[80px]">
-                                    Status
+                                
+                                <!-- Foldable Section Headers -->
+                                <th class="section-header" data-section="details">
+                                    <button class="section-toggle flex items-center space-x-2 w-full text-left" 
+                                            onclick="toggleSection('details')">
+                                        <svg class="section-arrow w-4 h-4 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Project Details</span>
+                                    </button>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[80px]">
-                                    Stage
+                                
+                                <th class="section-header" data-section="contract">
+                                    <button class="section-toggle flex items-center space-x-2 w-full text-left" 
+                                            onclick="toggleSection('contract')">
+                                        <svg class="section-arrow w-4 h-4 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Contract Details</span>
+                                    </button>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[90px]">
-                                    Total Expenses
+                                
+                                <th class="section-header" data-section="expenses">
+                                    <button class="section-toggle flex items-center space-x-2 w-full text-left" 
+                                            onclick="toggleSection('expenses')">
+                                        <svg class="section-arrow w-4 h-4 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Expenses</span>
+                                    </button>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[90px]">
-                                    Total Revenues
+                                
+                                <th class="section-header" data-section="status">
+                                    <button class="section-toggle flex items-center space-x-2 w-full text-left" 
+                                            onclick="toggleSection('status')">
+                                        <svg class="section-arrow w-4 h-4 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Status & Dates</span>
+                                    </button>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[150px]">
-                                    Expense Breakdown
+                            </tr>
+                            
+                            <!-- Sub-headers for expanded sections -->
+                            <tr class="sub-headers">
+                                <th class="project-column-header"></th>
+                                
+                                <!-- Project Details Sub-headers -->
+                                <th class="section-subheader details-section" style="display: none;">
+                                    <div class="sub-header-grid details-grid">
+                                        <span>Unit</span>
+                                        <span>Area</span>
+                                        <span>Garden</span>
+                                        <span>Compound</span>
+                                    </div>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[150px]">
-                                    Revenue Breakdown
+                                
+                                <!-- Contract Details Sub-headers -->
+                                <th class="section-subheader contract-section" style="display: none;">
+                                    <div class="sub-header-grid contract-grid">
+                                        <span>Reserved</span>
+                                        <span>Contract Date</span>
+                                        <span>Total Value</span>
+                                        <span>Years</span>
+                                    </div>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[90px]">
-                                    Asset Evaluation
+                                
+                                <!-- Expenses Sub-headers -->
+                                <th class="section-subheader expenses-section" style="display: none;">
+                                    <div class="sub-header-grid expenses-grid">
+                                        <span>Asset Expenses</span>
+                                        <span>Operation Expenses</span>
+                                        <span>Total Expenses</span>
+                                        <span>Net Profit</span>
+                                    </div>
                                 </th>
-                                <th
-                                    class="px-2 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[90px]">
-                                    Asset Correction
-                                </th>
-                                <th
-                                    class="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[80px]">
-                                    Entry Date
-                                </th>
-                                <th
-                                    class="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[80px]">
-                                    Exit Date
-                                </th>
-                                <th
-                                    class="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[80px]">
-                                    Reservation Date
-                                </th>
-                                <th
-                                    class="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[80px]">
-                                    Contract Date
-                                </th>
-                                <th
-                                    class="px-2 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[90px]">
-                                    Contract Value
-                                </th>
-                                <th
-                                    class="px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[70px]">
-                                    Contract Years
+                                
+                                <!-- Status Sub-headers -->
+                                <th class="section-subheader status-section" style="display: none;">
+                                    <div class="sub-header-grid status-grid">
+                                        <span>Status</span>
+                                        <span>Stage</span>
+                                        <span>Start Date</span>
+                                        <span>End Date</span>
+                                    </div>
                                 </th>
                             </tr>
                         </thead>
+                        
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->projects as $project)
                                 @php
                                     $projectData = $this->projectsData[$project->key] ?? [];
+                                    $assetExpenses = 0;
+                                    $operationExpenses = 0;
+                                    
+                                    // Calculate categorized expenses
+                                    foreach ($projectData['expense_breakdown'] ?? [] as $type => $amount) {
+                                        if (str_contains($type, 'asset')) {
+                                            $assetExpenses += $amount;
+                                        } else {
+                                            $operationExpenses += $amount;
+                                        }
+                                    }
+                                    
+                                    $totalExpenses = $projectData['total_expenses'] ?? 0;
+                                    $totalRevenues = $projectData['total_revenues'] ?? 0;
+                                    $netProfit = $totalRevenues - $totalExpenses;
                                 @endphp
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <!-- Project Info (Sticky) -->
-                                    <td
-                                        class="sticky left-0 bg-white dark:bg-gray-800 px-2 py-2 border-r border-gray-200 dark:border-gray-600">
-                                        <div class="space-y-1">
-                                            <div class="font-medium text-gray-900 dark:text-white text-xs">
-                                                {{ $project->title }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $project->key }}
-                                            </div>
+                                    <!-- Fixed Project Column -->
+                                    <td class="project-column">
+                                        <div class="project-info">
+                                            <div class="project-title">{{ $project->title }}</div>
+                                            <div class="project-key">{{ $project->key }}</div>
                                             @if ($project->developer)
-                                                <div class="text-xs text-blue-600 dark:text-blue-400">
-                                                    {{ $project->developer->name }}</div>
+                                                <div class="project-developer">{{ $project->developer->name }}</div>
                                             @endif
                                         </div>
                                     </td>
-
-                                    <!-- Status -->
-                                    <td class="px-2 py-2">
-                                        <span
-                                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                        @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                        @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
-                                        @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
-                                        @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
-                                            {{ ucfirst($project->status) }}
-                                        </span>
-                                    </td>
-
-                                    <!-- Stage -->
-                                    <td class="px-2 py-2 text-xs text-gray-900 dark:text-white">
-                                        {{ ucfirst($project->stage ?? 'N/A') }}
-                                    </td>
-
-                                    <!-- Total Expenses -->
-                                    <td class="px-2 py-2 text-right text-xs font-medium text-red-600 dark:text-red-400">
-                                        ${{ number_format($projectData['total_expenses'] ?? 0, 2) }}
-                                    </td>
-
-                                    <!-- Total Revenues -->
-                                    <td
-                                        class="px-2 py-2 text-right text-xs font-medium text-green-600 dark:text-green-400">
-                                        ${{ number_format($projectData['total_revenues'] ?? 0, 2) }}
-                                    </td>
-
-                                    <!-- Expense Breakdown -->
-                                    <td class="px-2 py-2">
-                                        <div class="space-y-1">
-                                            @foreach ($projectData['expense_breakdown'] ?? [] as $type => $amount)
-                                                <div class="text-xs text-red-600 dark:text-red-400">
-                                                    <span
-                                                        class="font-medium">{{ ucfirst(str_replace('_', ' ', $type)) }}:</span>
-                                                    ${{ number_format($amount, 2) }}
-                                                </div>
-                                            @endforeach
-                                            @if (empty($projectData['expense_breakdown']))
-                                                <span class="text-xs text-gray-400">No expenses</span>
-                                            @endif
+                                    
+                                    <!-- Project Details Section -->
+                                    <td class="section-content details-section" style="display: none;">
+                                        <div class="content-grid details-grid">
+                                            <div class="content-item">
+                                                <span class="content-value">{{ $project->unit_no ?? 'N/A' }}</span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if($project->area)
+                                                        {{ number_format($project->area, 0) }} m²
+                                                    @else
+                                                        N/A
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if($project->garden_area)
+                                                        {{ number_format($project->garden_area, 0) }} m²
+                                                    @else
+                                                        N/A
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">{{ $project->compound->name ?? $project->project ?? 'N/A' }}</span>
+                                            </div>
                                         </div>
                                     </td>
-
-                                    <!-- Revenue Breakdown -->
-                                    <td class="px-2 py-2">
-                                        <div class="space-y-1">
-                                            @foreach ($projectData['revenue_breakdown'] ?? [] as $type => $amount)
-                                                <div class="text-xs text-green-600 dark:text-green-400">
-                                                    <span
-                                                        class="font-medium">{{ ucfirst(str_replace('_', ' ', $type)) }}:</span>
-                                                    ${{ number_format($amount, 2) }}
-                                                </div>
-                                            @endforeach
-                                            @if (empty($projectData['revenue_breakdown']))
-                                                <span class="text-xs text-gray-400">No revenues</span>
-                                            @endif
+                                    
+                                    <!-- Contract Details Section -->
+                                    <td class="section-content contract-section" style="display: none;">
+                                        <div class="content-grid contract-grid">
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if ($project->reservation_date)
+                                                        {{ $project->reservation_date->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-gray-400">N/A</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if ($project->contract_date)
+                                                        {{ $project->contract_date->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-gray-400">N/A</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value font-medium">
+                                                    @if ($project->total_contract_value)
+                                                        ${{ number_format($project->total_contract_value, 0) }}
+                                                    @else
+                                                        <span class="text-gray-400">N/A</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if ($project->years_of_installment)
+                                                        {{ $project->years_of_installment }} years
+                                                    @else
+                                                        <span class="text-gray-400">N/A</span>
+                                                    @endif
+                                                </span>
+                                            </div>
                                         </div>
                                     </td>
-
-                                    <!-- Asset Evaluation -->
-                                    <td
-                                        class="px-2 py-2 text-right text-xs font-medium text-blue-600 dark:text-blue-400">
-                                        ${{ number_format($projectData['asset_evaluation'] ?? 0, 2) }}
+                                    
+                                    <!-- Expenses Section -->
+                                    <td class="section-content expenses-section" style="display: none;">
+                                        <div class="content-grid expenses-grid">
+                                            <div class="content-item">
+                                                <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                    ${{ number_format($assetExpenses, 0) }}
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                    ${{ number_format($operationExpenses, 0) }}
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value text-red-600 dark:text-red-400 font-bold">
+                                                    ${{ number_format($totalExpenses, 0) }}
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                                    ${{ number_format($netProfit, 0) }}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </td>
-
-                                    <!-- Asset Correction -->
-                                    <td
-                                        class="px-2 py-2 text-right text-xs font-medium text-purple-600 dark:text-purple-400">
-                                        ${{ number_format($projectData['asset_correction'] ?? 0, 2) }}
-                                    </td>
-
-                                    <!-- Entry Date -->
-                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-white">
-                                        @if ($projectData['entry_date'])
-                                            {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Exit Date -->
-                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-white">
-                                        @if ($projectData['exit_date'])
-                                            {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">-</span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Reservation Date -->
-                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-white">
-                                        @if ($project->reservation_date)
-                                            {{ $project->reservation_date->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Contract Date -->
-                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-white">
-                                        @if ($project->contract_date)
-                                            {{ $project->contract_date->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Contract Value -->
-                                    <td class="px-2 py-2 text-right text-xs font-medium text-gray-900 dark:text-white">
-                                        @if ($project->total_contract_value)
-                                            ${{ number_format($project->total_contract_value, 2) }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-
-                                    <!-- Contract Years -->
-                                    <td class="px-2 py-2 text-center text-xs text-gray-900 dark:text-white">
-                                        @if ($project->years_of_installment)
-                                            {{ $project->years_of_installment }} years
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
+                                    
+                                    <!-- Status Section -->
+                                    <td class="section-content status-section" style="display: none;">
+                                        <div class="content-grid status-grid">
+                                            <div class="content-item">
+                                                <span class="status-badge
+                                                    @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                                    @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
+                                                    @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                                    @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
+                                                    {{ $project->status === 'exited' ? 'Sold' : ($project->status === 'active' ? 'On Hold' : ucfirst($project->status)) }}
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if ($projectData['entry_date'])
+                                                        {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-gray-400">N/A</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            <div class="content-item">
+                                                <span class="content-value">
+                                                    @if ($projectData['exit_date'])
+                                                        {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-gray-400">-</span>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="16"
-                                        class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                         No projects found matching your criteria.
                                     </td>
                                 </tr>
@@ -310,36 +361,303 @@
     </div>
 
     <style>
+        /* Project Status Table Styles */
+        .project-status-table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .project-status-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            line-height: 1rem;
+        }
+
+        /* Fixed Project Column */
+        .project-column-header,
+        .project-column {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: white;
+            border-right: 2px solid #e5e7eb;
+            min-width: 200px;
+            max-width: 200px;
+        }
+
+        .dark .project-column-header,
+        .dark .project-column {
+            background: #1f2937;
+            border-right-color: #374151;
+        }
+
+        .project-column-header {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            background: #f9fafb;
+        }
+
+        .dark .project-column-header {
+            color: #d1d5db;
+            background: #374151;
+        }
+
+        .project-column {
+            padding: 16px;
+            vertical-align: top;
+        }
+
+        .project-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .project-title {
+            font-weight: 600;
+            color: #111827;
+            font-size: 0.875rem;
+        }
+
+        .dark .project-title {
+            color: #f9fafb;
+        }
+
+        .project-key {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-family: monospace;
+        }
+
+        .dark .project-key {
+            color: #9ca3af;
+        }
+
+        .project-developer {
+            font-size: 0.75rem;
+            color: #2563eb;
+        }
+
+        .dark .project-developer {
+            color: #60a5fa;
+        }
+
+        /* Section Headers */
+        .section-header {
+            min-width: 180px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-left: 1px solid #e5e7eb;
+        }
+
+        .dark .section-header {
+            background: #374151;
+            border-left-color: #4b5563;
+        }
+
+        .section-toggle {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark .section-toggle {
+            color: #d1d5db;
+        }
+
+        .section-toggle:hover {
+            color: #374151;
+        }
+
+        .dark .section-toggle:hover {
+            color: #f9fafb;
+        }
+
+        .section-arrow {
+            transition: transform 0.2s ease;
+        }
+
+        .section-arrow.expanded {
+            transform: rotate(90deg);
+        }
+
+        /* Sub-headers */
+        .section-subheader {
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border-left: 1px solid #e5e7eb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .dark .section-subheader {
+            background: #2d3748;
+            border-left-color: #4b5563;
+            border-top-color: #4b5563;
+        }
+
+        .sub-header-grid {
+            display: grid;
+            gap: 8px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .dark .sub-header-grid {
+            color: #9ca3af;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .contract-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .expenses-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .status-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        /* Section Content */
+        .section-content {
+            padding: 16px 12px;
+            border-left: 1px solid #e5e7eb;
+            vertical-align: top;
+            min-width: 180px;
+        }
+
+        .dark .section-content {
+            border-left-color: #4b5563;
+        }
+
+        .content-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .content-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .content-value {
+            font-size: 0.75rem;
+            color: #111827;
+        }
+
+        .dark .content-value {
+            color: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .project-column-header,
+            .project-column {
+                min-width: 150px;
+                max-width: 150px;
+            }
+
+            .section-header,
+            .section-content {
+                min-width: 140px;
+            }
+
+            .sub-header-grid,
+            .content-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+        }
+
         /* Custom scrollbar for the table */
-        .overflow-x-auto::-webkit-scrollbar {
+        .project-status-table-container::-webkit-scrollbar {
             height: 8px;
         }
 
-        .overflow-x-auto::-webkit-scrollbar-track {
+        .project-status-table-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 4px;
         }
 
-        .overflow-x-auto::-webkit-scrollbar-thumb {
+        .project-status-table-container::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 4px;
         }
 
-        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+        .project-status-table-container::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
 
         /* Dark mode scrollbar */
-        .dark .overflow-x-auto::-webkit-scrollbar-track {
+        .dark .project-status-table-container::-webkit-scrollbar-track {
             background: #374151;
         }
 
-        .dark .overflow-x-auto::-webkit-scrollbar-thumb {
+        .dark .project-status-table-container::-webkit-scrollbar-thumb {
             background: #6b7280;
         }
 
-        .dark .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+        .dark .project-status-table-container::-webkit-scrollbar-thumb:hover {
             background: #9ca3af;
         }
     </style>
+
+    <script>
+        function toggleSection(sectionName) {
+            // Toggle section visibility
+            const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
+            const arrow = document.querySelector(`[data-section="${sectionName}"] .section-arrow`);
+            
+            sectionElements.forEach(element => {
+                if (element.style.display === 'none' || element.style.display === '') {
+                    element.style.display = 'table-cell';
+                } else {
+                    element.style.display = 'none';
+                }
+            });
+            
+            // Toggle arrow rotation
+            if (arrow) {
+                arrow.classList.toggle('expanded');
+            }
+        }
+
+        // Initialize all sections as collapsed
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = ['details', 'contract', 'expenses', 'status'];
+            sections.forEach(section => {
+                const elements = document.querySelectorAll(`.${section}-section`);
+                elements.forEach(element => {
+                    element.style.display = 'none';
+                });
+            });
+        });
+    </script>
 </div>
