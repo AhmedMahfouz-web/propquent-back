@@ -264,6 +264,7 @@
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
+            table-layout: fixed;
         }
 
         /* Fixed Project Column */
@@ -341,35 +342,41 @@
 
         /* Table Headers */
         .table-header {
-            padding: 12px 16px;
+            padding: 8px 12px;
             text-align: left;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: #6b7280;
             background: #f9fafb;
-            border-left: 1px solid #e5e7eb;
-            min-width: 120px;
+            border: 1px solid #e5e7eb;
+            width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .dark .table-header {
             color: #d1d5db;
             background: #374151;
-            border-left-color: #4b5563;
+            border-color: #4b5563;
         }
 
         /* Table Cells */
         .table-cell {
-            padding: 16px;
-            vertical-align: top;
-            border-left: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            vertical-align: middle;
+            border: 1px solid #e5e7eb;
             font-size: 0.75rem;
             color: #111827;
-            min-width: 120px;
+            width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .dark .table-cell {
-            border-left-color: #4b5563;
+            border-color: #4b5563;
             color: #f9fafb;
         }
 
@@ -392,8 +399,9 @@
 
             .table-header,
             .table-cell {
-                min-width: 100px;
-                padding: 12px 8px;
+                width: 100px;
+                padding: 6px 8px;
+                font-size: 0.6875rem;
             }
         }
 
