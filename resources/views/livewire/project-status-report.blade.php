@@ -213,15 +213,7 @@
                                     
                                     <!-- Project Details Section -->
                                     <td class="section-content details-section collapsed" data-section="details">
-                                        <div class="section-collapsed-content">
-                                            <div class="collapsed-letters">
-                                                <span>{{ substr($project->unit_no ?? 'N', 0, 1) }}</span>
-                                                <span>{{ substr(number_format($project->area ?? 0, 0), 0, 1) }}</span>
-                                                <span>{{ substr(number_format($project->garden_area ?? 0, 0), 0, 1) }}</span>
-                                                <span>{{ substr($project->compound->name ?? $project->project ?? 'N', 0, 1) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="section-expanded-content" style="display: none;">
+                                        <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
                                                     <span class="content-label">Unit:</span>
@@ -257,15 +249,7 @@
                                     
                                     <!-- Contract Details Section -->
                                     <td class="section-content contract-section collapsed" data-section="contract">
-                                        <div class="section-collapsed-content">
-                                            <div class="collapsed-letters">
-                                                <span>{{ $project->reservation_date ? 'R' : 'N' }}</span>
-                                                <span>{{ $project->contract_date ? 'C' : 'N' }}</span>
-                                                <span>{{ $project->total_contract_value ? '$' : 'N' }}</span>
-                                                <span>{{ $project->years_of_installment ? 'Y' : 'N' }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="section-expanded-content" style="display: none;">
+                                        <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
                                                     <span class="content-label">Reserved:</span>
@@ -313,15 +297,7 @@
                                     
                                     <!-- Expenses Section -->
                                     <td class="section-content expenses-section collapsed" data-section="expenses">
-                                        <div class="section-collapsed-content">
-                                            <div class="collapsed-letters">
-                                                <span class="text-red-600 dark:text-red-400">A</span>
-                                                <span class="text-red-600 dark:text-red-400">O</span>
-                                                <span class="text-red-600 dark:text-red-400">T</span>
-                                                <span class="{{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">N</span>
-                                            </div>
-                                        </div>
-                                        <div class="section-expanded-content" style="display: none;">
+                                        <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
                                                     <span class="content-label">Asset Expenses:</span>
@@ -353,21 +329,7 @@
                                     
                                     <!-- Status Section -->
                                     <td class="section-content status-section collapsed" data-section="status">
-                                        <div class="section-collapsed-content">
-                                            <div class="collapsed-letters">
-                                                <span class="
-                                                    @if ($project->status === 'active') text-green-600 dark:text-green-400
-                                                    @elseif($project->status === 'exited') text-red-600 dark:text-red-400
-                                                    @elseif($project->status === 'pending') text-yellow-600 dark:text-yellow-400
-                                                    @else text-gray-600 dark:text-gray-400 @endif">
-                                                    {{ $project->status === 'exited' ? 'S' : ($project->status === 'active' ? 'H' : 'P') }}
-                                                </span>
-                                                <span>{{ substr(ucfirst($project->stage ?? 'N'), 0, 1) }}</span>
-                                                <span>{{ $projectData['entry_date'] ? 'S' : 'N' }}</span>
-                                                <span>{{ $projectData['exit_date'] ? 'E' : 'N' }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="section-expanded-content" style="display: none;">
+                                        <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
                                                     <span class="content-label">Status:</span>
@@ -400,7 +362,7 @@
                                                             {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
                                                         @else
                                                             <span class="text-gray-400">-</span>
-                                                        @endif
+                                        @endif
                                                     </span>
                                                 </div>
                                             </div>
@@ -642,6 +604,10 @@
             max-width: 60px;
             padding: 8px 4px;
         }
+        
+        .section-content.collapsed .section-expanded-content {
+            display: none;
+        }
 
         .section-content.expanded {
             min-width: 200px;
@@ -650,42 +616,6 @@
 
         .dark .section-content {
             border-left-color: #4b5563;
-        }
-
-        /* Collapsed Content */
-        .section-collapsed-content {
-            display: block;
-        }
-
-        .section-content.expanded .section-collapsed-content {
-            display: none;
-        }
-
-        .collapsed-letters {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .collapsed-letters span {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #f3f4f6;
-            color: #374151;
-            font-size: 0.6875rem;
-            font-weight: 700;
-        }
-
-        .dark .collapsed-letters span {
-            background: #4b5563;
-            color: #d1d5db;
         }
 
         /* Expanded Content */
