@@ -91,7 +91,7 @@
                                 <th class="section-header details-header" data-section="details" onclick="toggleSection('details')">
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
-                                        <span class="section-title-short">Details</span>
+                                        <span class="section-title-short">D</span>
                                         <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
@@ -102,7 +102,7 @@
                                 <th class="section-header contract-header" data-section="contract" onclick="toggleSection('contract')">
                                     <div class="header-content">
                                         <span class="section-title-full">Contract Details</span>
-                                        <span class="section-title-short">Contract</span>
+                                        <span class="section-title-short">C</span>
                                         <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
@@ -113,7 +113,7 @@
                                 <th class="section-header expenses-header" data-section="expenses" onclick="toggleSection('expenses')">
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
-                                        <span class="section-title-short">Expenses</span>
+                                        <span class="section-title-short">E</span>
                                         <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
@@ -124,7 +124,7 @@
                                 <th class="section-header status-header" data-section="status" onclick="toggleSection('status')">
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
-                                        <span class="section-title-short">Status</span>
+                                        <span class="section-title-short">S</span>
                                         <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
@@ -485,8 +485,8 @@
         }
 
         .section-header.collapsed {
-            min-width: 60px;
-            max-width: 60px;
+            min-width: 40px;
+            max-width: 40px;
         }
 
         .section-header.expanded {
@@ -534,7 +534,7 @@
 
         .section-title-short {
             display: inline;
-            font-size: 0.6875rem;
+            font-size: 0.875rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -601,8 +601,8 @@
         }
 
         .section-content.collapsed {
-            min-width: 60px;
-            max-width: 60px;
+            min-width: 40px;
+            max-width: 40px;
             padding: 8px 4px;
         }
         
@@ -613,6 +613,39 @@
         .section-content.expanded {
             min-width: 200px;
             padding: 16px 12px;
+            display: table-cell;
+        }
+
+        .section-content.expanded .expanded-content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .section-content.expanded .content-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-bottom: none;
+            padding: 8px 4px;
+        }
+
+        .section-content.expanded .content-label {
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            margin-bottom: 4px;
+            min-width: auto;
+        }
+
+        .section-content.expanded .content-value {
+            font-size: 0.75rem;
+            color: #111827;
+            text-align: center;
         }
 
         .dark .section-content {
