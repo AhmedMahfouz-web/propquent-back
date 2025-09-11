@@ -88,54 +88,46 @@
                                 </th>
                                 
                                 <!-- Project Details Section Header -->
-                                <th class="section-header details-header" data-section="details">
+                                <th class="section-header details-header" data-section="details" onclick="toggleSection('details')">
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
                                         <span class="section-title-short">Details</span>
-                                        <button class="toggle-btn" onclick="toggleSection('details')">
-                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </div>
                                 </th>
                                 
                                 <!-- Contract Details Section Header -->
-                                <th class="section-header contract-header" data-section="contract">
+                                <th class="section-header contract-header" data-section="contract" onclick="toggleSection('contract')">
                                     <div class="header-content">
                                         <span class="section-title-full">Contract Details</span>
                                         <span class="section-title-short">Contract</span>
-                                        <button class="toggle-btn" onclick="toggleSection('contract')">
-                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </div>
                                 </th>
                                 
                                 <!-- Expenses Section Header -->
-                                <th class="section-header expenses-header" data-section="expenses">
+                                <th class="section-header expenses-header" data-section="expenses" onclick="toggleSection('expenses')">
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
                                         <span class="section-title-short">Expenses</span>
-                                        <button class="toggle-btn" onclick="toggleSection('expenses')">
-                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </div>
                                 </th>
                                 
                                 <!-- Status Section Header -->
-                                <th class="section-header status-header" data-section="status">
+                                <th class="section-header status-header" data-section="status" onclick="toggleSection('status')">
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
                                         <span class="section-title-short">Status</span>
-                                        <button class="toggle-btn" onclick="toggleSection('status')">
-                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </div>
                                 </th>
                             </tr>
@@ -513,28 +505,12 @@
             gap: 8px;
         }
 
-        .toggle-btn {
-            background: none;
-            border: none;
-            color: #6b7280;
-            cursor: pointer;
-            padding: 2px;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .dark .toggle-btn {
-            color: #d1d5db;
-        }
-
-        .toggle-btn:hover {
+        .section-header:hover {
             background: #e5e7eb;
-            color: #374151;
         }
 
-        .dark .toggle-btn:hover {
+        .dark .section-header:hover {
             background: #4b5563;
-            color: #f9fafb;
         }
 
         .toggle-arrow {
