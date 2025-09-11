@@ -86,56 +86,68 @@
                                         <span>Project</span>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Project Details Section Header -->
-                                <th class="section-header details-header" data-section="details" onclick="toggleSection('details')">
+                                <th class="section-header details-header" data-section="details"
+                                    onclick="toggleSection('details')">
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
-                                        <span class="section-title-short">D</span>
-                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <span class="section-title-short">P.D</span>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Contract Details Section Header -->
-                                <th class="section-header contract-header" data-section="contract" onclick="toggleSection('contract')">
+                                <th class="section-header contract-header" data-section="contract"
+                                    onclick="toggleSection('contract')">
                                     <div class="header-content">
                                         <span class="section-title-full">Contract Details</span>
-                                        <span class="section-title-short">C</span>
-                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <span class="section-title-short">C.D</span>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Expenses Section Header -->
-                                <th class="section-header expenses-header" data-section="expenses" onclick="toggleSection('expenses')">
+                                <th class="section-header expenses-header" data-section="expenses"
+                                    onclick="toggleSection('expenses')">
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
-                                        <span class="section-title-short">E</span>
-                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <span class="section-title-short">Exp</span>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Status Section Header -->
-                                <th class="section-header status-header" data-section="status" onclick="toggleSection('status')">
+                                <th class="section-header status-header" data-section="status"
+                                    onclick="toggleSection('status')">
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
-                                        <span class="section-title-short">S</span>
-                                        <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        <span class="section-title-short">S&D</span>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
                                 </th>
                             </tr>
-                            
+
                             <!-- Sub-headers row -->
                             <tr class="sub-headers-row">
                                 <th></th> <!-- Empty for project column -->
-                                
+
                                 <!-- Project Details Sub-headers -->
                                 <th class="section-subheader details-section">
                                     <div class="sub-header-grid details-grid">
@@ -145,7 +157,7 @@
                                         <span>Compound</span>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Contract Details Sub-headers -->
                                 <th class="section-subheader contract-section">
                                     <div class="sub-header-grid contract-grid">
@@ -155,7 +167,7 @@
                                         <span>Years</span>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Expenses Sub-headers -->
                                 <th class="section-subheader expenses-section">
                                     <div class="sub-header-grid expenses-grid">
@@ -165,7 +177,7 @@
                                         <span>Net Profit</span>
                                     </div>
                                 </th>
-                                
+
                                 <!-- Status Sub-headers -->
                                 <th class="section-subheader status-section">
                                     <div class="sub-header-grid status-grid">
@@ -177,14 +189,14 @@
                                 </th>
                             </tr>
                         </thead>
-                        
+
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->projects as $project)
                                 @php
                                     $projectData = $this->projectsData[$project->key] ?? [];
                                     $assetExpenses = 0;
                                     $operationExpenses = 0;
-                                    
+
                                     // Calculate categorized expenses
                                     foreach ($projectData['expense_breakdown'] ?? [] as $type => $amount) {
                                         if (str_contains($type, 'asset')) {
@@ -193,7 +205,7 @@
                                             $operationExpenses += $amount;
                                         }
                                     }
-                                    
+
                                     $totalExpenses = $projectData['total_expenses'] ?? 0;
                                     $totalRevenues = $projectData['total_revenues'] ?? 0;
                                     $netProfit = $totalRevenues - $totalExpenses;
@@ -204,24 +216,20 @@
                                         <div class="project-info">
                                             <div class="project-title">{{ $project->title }}</div>
                                             <div class="project-key">{{ $project->key }}</div>
-                                            @if ($project->developer)
-                                                <div class="project-developer">{{ $project->developer->name }}</div>
-                                            @endif
                                         </div>
                                     </td>
-                                    
+
                                     <!-- Project Details Section -->
                                     <td class="section-content details-section collapsed" data-section="details">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <span class="content-label">Unit:</span>
-                                                    <span class="content-value">{{ $project->unit_no ?? 'N/A' }}</span>
+                                                    <span
+                                                        class="content-value">{{ $project->unit_no ?? 'N/A' }}</span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Area:</span>
                                                     <span class="content-value">
-                                                        @if($project->area)
+                                                        @if ($project->area)
                                                             {{ number_format($project->area, 0) }} m²
                                                         @else
                                                             N/A
@@ -229,9 +237,8 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Garden:</span>
                                                     <span class="content-value">
-                                                        @if($project->garden_area)
+                                                        @if ($project->garden_area)
                                                             {{ number_format($project->garden_area, 0) }} m²
                                                         @else
                                                             N/A
@@ -239,19 +246,18 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Compound:</span>
-                                                    <span class="content-value">{{ $project->compound->name ?? $project->project ?? 'N/A' }}</span>
+                                                    <span
+                                                        class="content-value">{{ $project->compound->name ?? ($project->project ?? 'N/A') }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    
+
                                     <!-- Contract Details Section -->
                                     <td class="section-content contract-section collapsed" data-section="contract">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <span class="content-label">Reserved:</span>
                                                     <span class="content-value">
                                                         @if ($project->reservation_date)
                                                             {{ $project->reservation_date->format('M d, Y') }}
@@ -261,7 +267,6 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Contract Date:</span>
                                                     <span class="content-value">
                                                         @if ($project->contract_date)
                                                             {{ $project->contract_date->format('M d, Y') }}
@@ -271,7 +276,6 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Total Value:</span>
                                                     <span class="content-value font-medium">
                                                         @if ($project->total_contract_value)
                                                             ${{ number_format($project->total_contract_value, 0) }}
@@ -281,7 +285,6 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Years:</span>
                                                     <span class="content-value">
                                                         @if ($project->years_of_installment)
                                                             {{ $project->years_of_installment }} years
@@ -293,46 +296,46 @@
                                             </div>
                                         </div>
                                     </td>
-                                    
+
                                     <!-- Expenses Section -->
                                     <td class="section-content expenses-section collapsed" data-section="expenses">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <span class="content-label">Asset Expenses:</span>
-                                                    <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                    <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
                                                         ${{ number_format($assetExpenses, 0) }}
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Operation Expenses:</span>
-                                                    <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                    <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
                                                         ${{ number_format($operationExpenses, 0) }}
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Total Expenses:</span>
-                                                    <span class="content-value text-red-600 dark:text-red-400 font-bold">
+                                                    <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-bold">
                                                         ${{ number_format($totalExpenses, 0) }}
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Net Profit:</span>
-                                                    <span class="content-value font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                                    <span
+                                                        class="content-value font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                                                         ${{ number_format($netProfit, 0) }}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    
+
                                     <!-- Status Section -->
                                     <td class="section-content status-section collapsed" data-section="status">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <span class="content-label">Status:</span>
-                                                    <span class="status-badge
+                                                    <span
+                                                        class="status-badge
                                                         @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
                                                         @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
                                                         @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
@@ -341,11 +344,10 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Stage:</span>
-                                                    <span class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
+                                                    <span
+                                                        class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">Start Date:</span>
                                                     <span class="content-value">
                                                         @if ($projectData['entry_date'])
                                                             {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
@@ -355,7 +357,6 @@
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
-                                                    <span class="content-label">End Date:</span>
                                                     <span class="content-value">
                                                         @if ($projectData['exit_date'])
                                                             {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
@@ -370,7 +371,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <td colspan="5"
+                                        class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                         No projects found matching your criteria.
                                     </td>
                                 </tr>
@@ -626,7 +628,7 @@
             padding: 8px 4px;
             text-align: center;
         }
-        
+
         .section-content.collapsed .section-expanded-content {
             display: none;
         }
@@ -753,6 +755,7 @@
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
+
             .project-column-header,
             .project-column {
                 min-width: 150px;
@@ -814,22 +817,22 @@
             // Toggle section header state
             const sectionHeader = document.querySelector(`[data-section="${sectionName}"]`);
             const arrow = sectionHeader.querySelector('.toggle-arrow');
-            
+
             // Toggle section content elements and sub-headers
             const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
-            
+
             const isExpanded = sectionHeader.classList.contains('expanded');
-            
+
             if (isExpanded) {
                 // Collapse section
                 sectionHeader.classList.remove('expanded');
                 sectionHeader.classList.add('collapsed');
-                
+
                 sectionElements.forEach(element => {
                     element.classList.remove('expanded');
                     element.classList.add('collapsed');
                 });
-                
+
                 // Rotate arrow back
                 if (arrow) {
                     arrow.classList.remove('expanded');
@@ -838,12 +841,12 @@
                 // Expand section
                 sectionHeader.classList.remove('collapsed');
                 sectionHeader.classList.add('expanded');
-                
+
                 sectionElements.forEach(element => {
                     element.classList.remove('collapsed');
                     element.classList.add('expanded');
                 });
-                
+
                 // Rotate arrow
                 if (arrow) {
                     arrow.classList.add('expanded');
@@ -854,14 +857,14 @@
         // Initialize all sections as collapsed and ensure proper alignment
         document.addEventListener('DOMContentLoaded', function() {
             const sections = ['details', 'contract', 'expenses', 'status'];
-            
+
             sections.forEach(section => {
                 // Set headers as collapsed
                 const header = document.querySelector(`[data-section="${section}"]`);
                 if (header) {
                     header.classList.add('collapsed');
                 }
-                
+
                 // Set all section elements (content and sub-headers) as collapsed
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
@@ -874,13 +877,13 @@
         document.addEventListener('livewire:navigated', function() {
             // Re-initialize collapsed states after Livewire updates
             const sections = ['details', 'contract', 'expenses', 'status'];
-            
+
             sections.forEach(section => {
                 const header = document.querySelector(`[data-section="${section}"]`);
                 if (header && !header.classList.contains('expanded')) {
                     header.classList.add('collapsed');
                 }
-                
+
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
                     if (!element.classList.contains('expanded')) {
