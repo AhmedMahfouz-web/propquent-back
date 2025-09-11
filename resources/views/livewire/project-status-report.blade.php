@@ -87,29 +87,102 @@
                                     </div>
                                 </th>
                                 
-                                <!-- Project Details Columns -->
-                                <th class="table-header">Unit</th>
-                                <th class="table-header">Area</th>
-                                <th class="table-header">Garden</th>
-                                <th class="table-header">Compound</th>
+                                <!-- Project Details Section Header -->
+                                <th class="section-header details-header" data-section="details">
+                                    <div class="header-content">
+                                        <span class="section-title-full">Project Details</span>
+                                        <span class="section-title-short">Details</span>
+                                        <button class="toggle-btn" onclick="toggleSection('details')">
+                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </th>
                                 
-                                <!-- Contract Details Columns -->
-                                <th class="table-header">Reserved</th>
-                                <th class="table-header">Contract Date</th>
-                                <th class="table-header">Total Value</th>
-                                <th class="table-header">Years</th>
+                                <!-- Contract Details Section Header -->
+                                <th class="section-header contract-header" data-section="contract">
+                                    <div class="header-content">
+                                        <span class="section-title-full">Contract Details</span>
+                                        <span class="section-title-short">Contract</span>
+                                        <button class="toggle-btn" onclick="toggleSection('contract')">
+                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </th>
                                 
-                                <!-- Expenses Columns -->
-                                <th class="table-header">Asset Expenses</th>
-                                <th class="table-header">Operation Expenses</th>
-                                <th class="table-header">Total Expenses</th>
-                                <th class="table-header">Net Profit</th>
+                                <!-- Expenses Section Header -->
+                                <th class="section-header expenses-header" data-section="expenses">
+                                    <div class="header-content">
+                                        <span class="section-title-full">Expenses</span>
+                                        <span class="section-title-short">Expenses</span>
+                                        <button class="toggle-btn" onclick="toggleSection('expenses')">
+                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </th>
                                 
-                                <!-- Status Columns -->
-                                <th class="table-header">Status</th>
-                                <th class="table-header">Stage</th>
-                                <th class="table-header">Start Date</th>
-                                <th class="table-header">End Date</th>
+                                <!-- Status Section Header -->
+                                <th class="section-header status-header" data-section="status">
+                                    <div class="header-content">
+                                        <span class="section-title-full">Status & Dates</span>
+                                        <span class="section-title-short">Status</span>
+                                        <button class="toggle-btn" onclick="toggleSection('status')">
+                                            <svg class="toggle-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </th>
+                            </tr>
+                            
+                            <!-- Sub-headers row -->
+                            <tr class="sub-headers-row">
+                                <th></th> <!-- Empty for project column -->
+                                
+                                <!-- Project Details Sub-headers -->
+                                <th class="section-subheader details-section">
+                                    <div class="sub-header-grid details-grid">
+                                        <span>Unit</span>
+                                        <span>Area</span>
+                                        <span>Garden</span>
+                                        <span>Compound</span>
+                                    </div>
+                                </th>
+                                
+                                <!-- Contract Details Sub-headers -->
+                                <th class="section-subheader contract-section">
+                                    <div class="sub-header-grid contract-grid">
+                                        <span>Reserved</span>
+                                        <span>Contract Date</span>
+                                        <span>Total Value</span>
+                                        <span>Years</span>
+                                    </div>
+                                </th>
+                                
+                                <!-- Expenses Sub-headers -->
+                                <th class="section-subheader expenses-section">
+                                    <div class="sub-header-grid expenses-grid">
+                                        <span>Asset</span>
+                                        <span>Operation</span>
+                                        <span>Total</span>
+                                        <span>Net Profit</span>
+                                    </div>
+                                </th>
+                                
+                                <!-- Status Sub-headers -->
+                                <th class="section-subheader status-section">
+                                    <div class="sub-header-grid status-grid">
+                                        <span>Status</span>
+                                        <span>Stage</span>
+                                        <span>Start Date</span>
+                                        <span>End Date</span>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         
@@ -145,97 +218,167 @@
                                         </div>
                                     </td>
                                     
-                                    <!-- Project Details Columns -->
-                                    <td class="table-cell">{{ $project->unit_no ?? 'N/A' }}</td>
-                                    <td class="table-cell">
-                                        @if($project->area)
-                                            {{ number_format($project->area, 0) }} m²
-                                        @else
-                                            N/A
-                                        @endif
-                                    </td>
-                                    <td class="table-cell">
-                                        @if($project->garden_area)
-                                            {{ number_format($project->garden_area, 0) }} m²
-                                        @else
-                                            N/A
-                                        @endif
-                                    </td>
-                                    <td class="table-cell">{{ $project->compound->name ?? $project->project ?? 'N/A' }}</td>
-                                    
-                                    <!-- Contract Details Columns -->
-                                    <td class="table-cell">
-                                        @if ($project->reservation_date)
-                                            {{ $project->reservation_date->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="table-cell">
-                                        @if ($project->contract_date)
-                                            {{ $project->contract_date->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="table-cell font-medium">
-                                        @if ($project->total_contract_value)
-                                            ${{ number_format($project->total_contract_value, 0) }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="table-cell">
-                                        @if ($project->years_of_installment)
-                                            {{ $project->years_of_installment }} years
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
+                                    <!-- Project Details Section -->
+                                    <td class="section-content details-section collapsed" data-section="details">
+                                        <div class="section-expanded-content">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span class="content-label">Unit:</span>
+                                                    <span class="content-value">{{ $project->unit_no ?? 'N/A' }}</span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Area:</span>
+                                                    <span class="content-value">
+                                                        @if($project->area)
+                                                            {{ number_format($project->area, 0) }} m²
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Garden:</span>
+                                                    <span class="content-value">
+                                                        @if($project->garden_area)
+                                                            {{ number_format($project->garden_area, 0) }} m²
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Compound:</span>
+                                                    <span class="content-value">{{ $project->compound->name ?? $project->project ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                     
-                                    <!-- Expenses Columns -->
-                                    <td class="table-cell text-red-600 dark:text-red-400 font-medium">
-                                        ${{ number_format($assetExpenses, 0) }}
-                                    </td>
-                                    <td class="table-cell text-red-600 dark:text-red-400 font-medium">
-                                        ${{ number_format($operationExpenses, 0) }}
-                                    </td>
-                                    <td class="table-cell text-red-600 dark:text-red-400 font-bold">
-                                        ${{ number_format($totalExpenses, 0) }}
-                                    </td>
-                                    <td class="table-cell font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                        ${{ number_format($netProfit, 0) }}
+                                    <!-- Contract Details Section -->
+                                    <td class="section-content contract-section collapsed" data-section="contract">
+                                        <div class="section-expanded-content">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span class="content-label">Reserved:</span>
+                                                    <span class="content-value">
+                                                        @if ($project->reservation_date)
+                                                            {{ $project->reservation_date->format('M d, Y') }}
+                                                        @else
+                                                            <span class="text-gray-400">N/A</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Contract Date:</span>
+                                                    <span class="content-value">
+                                                        @if ($project->contract_date)
+                                                            {{ $project->contract_date->format('M d, Y') }}
+                                                        @else
+                                                            <span class="text-gray-400">N/A</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Total Value:</span>
+                                                    <span class="content-value font-medium">
+                                                        @if ($project->total_contract_value)
+                                                            ${{ number_format($project->total_contract_value, 0) }}
+                                                        @else
+                                                            <span class="text-gray-400">N/A</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Years:</span>
+                                                    <span class="content-value">
+                                                        @if ($project->years_of_installment)
+                                                            {{ $project->years_of_installment }} years
+                                                        @else
+                                                            <span class="text-gray-400">N/A</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                     
-                                    <!-- Status Columns -->
-                                    <td class="table-cell">
-                                        <span class="status-badge
-                                            @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                            @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
-                                            @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
-                                            @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
-                                            {{ $project->status === 'exited' ? 'Sold' : ($project->status === 'active' ? 'On Hold' : ucfirst($project->status)) }}
-                                        </span>
+                                    <!-- Expenses Section -->
+                                    <td class="section-content expenses-section collapsed" data-section="expenses">
+                                        <div class="section-expanded-content">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span class="content-label">Asset Expenses:</span>
+                                                    <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                        ${{ number_format($assetExpenses, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Operation Expenses:</span>
+                                                    <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                        ${{ number_format($operationExpenses, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Total Expenses:</span>
+                                                    <span class="content-value text-red-600 dark:text-red-400 font-bold">
+                                                        ${{ number_format($totalExpenses, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Net Profit:</span>
+                                                    <span class="content-value font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                                        ${{ number_format($netProfit, 0) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="table-cell">{{ ucfirst($project->stage ?? 'N/A') }}</td>
-                                    <td class="table-cell">
-                                        @if ($projectData['entry_date'])
-                                            {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="table-cell">
-                                        @if ($projectData['exit_date'])
-                                            {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
-                                        @else
-                                            <span class="text-gray-400">-</span>
-                                        @endif
+                                    
+                                    <!-- Status Section -->
+                                    <td class="section-content status-section collapsed" data-section="status">
+                                        <div class="section-expanded-content">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span class="content-label">Status:</span>
+                                                    <span class="status-badge
+                                                        @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                                        @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
+                                                        @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                                        @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
+                                                        {{ $project->status === 'exited' ? 'Sold' : ($project->status === 'active' ? 'On Hold' : ucfirst($project->status)) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Stage:</span>
+                                                    <span class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">Start Date:</span>
+                                                    <span class="content-value">
+                                                        @if ($projectData['entry_date'])
+                                                            {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
+                                                        @else
+                                                            <span class="text-gray-400">N/A</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span class="content-label">End Date:</span>
+                                                    <span class="content-value">
+                                                        @if ($projectData['exit_date'])
+                                                            {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
+                                                        @else
+                                                            <span class="text-gray-400">-</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="17" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <td colspan="5" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                         No projects found matching your criteria.
                                     </td>
                                 </tr>
@@ -340,43 +483,217 @@
             color: #60a5fa;
         }
 
-        /* Table Headers */
-        .table-header {
+        /* Section Headers */
+        .section-header {
             padding: 8px 12px;
-            text-align: left;
+            background: #f9fafb;
+            border-left: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .section-header.collapsed {
+            min-width: 60px;
+            max-width: 60px;
+        }
+
+        .section-header.expanded {
+            min-width: 200px;
+        }
+
+        .dark .section-header {
+            background: #374151;
+            border-left-color: #4b5563;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .dark .toggle-btn {
+            color: #d1d5db;
+        }
+
+        .toggle-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .dark .toggle-btn:hover {
+            background: #4b5563;
+            color: #f9fafb;
+        }
+
+        .toggle-arrow {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-arrow.expanded {
+            transform: rotate(180deg);
+        }
+
+        /* Section Title States */
+        .section-title-full {
+            display: none;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #6b7280;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.75rem;
         }
 
-        .dark .table-header {
-            color: #d1d5db;
-            background: #374151;
-            border-color: #4b5563;
+        .section-title-short {
+            display: inline;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        /* Table Cells */
-        .table-cell {
+        .section-header.expanded .section-title-full {
+            display: inline;
+        }
+
+        .section-header.expanded .section-title-short {
+            display: none;
+        }
+
+        /* Sub-headers */
+        .section-subheader {
             padding: 8px 12px;
-            vertical-align: middle;
-            border: 1px solid #e5e7eb;
+            background: #f3f4f6;
+            border-left: 1px solid #e5e7eb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .dark .section-subheader {
+            background: #2d3748;
+            border-left-color: #4b5563;
+            border-top-color: #4b5563;
+        }
+
+        .sub-header-grid {
+            display: grid;
+            gap: 8px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .dark .sub-header-grid {
+            color: #9ca3af;
+        }
+
+        .details-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .contract-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .expenses-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .status-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        /* Section Content */
+        .section-content {
+            border-left: 1px solid #e5e7eb;
+            vertical-align: top;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .section-content.collapsed {
+            min-width: 60px;
+            max-width: 60px;
+            padding: 8px 4px;
+        }
+        
+        .section-content.collapsed .section-expanded-content {
+            display: none;
+        }
+
+        .section-content.expanded {
+            min-width: 200px;
+            padding: 16px 12px;
+        }
+
+        .dark .section-content {
+            border-left-color: #4b5563;
+        }
+
+        /* Expanded Content */
+        .section-expanded-content {
+            display: none;
+        }
+
+        .section-content.expanded .section-expanded-content {
+            display: block;
+        }
+
+        .expanded-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .content-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .dark .content-row {
+            border-bottom-color: #4b5563;
+        }
+
+        .content-row:last-child {
+            border-bottom: none;
+        }
+
+        .content-label {
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            min-width: 60px;
+        }
+
+        .dark .content-label {
+            color: #9ca3af;
+        }
+
+        .content-value {
             font-size: 0.75rem;
             color: #111827;
-            width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            text-align: right;
         }
 
-        .dark .table-cell {
-            border-color: #4b5563;
+        .dark .content-value {
             color: #f9fafb;
         }
 
@@ -397,11 +714,14 @@
                 max-width: 150px;
             }
 
-            .table-header,
-            .table-cell {
-                width: 100px;
-                padding: 6px 8px;
-                font-size: 0.6875rem;
+            .section-header,
+            .section-content {
+                min-width: 140px;
+            }
+
+            .sub-header-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
             }
         }
 
@@ -438,4 +758,74 @@
         }
     </style>
 
+    <script>
+        function toggleSection(sectionName) {
+            // Toggle section header state
+            const sectionHeader = document.querySelector(`[data-section="${sectionName}"]`);
+            const arrow = sectionHeader.querySelector('.toggle-arrow');
+            
+            // Toggle section content elements
+            const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
+            
+            const isExpanded = sectionHeader.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse section
+                sectionHeader.classList.remove('expanded');
+                sectionHeader.classList.add('collapsed');
+                
+                sectionElements.forEach(element => {
+                    element.classList.remove('expanded');
+                    element.classList.add('collapsed');
+                });
+                
+                // Hide sub-headers
+                const subHeaders = document.querySelectorAll(`.section-subheader.${sectionName}-section`);
+                subHeaders.forEach(header => {
+                    header.style.display = 'none';
+                });
+            } else {
+                // Expand section
+                sectionHeader.classList.remove('collapsed');
+                sectionHeader.classList.add('expanded');
+                
+                sectionElements.forEach(element => {
+                    element.classList.remove('collapsed');
+                    element.classList.add('expanded');
+                });
+                
+                // Show sub-headers
+                const subHeaders = document.querySelectorAll(`.section-subheader.${sectionName}-section`);
+                subHeaders.forEach(header => {
+                    header.style.display = 'table-cell';
+                });
+            }
+            
+            // Toggle arrow rotation
+            if (arrow) {
+                arrow.classList.toggle('expanded');
+            }
+        }
+
+        // Initialize all sections as collapsed
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = ['details', 'contract', 'expenses', 'status'];
+            sections.forEach(section => {
+                // Set headers as collapsed
+                const header = document.querySelector(`[data-section="${section}"]`);
+                if (header) {
+                    header.classList.add('collapsed');
+                }
+                
+                // Set content elements as collapsed
+                const elements = document.querySelectorAll(`.${section}-section`);
+                elements.forEach(element => {
+                    element.classList.add('collapsed');
+                    if (element.classList.contains('section-subheader')) {
+                        element.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
 </div>
