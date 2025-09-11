@@ -220,7 +220,7 @@
                                     </td>
 
                                     <!-- Project Details Section -->
-                                    <td class="section-content details-section collapsed" data-section="details">
+                                    <td class="section-content details-section expanded" data-section="details">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -254,7 +254,7 @@
                                     </td>
 
                                     <!-- Contract Details Section -->
-                                    <td class="section-content contract-section collapsed" data-section="contract">
+                                    <td class="section-content contract-section expanded" data-section="contract">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -298,7 +298,7 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section collapsed" data-section="expenses">
+                                    <td class="section-content expenses-section expanded" data-section="expenses">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -330,7 +330,7 @@
                                     </td>
 
                                     <!-- Status Section -->
-                                    <td class="section-content status-section collapsed" data-section="status">
+                                    <td class="section-content status-section expanded" data-section="status">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
