@@ -399,7 +399,7 @@
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
-            table-layout: fixed;
+            table-layout: auto;
         }
 
         /* Fixed Project Column */
@@ -482,15 +482,20 @@
             border-left: 1px solid #e5e7eb;
             transition: all 0.3s ease;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         .section-header.collapsed {
-            min-width: 40px;
-            max-width: 40px;
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+            padding: 8px 4px;
         }
 
         .section-header.expanded {
-            min-width: 200px;
+            width: auto;
+            min-width: 280px;
+            padding: 8px 12px;
         }
 
         .dark .section-header {
@@ -554,6 +559,20 @@
             background: #f3f4f6;
             border-left: 1px solid #e5e7eb;
             border-top: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .section-subheader.collapsed {
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+            padding: 8px 4px;
+        }
+
+        .section-subheader.expanded {
+            width: auto;
+            min-width: 280px;
+            padding: 8px 12px;
         }
 
         .dark .section-subheader {
@@ -570,26 +589,26 @@
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.025em;
+            width: 100%;
+        }
+
+        .section-subheader.collapsed .sub-header-grid {
+            display: none;
         }
 
         .dark .sub-header-grid {
             color: #9ca3af;
         }
 
-        .details-grid {
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-        }
-
-        .contract-grid {
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-        }
-
-        .expenses-grid {
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-        }
-
+        .details-grid,
+        .contract-grid,
+        .expenses-grid,
         .status-grid {
             grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .section-subheader.expanded .sub-header-grid {
+            display: grid;
         }
 
         /* Section Content */
@@ -601,9 +620,11 @@
         }
 
         .section-content.collapsed {
-            min-width: 40px;
-            max-width: 40px;
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
             padding: 8px 4px;
+            text-align: center;
         }
         
         .section-content.collapsed .section-expanded-content {
@@ -611,16 +632,17 @@
         }
 
         .section-content.expanded {
-            min-width: 200px;
+            width: auto;
+            min-width: 280px;
             padding: 16px 12px;
-            display: table-cell;
         }
 
         .section-content.expanded .expanded-content-wrapper {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 12px;
-            align-items: center;
+            align-items: start;
+            width: 100%;
         }
 
         .section-content.expanded .content-row {
@@ -630,6 +652,7 @@
             text-align: center;
             border-bottom: none;
             padding: 8px 4px;
+            min-height: 60px;
         }
 
         .section-content.expanded .content-label {
@@ -640,12 +663,15 @@
             letter-spacing: 0.025em;
             margin-bottom: 4px;
             min-width: auto;
+            white-space: nowrap;
         }
 
         .section-content.expanded .content-value {
             font-size: 0.75rem;
             color: #111827;
             text-align: center;
+            word-wrap: break-word;
+            max-width: 100%;
         }
 
         .dark .section-content {
@@ -715,6 +741,16 @@
             font-weight: 500;
         }
 
+        /* Collapsed state indicators */
+        .section-content.collapsed::after {
+            content: '•••';
+            display: block;
+            text-align: center;
+            color: #9ca3af;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .project-column-header,
@@ -723,14 +759,20 @@
                 max-width: 150px;
             }
 
-            .section-header,
-            .section-content {
-                min-width: 140px;
+            .section-header.expanded,
+            .section-content.expanded,
+            .section-subheader.expanded {
+                min-width: 200px;
+            }
+
+            .section-content.expanded .expanded-content-wrapper {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
             }
 
             .sub-header-grid {
                 grid-template-columns: 1fr 1fr;
-                gap: 8px;
+                gap: 6px;
             }
         }
 
@@ -773,7 +815,7 @@
             const sectionHeader = document.querySelector(`[data-section="${sectionName}"]`);
             const arrow = sectionHeader.querySelector('.toggle-arrow');
             
-            // Toggle section content elements
+            // Toggle section content elements and sub-headers
             const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
             
             const isExpanded = sectionHeader.classList.contains('expanded');
@@ -788,11 +830,10 @@
                     element.classList.add('collapsed');
                 });
                 
-                // Hide sub-headers
-                const subHeaders = document.querySelectorAll(`.section-subheader.${sectionName}-section`);
-                subHeaders.forEach(header => {
-                    header.style.display = 'none';
-                });
+                // Rotate arrow back
+                if (arrow) {
+                    arrow.classList.remove('expanded');
+                }
             } else {
                 // Expand section
                 sectionHeader.classList.remove('collapsed');
@@ -803,22 +844,17 @@
                     element.classList.add('expanded');
                 });
                 
-                // Show sub-headers
-                const subHeaders = document.querySelectorAll(`.section-subheader.${sectionName}-section`);
-                subHeaders.forEach(header => {
-                    header.style.display = 'table-cell';
-                });
-            }
-            
-            // Toggle arrow rotation
-            if (arrow) {
-                arrow.classList.toggle('expanded');
+                // Rotate arrow
+                if (arrow) {
+                    arrow.classList.add('expanded');
+                }
             }
         }
 
-        // Initialize all sections as collapsed
+        // Initialize all sections as collapsed and ensure proper alignment
         document.addEventListener('DOMContentLoaded', function() {
             const sections = ['details', 'contract', 'expenses', 'status'];
+            
             sections.forEach(section => {
                 // Set headers as collapsed
                 const header = document.querySelector(`[data-section="${section}"]`);
@@ -826,12 +862,29 @@
                     header.classList.add('collapsed');
                 }
                 
-                // Set content elements as collapsed
+                // Set all section elements (content and sub-headers) as collapsed
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
                     element.classList.add('collapsed');
-                    if (element.classList.contains('section-subheader')) {
-                        element.style.display = 'none';
+                });
+            });
+        });
+
+        // Handle Livewire updates to maintain section states
+        document.addEventListener('livewire:navigated', function() {
+            // Re-initialize collapsed states after Livewire updates
+            const sections = ['details', 'contract', 'expenses', 'status'];
+            
+            sections.forEach(section => {
+                const header = document.querySelector(`[data-section="${section}"]`);
+                if (header && !header.classList.contains('expanded')) {
+                    header.classList.add('collapsed');
+                }
+                
+                const elements = document.querySelectorAll(`.${section}-section`);
+                elements.forEach(element => {
+                    if (!element.classList.contains('expanded')) {
+                        element.classList.add('collapsed');
                     }
                 });
             });
