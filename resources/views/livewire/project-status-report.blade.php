@@ -654,7 +654,6 @@
             text-align: center;
             border-bottom: none;
             padding: 8px 4px;
-            min-height: 60px;
         }
 
         .section-content.expanded .content-label {
