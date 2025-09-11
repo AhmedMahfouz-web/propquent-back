@@ -853,40 +853,50 @@
             }
         }
 
-        // Initialize all sections as collapsed and ensure proper alignment
+        // Initialize all sections as expanded by default
         document.addEventListener('DOMContentLoaded', function() {
             const sections = ['details', 'contract', 'expenses', 'status'];
 
             sections.forEach(section => {
-                // Set headers as collapsed
+                // Set headers as expanded
                 const header = document.querySelector(`[data-section="${section}"]`);
                 if (header) {
-                    header.classList.add('collapsed');
+                    header.classList.add('expanded');
+                    // Rotate arrow to expanded state
+                    const arrow = header.querySelector('.toggle-arrow');
+                    if (arrow) {
+                        arrow.classList.add('expanded');
+                    }
                 }
 
-                // Set all section elements (content and sub-headers) as collapsed
+                // Set all section elements (content and sub-headers) as expanded
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
-                    element.classList.add('collapsed');
+                    element.classList.add('expanded');
                 });
             });
         });
 
         // Handle Livewire updates to maintain section states
         document.addEventListener('livewire:navigated', function() {
-            // Re-initialize collapsed states after Livewire updates
+            // Re-initialize expanded states after Livewire updates
             const sections = ['details', 'contract', 'expenses', 'status'];
 
             sections.forEach(section => {
                 const header = document.querySelector(`[data-section="${section}"]`);
-                if (header && !header.classList.contains('expanded')) {
-                    header.classList.add('collapsed');
+                if (header && !header.classList.contains('collapsed')) {
+                    header.classList.add('expanded');
+                    // Rotate arrow to expanded state
+                    const arrow = header.querySelector('.toggle-arrow');
+                    if (arrow) {
+                        arrow.classList.add('expanded');
+                    }
                 }
 
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
-                    if (!element.classList.contains('expanded')) {
-                        element.classList.add('collapsed');
+                    if (!element.classList.contains('collapsed')) {
+                        element.classList.add('expanded');
                     }
                 });
             });
