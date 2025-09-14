@@ -51,7 +51,7 @@
                                 <span>Required fields</span>
                             </div>
                         </div>
-                        <p><strong>Required fields:</strong> Project, Amount, Date, Status</p>
+                        <p><strong>Required fields:</strong> Project, Financial Type, Amount, Date, Status</p>
                         <p><strong>Navigation:</strong> Use arrow keys to move between cells • Click any cell to edit •
                             Changes save automatically</p>
                     </div>
@@ -71,6 +71,14 @@
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Project</span>
+                            </span>
+                        </th>
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
+                            style="min-width: 150px;">
+                            <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
+                                <span
+                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Financial
+                                    Type</span>
                             </span>
                         </th>
                         <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
@@ -164,6 +172,21 @@
                                     @foreach ($projects as $key => $label)
                                         <option value="{{ $key }}"
                                             {{ $row['project_key'] == $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td
+                                class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3">
+                                <select
+                                    wire:change="updateDraftRow('{{ $rowId }}', 'financial_type', $event.target.value)"
+                                    data-row="{{ $rowId }}" data-col="1"
+                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6">
+                                    <option value="">Select Financial Type...</option>
+                                    @foreach ($financialTypes as $key => $label)
+                                        <option value="{{ $key }}"
+                                            {{ $row['financial_type'] == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach

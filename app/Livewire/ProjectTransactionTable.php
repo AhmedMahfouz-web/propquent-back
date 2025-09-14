@@ -13,6 +13,7 @@ class ProjectTransactionTable extends Component
     public $transactions = [];
     public $draftRows = [];
     public $projects = [];
+    public $financialTypes = [];
     public $servingTypes = [];
     public $transactionMethods = [];
     public $statuses = [];
@@ -40,6 +41,7 @@ class ProjectTransactionTable extends Component
             })
             ->toArray();
 
+        $this->financialTypes = ProjectTransaction::getAvailableFinancialTypes();
         $this->servingTypes = ProjectTransaction::getAvailableServingTypes();
         $this->transactionMethods = ProjectTransaction::getAvailableTransactionMethods();
         $this->statuses = ProjectTransaction::getAvailableStatuses();
@@ -51,6 +53,7 @@ class ProjectTransactionTable extends Component
         $this->draftRows[$newRowId] = [
             'id' => $newRowId,
             'project_key' => '',
+            'financial_type' => '',
             'serving' => '',
             'amount' => '',
             'method' => '',
@@ -115,6 +118,7 @@ class ProjectTransactionTable extends Component
     {
         $rules = [
             'project_key' => 'required|exists:projects,key',
+            'financial_type' => 'required|in:' . implode(',', array_keys($this->financialTypes)),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
             'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
@@ -148,7 +152,7 @@ class ProjectTransactionTable extends Component
         $row = $this->draftRows[$rowId];
 
         // Check if required fields are filled
-        $requiredFields = ['project_key', 'amount', 'transaction_date', 'status'];
+        $requiredFields = ['project_key', 'financial_type', 'amount', 'transaction_date', 'status'];
         $hasAllRequired = true;
 
         foreach ($requiredFields as $field) {
