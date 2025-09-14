@@ -94,6 +94,24 @@ class CashflowResource extends Resource
                     ->sortable()
                     ->color('warning'),
 
+                Tables\Columns\TextColumn::make('current_month_paid')
+                    ->label('This Month Paid')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('current_month_pending')
+                    ->label('This Month Pending')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('next_month_due')
+                    ->label('Next Month Due')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('info'),
+
                 Tables\Columns\TextColumn::make('next_installment_date')
                     ->label('Next Installment')
                     ->date()
