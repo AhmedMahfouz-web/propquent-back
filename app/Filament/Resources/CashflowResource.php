@@ -6,6 +6,7 @@ use App\Filament\Resources\CashflowResource\Pages;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use App\Models\UserTransaction;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -272,29 +273,99 @@ class CashflowResource extends Resource
                 Tables\Filters\SelectFilter::make('developer')
                     ->relationship('developer', 'name'),
 
+                Tables\Filters\Filter::make('month_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('start_month')
+                            ->label('Start Month')
+                            ->displayFormat('Y-m')
+                            ->format('Y-m-01')
+                            ->default(function () {
+                                $minDate = DB::table('project_transactions')
+                                    ->selectRaw('MIN(COALESCE(transaction_date, due_date)) as min_date')
+                                    ->first()->min_date;
+                                return $minDate ? Carbon::parse($minDate)->startOfMonth()->format('Y-m-01') : Carbon::now()->subMonths(6)->startOfMonth()->format('Y-m-01');
+                            }),
+                        Forms\Components\DatePicker::make('end_month')
+                            ->label('End Month')
+                            ->displayFormat('Y-m')
+                            ->format('Y-m-01')
+                            ->default(function () {
+                                $maxDate = DB::table('project_transactions')
+                                    ->selectRaw('MAX(COALESCE(due_date, transaction_date)) as max_date')
+                                    ->first()->max_date;
+                                return $maxDate ? Carbon::parse($maxDate)->startOfMonth()->format('Y-m-01') : Carbon::now()->addMonths(6)->startOfMonth()->format('Y-m-01');
+                            }),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['start_month'],
+                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
+                                    $q->where(function ($subQuery) use ($date) {
+                                        $subQuery->where('transaction_date', '>=', $date)
+                                            ->orWhere('due_date', '>=', $date);
+                                    });
+                                }),
+                            )
+                            ->when(
+                                $data['end_month'],
+                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
+                                    $endOfMonth = Carbon::parse($date)->endOfMonth();
+                                    $q->where(function ($subQuery) use ($endOfMonth) {
+                                        $subQuery->where('transaction_date', '<=', $endOfMonth)
+                                            ->orWhere('due_date', '<=', $endOfMonth);
+                                    });
+                                }),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['start_month']) {
+                            $indicators['start_month'] = 'From: ' . Carbon::parse($data['start_month'])->format('M Y');
+                        }
+                        if ($data['end_month']) {
+                            $indicators['end_month'] = 'Until: ' . Carbon::parse($data['end_month'])->format('M Y');
+                        }
+                        return $indicators;
+                    }),
+
                 Tables\Filters\Filter::make('date_range')
                     ->form([
                         Forms\Components\DatePicker::make('from')
-                            ->label('From Date')
-                            ->default(now()->format('Y-m-d')),
+                            ->label('From Date'),
                         Forms\Components\DatePicker::make('until')
-                            ->label('Until Date')
-                            ->default(now()->addMonths(6)->format('Y-m-d')),
+                            ->label('Until Date'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['from'],
                                 fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
-                                    $q->where('transaction_date', '>=', $date);
+                                    $q->where(function ($subQuery) use ($date) {
+                                        $subQuery->where('transaction_date', '>=', $date)
+                                            ->orWhere('due_date', '>=', $date);
+                                    });
                                 }),
                             )
                             ->when(
                                 $data['until'],
                                 fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
-                                    $q->where('transaction_date', '<=', $date);
+                                    $q->where(function ($subQuery) use ($date) {
+                                        $subQuery->where('transaction_date', '<=', $date)
+                                            ->orWhere('due_date', '<=', $date);
+                                    });
                                 }),
                             );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from']) {
+                            $indicators['from'] = 'From: ' . Carbon::parse($data['from'])->toFormattedDateString();
+                        }
+                        if ($data['until']) {
+                            $indicators['until'] = 'Until: ' . Carbon::parse($data['until'])->toFormattedDateString();
+                        }
+                        return $indicators;
                     }),
             ])
             ->actions([
