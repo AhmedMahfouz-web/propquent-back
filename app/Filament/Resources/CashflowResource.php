@@ -297,26 +297,35 @@ class CashflowResource extends Resource
                             }),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['start_month'],
-                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
-                                    $q->where(function ($subQuery) use ($date) {
-                                        $subQuery->where('transaction_date', '>=', $date)
-                                            ->orWhere('due_date', '>=', $date);
-                                    });
-                                }),
-                            )
-                            ->when(
-                                $data['end_month'],
-                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
-                                    $endOfMonth = Carbon::parse($date)->endOfMonth();
-                                    $q->where(function ($subQuery) use ($endOfMonth) {
-                                        $subQuery->where('transaction_date', '<=', $endOfMonth)
-                                            ->orWhere('due_date', '<=', $endOfMonth);
-                                    });
-                                }),
-                            );
+                        if (!$data['start_month'] && !$data['end_month']) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('transactions', function ($q) use ($data) {
+                            if ($data['start_month'] && $data['end_month']) {
+                                $startDate = Carbon::parse($data['start_month'])->startOfMonth();
+                                $endDate = Carbon::parse($data['end_month'])->endOfMonth();
+
+                                $q->where(function ($subQuery) use ($startDate, $endDate) {
+                                    $subQuery->whereBetween('transaction_date', [$startDate, $endDate])
+                                        ->orWhereBetween('due_date', [$startDate, $endDate]);
+                                });
+                            } elseif ($data['start_month']) {
+                                $startDate = Carbon::parse($data['start_month'])->startOfMonth();
+
+                                $q->where(function ($subQuery) use ($startDate) {
+                                    $subQuery->where('transaction_date', '>=', $startDate)
+                                        ->orWhere('due_date', '>=', $startDate);
+                                });
+                            } elseif ($data['end_month']) {
+                                $endDate = Carbon::parse($data['end_month'])->endOfMonth();
+
+                                $q->where(function ($subQuery) use ($endDate) {
+                                    $subQuery->where('transaction_date', '<=', $endDate)
+                                        ->orWhere('due_date', '<=', $endDate);
+                                });
+                            }
+                        });
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
@@ -337,25 +346,28 @@ class CashflowResource extends Resource
                             ->label('Until Date'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['from'],
-                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
-                                    $q->where(function ($subQuery) use ($date) {
-                                        $subQuery->where('transaction_date', '>=', $date)
-                                            ->orWhere('due_date', '>=', $date);
-                                    });
-                                }),
-                            )
-                            ->when(
-                                $data['until'],
-                                fn(Builder $query, $date): Builder => $query->whereHas('transactions', function ($q) use ($date) {
-                                    $q->where(function ($subQuery) use ($date) {
-                                        $subQuery->where('transaction_date', '<=', $date)
-                                            ->orWhere('due_date', '<=', $date);
-                                    });
-                                }),
-                            );
+                        if (!$data['from'] && !$data['until']) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('transactions', function ($q) use ($data) {
+                            if ($data['from'] && $data['until']) {
+                                $q->where(function ($subQuery) use ($data) {
+                                    $subQuery->whereBetween('transaction_date', [$data['from'], $data['until']])
+                                        ->orWhereBetween('due_date', [$data['from'], $data['until']]);
+                                });
+                            } elseif ($data['from']) {
+                                $q->where(function ($subQuery) use ($data) {
+                                    $subQuery->where('transaction_date', '>=', $data['from'])
+                                        ->orWhere('due_date', '>=', $data['from']);
+                                });
+                            } elseif ($data['until']) {
+                                $q->where(function ($subQuery) use ($data) {
+                                    $subQuery->where('transaction_date', '<=', $data['until'])
+                                        ->orWhere('due_date', '<=', $data['until']);
+                                });
+                            }
+                        });
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
