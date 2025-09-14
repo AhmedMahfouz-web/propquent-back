@@ -94,75 +94,171 @@ class CashflowResource extends Resource
                     ->sortable()
                     ->color('warning'),
 
-                // Monthly Cashflow Columns (6 months: 3 past + current + 2 future)
-                Tables\Columns\TextColumn::make('month_3_ago')
-                    ->label(now()->subMonths(3)->format('M Y'))
+                // Month 3 Ago - Weekly Breakdown
+                Tables\Columns\TextColumn::make('month_3_ago_w1')
+                    ->label(now()->subMonths(3)->format('M Y') . ' W1')
                     ->money('USD')
                     ->sortable()
                     ->color('gray')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('month_2_ago')
-                    ->label(now()->subMonths(2)->format('M Y'))
+                Tables\Columns\TextColumn::make('month_3_ago_w2')
+                    ->label(now()->subMonths(3)->format('M Y') . ' W2')
                     ->money('USD')
                     ->sortable()
                     ->color('gray')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('month_1_ago')
-                    ->label(now()->subMonths(1)->format('M Y'))
+                Tables\Columns\TextColumn::make('month_3_ago_w3')
+                    ->label(now()->subMonths(3)->format('M Y') . ' W3')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('month_3_ago_w4')
+                    ->label(now()->subMonths(3)->format('M Y') . ' W4')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                // Month 2 Ago - Weekly Breakdown
+                Tables\Columns\TextColumn::make('month_2_ago_w1')
+                    ->label(now()->subMonths(2)->format('M Y') . ' W1')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('month_2_ago_w2')
+                    ->label(now()->subMonths(2)->format('M Y') . ' W2')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('month_2_ago_w3')
+                    ->label(now()->subMonths(2)->format('M Y') . ' W3')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('month_2_ago_w4')
+                    ->label(now()->subMonths(2)->format('M Y') . ' W4')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                // Month 1 Ago - Weekly Breakdown
+                Tables\Columns\TextColumn::make('month_1_ago_w1')
+                    ->label(now()->subMonths(1)->format('M Y') . ' W1')
                     ->money('USD')
                     ->sortable()
                     ->color('info')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('current_month')
-                    ->label(now()->format('M Y') . ' (Current)')
+                Tables\Columns\TextColumn::make('month_1_ago_w2')
+                    ->label(now()->subMonths(1)->format('M Y') . ' W2')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('info')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('month_1_ago_w3')
+                    ->label(now()->subMonths(1)->format('M Y') . ' W3')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('info')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('month_1_ago_w4')
+                    ->label(now()->subMonths(1)->format('M Y') . ' W4')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('info')
+                    ->toggleable(),
+
+                // Current Month - Weekly Breakdown (Always Visible)
+                Tables\Columns\TextColumn::make('current_month_w1')
+                    ->label(now()->format('M Y') . ' W1 (Current)')
                     ->money('USD')
                     ->sortable()
                     ->color('success'),
 
-                Tables\Columns\TextColumn::make('month_1_ahead')
-                    ->label(now()->addMonths(1)->format('M Y'))
+                Tables\Columns\TextColumn::make('current_month_w2')
+                    ->label(now()->format('M Y') . ' W2 (Current)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('current_month_w3')
+                    ->label(now()->format('M Y') . ' W3 (Current)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('current_month_w4')
+                    ->label(now()->format('M Y') . ' W4 (Current)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success'),
+
+                // Month 1 Ahead - Weekly Breakdown
+                Tables\Columns\TextColumn::make('month_1_ahead_w1')
+                    ->label(now()->addMonths(1)->format('M Y') . ' W1')
                     ->money('USD')
                     ->sortable()
                     ->color('warning'),
 
-                Tables\Columns\TextColumn::make('month_2_ahead')
-                    ->label(now()->addMonths(2)->format('M Y'))
+                Tables\Columns\TextColumn::make('month_1_ahead_w2')
+                    ->label(now()->addMonths(1)->format('M Y') . ' W2')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('month_1_ahead_w3')
+                    ->label(now()->addMonths(1)->format('M Y') . ' W3')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('month_1_ahead_w4')
+                    ->label(now()->addMonths(1)->format('M Y') . ' W4')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('warning'),
+
+                // Month 2 Ahead - Weekly Breakdown
+                Tables\Columns\TextColumn::make('month_2_ahead_w1')
+                    ->label(now()->addMonths(2)->format('M Y') . ' W1')
                     ->money('USD')
                     ->sortable()
                     ->color('danger')
                     ->toggleable(),
 
-                // Quarterly breakdown columns (expandable)
-                Tables\Columns\TextColumn::make('current_month_q1')
-                    ->label('Q1 (Week 1-7)')
+                Tables\Columns\TextColumn::make('month_2_ahead_w2')
+                    ->label(now()->addMonths(2)->format('M Y') . ' W2')
                     ->money('USD')
                     ->sortable()
-                    ->color('success')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->color('danger')
+                    ->toggleable(),
 
-                Tables\Columns\TextColumn::make('current_month_q2')
-                    ->label('Q2 (Week 8-14)')
+                Tables\Columns\TextColumn::make('month_2_ahead_w3')
+                    ->label(now()->addMonths(2)->format('M Y') . ' W3')
                     ->money('USD')
                     ->sortable()
-                    ->color('success')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->color('danger')
+                    ->toggleable(),
 
-                Tables\Columns\TextColumn::make('current_month_q3')
-                    ->label('Q3 (Week 15-21)')
+                Tables\Columns\TextColumn::make('month_2_ahead_w4')
+                    ->label(now()->addMonths(2)->format('M Y') . ' W4')
                     ->money('USD')
                     ->sortable()
-                    ->color('success')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('current_month_q4')
-                    ->label('Q4 (Week 22-31)')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('success')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->color('danger')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('next_installment_date')
                     ->label('Next Installment')
@@ -254,71 +350,196 @@ class CashflowResource extends Resource
                     $query->where('status', 'pending')
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                // Monthly data for 6 months
-                'transactions as month_3_ago' => function ($query) {
+                // Month 3 Ago - Weekly Breakdown
+                'transactions as month_3_ago_w1' => function ($query) {
                     $date = now()->subMonths(3);
                     $query->whereYear('transaction_date', $date->year)
                         ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '<=', 7)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as month_2_ago' => function ($query) {
+                'transactions as month_3_ago_w2' => function ($query) {
+                    $date = now()->subMonths(3);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 7)
+                        ->whereDay('transaction_date', '<=', 14)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_3_ago_w3' => function ($query) {
+                    $date = now()->subMonths(3);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 14)
+                        ->whereDay('transaction_date', '<=', 21)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_3_ago_w4' => function ($query) {
+                    $date = now()->subMonths(3);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 21)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                // Month 2 Ago - Weekly Breakdown
+                'transactions as month_2_ago_w1' => function ($query) {
                     $date = now()->subMonths(2);
                     $query->whereYear('transaction_date', $date->year)
                         ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '<=', 7)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as month_1_ago' => function ($query) {
+                'transactions as month_2_ago_w2' => function ($query) {
+                    $date = now()->subMonths(2);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 7)
+                        ->whereDay('transaction_date', '<=', 14)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ago_w3' => function ($query) {
+                    $date = now()->subMonths(2);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 14)
+                        ->whereDay('transaction_date', '<=', 21)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ago_w4' => function ($query) {
+                    $date = now()->subMonths(2);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 21)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                // Month 1 Ago - Weekly Breakdown
+                'transactions as month_1_ago_w1' => function ($query) {
                     $date = now()->subMonths(1);
                     $query->whereYear('transaction_date', $date->year)
                         ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '<=', 7)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as current_month' => function ($query) {
-                    $query->whereYear('transaction_date', now()->year)
-                        ->whereMonth('transaction_date', now()->month)
+                'transactions as month_1_ago_w2' => function ($query) {
+                    $date = now()->subMonths(1);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 7)
+                        ->whereDay('transaction_date', '<=', 14)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as month_1_ahead' => function ($query) {
-                    $date = now()->addMonths(1);
-                    $query->where('status', 'pending')
-                        ->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
+                'transactions as month_1_ago_w3' => function ($query) {
+                    $date = now()->subMonths(1);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 14)
+                        ->whereDay('transaction_date', '<=', 21)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as month_2_ahead' => function ($query) {
-                    $date = now()->addMonths(2);
-                    $query->where('status', 'pending')
-                        ->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
+                'transactions as month_1_ago_w4' => function ($query) {
+                    $date = now()->subMonths(1);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->whereDay('transaction_date', '>', 21)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                // Quarterly breakdown for current month
-                'transactions as current_month_q1' => function ($query) {
+                // Current Month - Weekly Breakdown
+                'transactions as current_month_w1' => function ($query) {
                     $query->whereYear('transaction_date', now()->year)
                         ->whereMonth('transaction_date', now()->month)
                         ->whereDay('transaction_date', '<=', 7)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as current_month_q2' => function ($query) {
+                'transactions as current_month_w2' => function ($query) {
                     $query->whereYear('transaction_date', now()->year)
                         ->whereMonth('transaction_date', now()->month)
                         ->whereDay('transaction_date', '>', 7)
                         ->whereDay('transaction_date', '<=', 14)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as current_month_q3' => function ($query) {
+                'transactions as current_month_w3' => function ($query) {
                     $query->whereYear('transaction_date', now()->year)
                         ->whereMonth('transaction_date', now()->month)
                         ->whereDay('transaction_date', '>', 14)
                         ->whereDay('transaction_date', '<=', 21)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 },
-                'transactions as current_month_q4' => function ($query) {
+                'transactions as current_month_w4' => function ($query) {
                     $query->whereYear('transaction_date', now()->year)
                         ->whereMonth('transaction_date', now()->month)
                         ->whereDay('transaction_date', '>', 21)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                }
+                },
+                // Month 1 Ahead - Weekly Breakdown
+                'transactions as month_1_ahead_w1' => function ($query) {
+                    $date = now()->addMonths(1);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '<=', 7)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_1_ahead_w2' => function ($query) {
+                    $date = now()->addMonths(1);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '>', 7)
+                        ->whereDay('due_date', '<=', 14)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_1_ahead_w3' => function ($query) {
+                    $date = now()->addMonths(1);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '>', 14)
+                        ->whereDay('due_date', '<=', 21)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_1_ahead_w4' => function ($query) {
+                    $date = now()->addMonths(1);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '>', 21)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                // Month 2 Ahead - Weekly Breakdown
+                'transactions as month_2_ahead_w1' => function ($query) {
+                    $date = now()->addMonths(2);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '<=', 7)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ahead_w2' => function ($query) {
+                    $date = now()->addMonths(2);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '>', 7)
+                        ->whereDay('due_date', '<=', 14)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ahead_w3' => function ($query) {
+                    $date = now()->addMonths(2);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '>', 14)
+                        ->whereDay('due_date', '<=', 21)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ahead_w4' => function ($query) {
+                    $date = now()->addMonths(2);
+                    $query->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->whereDay('due_date', '>', 21)
+                        ->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
             ])
             ->selectRaw('
                 projects.*,
