@@ -11,6 +11,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Carbon\Carbon;
+use Filament\Notifications\Notification;
 
 class ListCashflows extends ListRecords
 {
@@ -19,7 +20,7 @@ class ListCashflows extends ListRecords
     public function mount(): void
     {
         parent::mount();
-        
+
         // Set default date range filter if not already set
         if (empty($this->tableFilters['date_range']['from']) && empty($this->tableFilters['date_range']['until'])) {
             $this->tableFilters = array_merge($this->tableFilters ?? [], [
@@ -44,14 +45,19 @@ class ListCashflows extends ListRecords
                     cache()->forget('monthly_cashflow_data_12');
                     cache()->forget('monthly_cashflow_data_24');
                     cache()->forget('monthly_cashflow_data_36');
-                    
+
                     // Clear any other cashflow cache keys
                     $cacheKeys = ['company_cashflow_summary', 'monthly_cashflow_data_6', 'monthly_cashflow_data_12', 'monthly_cashflow_data_24', 'monthly_cashflow_data_36'];
                     foreach ($cacheKeys as $key) {
                         cache()->forget($key);
                     }
-                    
-                    $this->notify('success', 'Cashflow data refreshed successfully!');
+
+                    Notification::make()
+                        ->title('Success')
+                        ->body('Cashflow data refreshed successfully!')
+                        ->success()
+                        ->send();
+
                     return redirect()->to(request()->url());
                 }),
         ];
@@ -62,11 +68,11 @@ class ListCashflows extends ListRecords
         return [
             'all' => Tab::make('All Projects'),
             'active' => Tab::make('Active Projects')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'active')),
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'active')),
             'profitable' => Tab::make('Profitable Projects')
-                ->modifyQueryUsing(fn (Builder $query) => $query->havingRaw('net_cashflow > 0')),
+                ->modifyQueryUsing(fn(Builder $query) => $query->havingRaw('net_cashflow > 0')),
             'loss_making' => Tab::make('Loss Making')
-                ->modifyQueryUsing(fn (Builder $query) => $query->havingRaw('net_cashflow < 0')),
+                ->modifyQueryUsing(fn(Builder $query) => $query->havingRaw('net_cashflow < 0')),
         ];
     }
 

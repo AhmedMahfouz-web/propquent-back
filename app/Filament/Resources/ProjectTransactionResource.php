@@ -46,6 +46,11 @@ class ProjectTransactionResource extends Resource
                             ->required()
                             ->columnSpanFull(),
 
+                        Forms\Components\Select::make('financial_type')
+                            ->label('Financial Type')
+                            ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
+                            ->required()
+                            ->searchable(),
 
                         Forms\Components\Select::make('serving')
                             ->options(fn() => ProjectTransaction::getAvailableServingTypes())
@@ -140,6 +145,15 @@ class ProjectTransactionResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->width(200),
+
+                Tables\Columns\SelectColumn::make('financial_type')
+                    ->label('Financial Type')
+                    ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
+                    ->rules(['required'])
+                    ->selectablePlaceholder(false)
+                    ->searchable()
+                    ->sortable()
+                    ->width(150),
 
                 Tables\Columns\SelectColumn::make('serving')
                     ->options(fn() => ProjectTransaction::getAvailableServingTypes())
@@ -238,6 +252,9 @@ class ProjectTransactionResource extends Resource
                     ->searchable()
                     ->preload(),
 
+
+                Tables\Filters\SelectFilter::make('financial_type')
+                    ->options(fn() => ProjectTransaction::getAvailableFinancialTypes()),
 
                 Tables\Filters\SelectFilter::make('serving')
                     ->options(fn() => ProjectTransaction::getAvailableServingTypes()),
