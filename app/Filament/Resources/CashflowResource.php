@@ -94,23 +94,75 @@ class CashflowResource extends Resource
                     ->sortable()
                     ->color('warning'),
 
-                Tables\Columns\TextColumn::make('current_month_paid')
-                    ->label('This Month Paid')
+                // Monthly Cashflow Columns (6 months: 3 past + current + 2 future)
+                Tables\Columns\TextColumn::make('month_3_ago')
+                    ->label(now()->subMonths(3)->format('M Y'))
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('month_2_ago')
+                    ->label(now()->subMonths(2)->format('M Y'))
+                    ->money('USD')
+                    ->sortable()
+                    ->color('gray')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('month_1_ago')
+                    ->label(now()->subMonths(1)->format('M Y'))
+                    ->money('USD')
+                    ->sortable()
+                    ->color('info')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('current_month')
+                    ->label(now()->format('M Y') . ' (Current)')
                     ->money('USD')
                     ->sortable()
                     ->color('success'),
 
-                Tables\Columns\TextColumn::make('current_month_pending')
-                    ->label('This Month Pending')
+                Tables\Columns\TextColumn::make('month_1_ahead')
+                    ->label(now()->addMonths(1)->format('M Y'))
                     ->money('USD')
                     ->sortable()
                     ->color('warning'),
 
-                Tables\Columns\TextColumn::make('next_month_due')
-                    ->label('Next Month Due')
+                Tables\Columns\TextColumn::make('month_2_ahead')
+                    ->label(now()->addMonths(2)->format('M Y'))
                     ->money('USD')
                     ->sortable()
-                    ->color('info'),
+                    ->color('danger')
+                    ->toggleable(),
+
+                // Quarterly breakdown columns (expandable)
+                Tables\Columns\TextColumn::make('current_month_q1')
+                    ->label('Q1 (Week 1-7)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('current_month_q2')
+                    ->label('Q2 (Week 8-14)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('current_month_q3')
+                    ->label('Q3 (Week 15-21)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('current_month_q4')
+                    ->label('Q4 (Week 22-31)')
+                    ->money('USD')
+                    ->sortable()
+                    ->color('success')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('next_installment_date')
                     ->label('Next Installment')
@@ -200,6 +252,71 @@ class CashflowResource extends Resource
                 },
                 'transactions as unpaid_installments' => function ($query) {
                     $query->where('status', 'pending')
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                // Monthly data for 6 months
+                'transactions as month_3_ago' => function ($query) {
+                    $date = now()->subMonths(3);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ago' => function ($query) {
+                    $date = now()->subMonths(2);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_1_ago' => function ($query) {
+                    $date = now()->subMonths(1);
+                    $query->whereYear('transaction_date', $date->year)
+                        ->whereMonth('transaction_date', $date->month)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as current_month' => function ($query) {
+                    $query->whereYear('transaction_date', now()->year)
+                        ->whereMonth('transaction_date', now()->month)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_1_ahead' => function ($query) {
+                    $date = now()->addMonths(1);
+                    $query->where('status', 'pending')
+                        ->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as month_2_ahead' => function ($query) {
+                    $date = now()->addMonths(2);
+                    $query->where('status', 'pending')
+                        ->whereYear('due_date', $date->year)
+                        ->whereMonth('due_date', $date->month)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                // Quarterly breakdown for current month
+                'transactions as current_month_q1' => function ($query) {
+                    $query->whereYear('transaction_date', now()->year)
+                        ->whereMonth('transaction_date', now()->month)
+                        ->whereDay('transaction_date', '<=', 7)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as current_month_q2' => function ($query) {
+                    $query->whereYear('transaction_date', now()->year)
+                        ->whereMonth('transaction_date', now()->month)
+                        ->whereDay('transaction_date', '>', 7)
+                        ->whereDay('transaction_date', '<=', 14)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as current_month_q3' => function ($query) {
+                    $query->whereYear('transaction_date', now()->year)
+                        ->whereMonth('transaction_date', now()->month)
+                        ->whereDay('transaction_date', '>', 14)
+                        ->whereDay('transaction_date', '<=', 21)
+                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
+                },
+                'transactions as current_month_q4' => function ($query) {
+                    $query->whereYear('transaction_date', now()->year)
+                        ->whereMonth('transaction_date', now()->month)
+                        ->whereDay('transaction_date', '>', 21)
                         ->select(DB::raw('COALESCE(SUM(amount), 0)'));
                 }
             ])
