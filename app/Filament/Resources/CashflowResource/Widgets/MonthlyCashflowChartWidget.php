@@ -15,23 +15,20 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '1600px';
+    protected static ?string $maxHeight = '800px';
 
     public ?string $filter = '6';
 
     protected function getData(): array
     {
         $months = (int) $this->filter;
-        $weeklyData = $this->getWeeklyCashflowData($months);
+        $monthlyData = CashflowResource::getMonthlyCashflowData($months, true);
 
-        // Get current cash balance to show as starting point
         $currentBalance = CashflowResource::getCurrentCashBalance();
 
-        // Add current week as starting point
-        $labels = array_column($weeklyData, 'week_label');
-        $balances = array_column($weeklyData, 'running_balance');
+        $labels = array_column($monthlyData, 'month_label');
+        $balances = array_column($monthlyData, 'running_balance');
 
-        // Prepend current week with current balance
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
 
@@ -44,85 +41,11 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'borderColor' => 'rgba(34, 197, 94, 1)',
                     'borderWidth' => 3,
                     'fill' => true,
-                    'type' => 'line',
-                    'tension' => 1,
-                    'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
-                    'pointBorderColor' => '#ffffff',
-                    'pointBorderWidth' => 2,
-                    'pointRadius' => 6,
-                    'pointHoverRadius' => 8,
+                    'tension' => 0.4,
                 ],
             ],
             'labels' => $labels,
         ];
-    }
-
-    private function getWeeklyCashflowData(int $months): array
-    {
-        $startDate = now();
-        $endDate = now()->addMonths($months);
-
-        // Get current cash balance as starting point
-        $runningBalance = CashflowResource::getCurrentCashBalance();
-
-        // Get pending transactions for future projections
-        $transactions = collect(DB::table('project_transactions')
-            ->where('status', 'pending')
-            ->whereBetween('due_date', [$startDate, $endDate])
-            ->selectRaw('
-                due_date,
-                financial_type,
-                amount
-            ')
-            ->orderBy('due_date')
-            ->get())
-            ->merge(DB::table('user_transactions')
-                ->where('status', 'pending')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->selectRaw('
-                    transaction_date as due_date,
-                    transaction_type as financial_type,
-                    amount
-                ')
-                ->orderBy('transaction_date')
-                ->get());
-
-        // Generate weekly periods
-        $weeklyData = [];
-        $currentWeek = $startDate->copy()->startOfWeek();
-
-        while ($currentWeek <= $endDate) {
-            $weekEnd = $currentWeek->copy()->endOfWeek();
-
-            // Get transactions for this week
-            $weekTransactions = $transactions->filter(function ($transaction) use ($currentWeek, $weekEnd) {
-                $transactionDate = \Carbon\Carbon::parse($transaction->due_date);
-                return $transactionDate->between($currentWeek, $weekEnd);
-            });
-
-            // Calculate weekly net change
-            $weeklyNet = 0;
-            foreach ($weekTransactions as $transaction) {
-                if (in_array($transaction->financial_type, ['revenue', 'deposit'])) {
-                    $weeklyNet += $transaction->amount;
-                } else {
-                    $weeklyNet -= $transaction->amount;
-                }
-            }
-
-            $runningBalance += $weeklyNet;
-
-            $weeklyData[] = [
-                'week_start' => $currentWeek->format('Y-m-d'),
-                'week_label' => $currentWeek->format('M d') . ' - ' . $weekEnd->format('M d'),
-                'weekly_net' => (float) $weeklyNet,
-                'running_balance' => (float) $runningBalance,
-            ];
-
-            $currentWeek->addWeek();
-        }
-
-        return $weeklyData;
     }
 
     protected function getType(): string
@@ -148,23 +71,15 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'display' => true,
                     'position' => 'top',
                 ],
-                'tooltip' => [
-                    'enabled' => true,
-                ],
                 'datalabels' => [
                     'display' => true,
                     'align' => 'top',
-                    'anchor' => 'end',
-                    'offset' => 10,
                     'color' => '#ffffff',
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.95)',
-                    'borderColor' => 'rgba(34, 197, 94, 1)',
-                    'borderRadius' => 6,
-                    'borderWidth' => 1,
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.9)',
+                    'borderRadius' => 4,
                     'padding' => 6,
                     'font' => [
                         'weight' => 'bold',
-                        'size' => 10
                     ],
                 ],
             ],
@@ -172,37 +87,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'y' => [
                     'beginAtZero' => false,
                 ],
-                'x' => [
-                    'display' => true,
-                    'ticks' => [
-                        'maxRotation' => 45,
-                        'minRotation' => 45,
-                        'maxTicksLimit' => 15,
-                        'autoSkip' => true,
-                        'autoSkipPadding' => 10
-                    ]
-                ],
-            ],
-            'interaction' => [
-                'mode' => 'index',
-                'intersect' => false,
-            ],
-            'elements' => [
-                'point' => [
-                    'radius' => 5,
-                    'hoverRadius' => 7,
-                ],
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
-            'layout' => [
-                'padding' => [
-                    'top' => 50,
-                    'bottom' => 60,
-                    'left' => 30,
-                    'right' => 30
-                ]
-            ]
         ];
     }
 }
