@@ -159,83 +159,43 @@ class CashflowResource extends Resource
     /**
      * Get cashflow data combining project and user transactions
      */
+
     public static function getEloquentQuery(): Builder
     {
-        // Get current cash balance from completed transactions
-        $currentBalance = self::getCurrentCashBalance();
+        // Since Filament expects an Eloquent Builder, we'll use ProjectTransaction as base
+        // and add custom attributes via accessors in a custom model or use raw selects
 
-        // Create a union query for both project and user transactions
-        $projectTransactions = DB::table('project_transactions as pt')
-            ->leftJoin('projects as p', 'pt.project_key', '=', 'p.key')
-            ->select([
-                DB::raw('COALESCE(pt.due_date, pt.transaction_date) as date'),
-                DB::raw('CONCAT("Project: ", COALESCE(p.title, pt.project_key), " - ", pt.financial_type) as description'),
-                DB::raw('CASE
-                    WHEN pt.financial_type = "revenue" THEN "Revenue"
-                    ELSE "Expense"
-                END as type'),
-                DB::raw('CASE
-                    WHEN pt.financial_type = "revenue" THEN pt.amount
-                    ELSE 0
-                END as cash_in'),
-                DB::raw('CASE
-                    WHEN pt.financial_type = "expense" THEN pt.amount
-                    ELSE 0
-                END as cash_out'),
-                DB::raw('CASE
-                    WHEN pt.status = "done" THEN "Completed"
-                    ELSE "Pending"
-                END as status'),
-                'pt.id',
-                DB::raw('"project" as source_table')
-            ])
-            ->where('pt.due_date', '>=', now()->startOfDay())
-            ->orWhere(function ($q) {
-                $q->where('pt.transaction_date', '>=', now()->startOfDay())
-                    ->where('pt.status', 'done');
-            });
-
-        $userTransactions = DB::table('user_transactions as ut')
-            ->leftJoin('users as u', 'ut.user_id', '=', 'u.id')
-            ->select([
-                DB::raw('COALESCE(ut.due_date, ut.transaction_date) as date'),
-                DB::raw('CONCAT("User: ", COALESCE(u.full_name, u.id), " - ", ut.transaction_type) as description'),
-                DB::raw('CASE
-                    WHEN ut.transaction_type = "deposit" THEN "Deposit"
-                    ELSE "Withdrawal"
-                END as type'),
-                DB::raw('CASE
-                    WHEN ut.transaction_type = "deposit" THEN ut.amount
-                    ELSE 0
-                END as cash_in'),
-                DB::raw('CASE
-                    WHEN ut.transaction_type = "withdraw" THEN ut.amount
-                    ELSE 0
-                END as cash_out'),
-                DB::raw('CASE
-                    WHEN ut.status = "done" THEN "Completed"
-                    ELSE "Pending"
-                END as status'),
-                'ut.id',
-                DB::raw('"user" as source_table')
-            ])
-            ->where('ut.due_date', '>=', now()->startOfDay())
-            ->orWhere(function ($q) {
-                $q->where('ut.transaction_date', '>=', now()->startOfDay())
-                    ->where('ut.status', 'done');
-            });
-
-        // Union both queries and add running balance calculation
-        $unionQuery = $projectTransactions->unionAll($userTransactions);
-
-        // Create a temporary table-like structure with running balance
-        return DB::query()
-            ->fromSub($unionQuery, 'combined_transactions')
+        return ProjectTransaction::query()
             ->selectRaw('
-                *,
-                @running_balance := @running_balance + cash_in - cash_out as running_balance
+                COALESCE(due_date, transaction_date) as date,
+                CONCAT("Project: ", project_key, " - ", financial_type) as description,
+                CASE
+                    WHEN financial_type = "revenue" THEN "Revenue"
+                    ELSE "Expense"
+                END as type,
+                CASE
+                    WHEN financial_type = "revenue" THEN amount
+                    ELSE 0
+                END as cash_in,
+                CASE
+                    WHEN financial_type = "expense" THEN amount
+                    ELSE 0
+                END as cash_out,
+                CASE
+                    WHEN status = "done" THEN "Completed"
+                    ELSE "Pending"
+                END as status,
+                0 as running_balance,
+                id,
+                "project" as source_table
             ')
-            ->crossJoin(DB::raw("(SELECT @running_balance := {$currentBalance}) as init"))
+            ->where(function ($query) {
+                $query->where('due_date', '>=', now()->startOfDay())
+                    ->orWhere(function ($q) {
+                        $q->where('transaction_date', '>=', now()->startOfDay())
+                            ->where('status', 'done');
+                    });
+            })
             ->orderBy('date')
             ->orderBy('id');
     }
