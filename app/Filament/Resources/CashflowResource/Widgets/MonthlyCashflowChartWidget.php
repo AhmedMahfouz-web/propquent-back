@@ -16,7 +16,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '2400px';
+    protected static ?string $maxHeight = '800px';
 
     public ?string $filter = '6';
 
@@ -33,17 +33,14 @@ class MonthlyCashflowChartWidget extends ChartWidget
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
 
-        // Create dynamic colors based on balance values
-        $backgroundColors = [];
-        $borderColors = [];
+        // Create dynamic colors for points based on balance values
+        $pointColors = [];
         
         foreach ($balances as $balance) {
             if ($balance < 0) {
-                $backgroundColors[] = 'rgba(239, 68, 68, 0.1)'; // Red background
-                $borderColors[] = 'rgba(239, 68, 68, 1)'; // Red border
+                $pointColors[] = 'rgba(239, 68, 68, 1)'; // Red points for negative
             } else {
-                $backgroundColors[] = 'rgba(34, 197, 94, 0.1)'; // Green background
-                $borderColors[] = 'rgba(34, 197, 94, 1)'; // Green border
+                $pointColors[] = 'rgba(34, 197, 94, 1)'; // Green points for positive
             }
         }
 
@@ -53,23 +50,15 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'label' => 'Cash in Hand',
                     'data' => $balances,
                     'weeklyNet' => array_column($weeklyData, 'weekly_net'),
-                    'backgroundColor' => $backgroundColors,
-                    'borderColor' => $borderColors,
-                    'pointBackgroundColor' => $borderColors,
-                    'pointBorderColor' => $borderColors,
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.1)', // Always green background
+                    'borderColor' => 'rgba(34, 197, 94, 1)', // Always green border
+                    'pointBackgroundColor' => $pointColors, // Dynamic point colors
+                    'pointBorderColor' => $pointColors, // Dynamic point border colors
                     'borderWidth' => 3,
                     'fill' => true,
                     'tension' => 0.3,
-                    'pointRadius' => 4,
-                    'pointHoverRadius' => 6,
-                    'segment' => [
-                        'borderColor' => 'function(ctx) {
-                            return ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0 ? "rgba(239, 68, 68, 1)" : "rgba(34, 197, 94, 1)";
-                        }',
-                        'backgroundColor' => 'function(ctx) {
-                            return ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0 ? "rgba(239, 68, 68, 0.1)" : "rgba(34, 197, 94, 0.1)";
-                        }'
-                    ]
+                    'pointRadius' => 6,
+                    'pointHoverRadius' => 8,
                 ],
             ],
             'labels' => $labels,
@@ -173,6 +162,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
+            'layout' => [
+                'padding' => 20
+            ],
             'interaction' => [
                 'mode' => 'index',
                 'intersect' => false,
