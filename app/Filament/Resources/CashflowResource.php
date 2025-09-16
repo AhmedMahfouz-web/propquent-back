@@ -237,4 +237,80 @@ class CashflowResource extends Resource
             ];
         });
     }
+
+    /**
+     * Get monthly cashflow data for chart
+     */
+    public static function getMonthlyCashflowData(int $months = 12): array
+    {
+        return Cache::remember("monthly_cashflow_data_{$months}", now()->addMinutes(15), function () use ($months) {
+            $startDate = now()->subMonths($months)->startOfMonth();
+            $endDate = now()->endOfMonth();
+
+            // Get monthly project transactions
+            $monthlyProjectData = collect(DB::table('project_transactions')
+                ->where('status', 'done')
+                ->whereBetween('transaction_date', [$startDate, $endDate])
+                ->selectRaw('
+                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
+                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
+                ')
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get()
+                ->toArray())
+                ->keyBy('month');
+
+            // Get monthly user transactions
+            $monthlyUserData = collect(DB::table('user_transactions')
+                ->where('status', 'done')
+                ->whereBetween('transaction_date', [$startDate, $endDate])
+                ->selectRaw('
+                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
+                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
+                ')
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get()
+                ->toArray())
+                ->keyBy('month');
+
+            // Generate all months in range
+            $monthlyData = [];
+            $currentMonth = $startDate->copy();
+            $runningBalance = 0;
+
+            while ($currentMonth <= $endDate) {
+                $monthKey = $currentMonth->format('Y-m');
+
+                $projectData = $monthlyProjectData->get($monthKey);
+                $userData = $monthlyUserData->get($monthKey);
+
+                $revenue = $projectData->revenue ?? 0;
+                $expenses = $projectData->expenses ?? 0;
+                $deposits = $userData->deposits ?? 0;
+                $withdrawals = $userData->withdrawals ?? 0;
+
+                $monthlyNet = $revenue + $deposits - $expenses - $withdrawals;
+                $runningBalance += $monthlyNet;
+
+                $monthlyData[] = [
+                    'month' => $monthKey,
+                    'month_label' => $currentMonth->format('M Y'),
+                    'revenue' => (float) $revenue,
+                    'expenses' => (float) $expenses,
+                    'deposits' => (float) $deposits,
+                    'withdrawals' => (float) $withdrawals,
+                    'monthly_net' => (float) $monthlyNet,
+                    'running_balance' => (float) $runningBalance,
+                ];
+
+                $currentMonth->addMonth();
+            }
+
+            return $monthlyData;
+        });
+    }
 }
