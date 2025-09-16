@@ -15,7 +15,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '900px';
+    protected static ?string $maxHeight = '1800px';
 
     public ?string $filter = '6';
 
@@ -61,10 +61,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
     {
         $startDate = now();
         $endDate = now()->addMonths($months);
-        
+
         // Get current cash balance as starting point
         $runningBalance = CashflowResource::getCurrentCashBalance();
-        
+
         // Get pending transactions for future projections
         $transactions = collect(DB::table('project_transactions')
             ->where('status', 'pending')
@@ -90,16 +90,16 @@ class MonthlyCashflowChartWidget extends ChartWidget
         // Generate weekly periods
         $weeklyData = [];
         $currentWeek = $startDate->copy()->startOfWeek();
-        
+
         while ($currentWeek <= $endDate) {
             $weekEnd = $currentWeek->copy()->endOfWeek();
-            
+
             // Get transactions for this week
             $weekTransactions = $transactions->filter(function ($transaction) use ($currentWeek, $weekEnd) {
                 $transactionDate = \Carbon\Carbon::parse($transaction->due_date);
                 return $transactionDate->between($currentWeek, $weekEnd);
             });
-            
+
             // Calculate weekly net change
             $weeklyNet = 0;
             foreach ($weekTransactions as $transaction) {
@@ -109,19 +109,19 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     $weeklyNet -= $transaction->amount;
                 }
             }
-            
+
             $runningBalance += $weeklyNet;
-            
+
             $weeklyData[] = [
                 'week_start' => $currentWeek->format('Y-m-d'),
                 'week_label' => $currentWeek->format('M d') . ' - ' . $weekEnd->format('M d'),
                 'weekly_net' => (float) $weeklyNet,
                 'running_balance' => (float) $runningBalance,
             ];
-            
+
             $currentWeek->addWeek();
         }
-        
+
         return $weeklyData;
     }
 
