@@ -175,8 +175,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'x' => [
                     'display' => true,
                     'ticks' => [
-                        'maxRotation' => 45,
-                        'minRotation' => 45
+                        'maxRotation' => 0,
+                        'minRotation' => 0,
+                        'maxTicksLimit' => 20
                     ]
                 ],
             ],
@@ -190,9 +191,8 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'hoverRadius' => 7,
                 ],
             ],
-            'responsive' => false,
+            'responsive' => true,
             'maintainAspectRatio' => false,
-            'aspectRatio' => 1,
             'layout' => [
                 'padding' => [
                     'top' => 30,
