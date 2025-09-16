@@ -45,7 +45,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'borderWidth' => 3,
                     'fill' => true,
                     'type' => 'line',
-                    'tension' => 0.4,
+                    'tension' => 1,
                     'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
                     'pointBorderColor' => '#ffffff',
                     'pointBorderWidth' => 2,
