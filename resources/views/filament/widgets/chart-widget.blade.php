@@ -1,40 +1,39 @@
+@php
+    $chartId = 'chart-' . $this->getId();
+@endphp
+
 <x-filament-widgets::widget class="fi-wi-chart">
     <div style="overflow-x: auto; overflow-y: hidden; padding-bottom: 20px;">
         <div style="min-width: 2000px; height: {{ $this->getMaxHeight() }};">
-            <canvas
-                x-data="{
-                    chart: null,
-                    
-                    init() {
-                        // Wait for Chart.js to be available
-                        const initChart = () => {
-                            if (typeof Chart !== 'undefined') {
-                                this.chart = new Chart($el, {
-                                    type: '{{ $this->getType() }}',
-                                    data: {{ \Illuminate\Support\Js::from($this->getData()) }},
-                                    options: {{ \Illuminate\Support\Js::from($this->getOptions()) }},
-                                });
-                                
-                                $wire.on('updateChartData', ({ data }) => {
-                                    this.chart.data = data;
-                                    this.chart.update();
-                                });
-                            } else {
-                                // Retry after a short delay
-                                setTimeout(initChart, 100);
-                            }
-                        };
-                        
-                        initChart();
-                    }
-                }"
-                x-init="init()"
-                wire:ignore
-            ></canvas>
+            <canvas id="{{ $chartId }}" wire:ignore></canvas>
         </div>
     </div>
-
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    @endpush
 </x-filament-widgets::widget>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('{{ $chartId }}');
+    if (!canvas) return;
+
+    // Wait for Chart.js to be available
+    function initChart() {
+        if (typeof Chart !== 'undefined') {
+            const chart = new Chart(canvas, {
+                type: '{{ $this->getType() }}',
+                data: {!! \Illuminate\Support\Js::from($this->getData()) !!},
+                options: {!! \Illuminate\Support\Js::from($this->getOptions()) !!}
+            });
+
+            // Listen for Livewire updates
+            Livewire.on('updateChartData', (data) => {
+                chart.data = data;
+                chart.update();
+            });
+        } else {
+            setTimeout(initChart, 100);
+        }
+    }
+
+    initChart();
+});
+</script>
