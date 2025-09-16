@@ -95,9 +95,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'mode' => 'index',
                     'intersect' => false,
                     'callbacks' => [
-                        'label' => 'function(context) {
+                        'label' => new \Illuminate\Support\HtmlString('function(context) {
                             return context.dataset.label + ": $" + context.parsed.y.toLocaleString();
-                        }'
+                        }')
                     ]
                 ],
                 'datalabels' => [
@@ -105,7 +105,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'align' => 'top',
                     'anchor' => 'end',
                     'offset' => 10,
-                    'formatter' => 'function(value, context) {
+                    'formatter' => new \Illuminate\Support\HtmlString('function(value, context) {
                         if (value === null || value === undefined) return "";
                         const formatted = new Intl.NumberFormat("en-US", {
                             style: "currency",
@@ -114,7 +114,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                             maximumFractionDigits: 0
                         }).format(value);
                         return formatted;
-                    }',
+                    }'),
                     'font' => [
                         'weight' => 'bold',
                         'size' => 12
@@ -137,9 +137,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'y' => [
                     'beginAtZero' => false,
                     'ticks' => [
-                        'callback' => 'function(value) {
+                        'callback' => new \Illuminate\Support\HtmlString('function(value) {
                             return "$" + value.toLocaleString();
-                        }'
+                        }')
                     ],
                 ],
                 'x' => [
