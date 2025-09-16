@@ -62,7 +62,7 @@ class CashflowResource extends Resource
                 Tables\Columns\TextColumn::make('financial_type')
                     ->label('Type')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
                     ->color(fn(string $state): string => match ($state) {
                         'revenue' => 'success',
                         'expense' => 'danger',
@@ -88,7 +88,7 @@ class CashflowResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === 'done' ? 'Completed' : 'Pending')
+                    ->formatStateUsing(fn(string $state): string => $state === 'done' ? 'Completed' : 'Pending')
                     ->color(fn(string $state): string => match ($state) {
                         'done' => 'success',
                         'pending' => 'warning',
@@ -107,14 +107,8 @@ class CashflowResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn($q) => $q->where(function($subQuery) use ($data) {
-                                $subQuery->where('due_date', '>=', $data['from'])
-                                         ->orWhere('transaction_date', '>=', $data['from']);
-                            }))
-                            ->when($data['until'], fn($q) => $q->where(function($subQuery) use ($data) {
-                                $subQuery->where('due_date', '<=', $data['until'])
-                                         ->orWhere('transaction_date', '<=', $data['until']);
-                            }));
+                            ->when($data['from'], fn($q) => $q->where('date', '>=', $data['from']))
+                            ->when($data['until'], fn($q) => $q->where('date', '<=', $data['until']));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
@@ -170,6 +164,7 @@ class CashflowResource extends Resource
     {
         return ProjectTransaction::query()
             ->with(['project'])
+            ->selectRaw('*, COALESCE(due_date, transaction_date) as date')
             ->where(function ($query) {
                 $query->where('due_date', '>=', now()->startOfDay())
                     ->orWhere(function ($q) {
