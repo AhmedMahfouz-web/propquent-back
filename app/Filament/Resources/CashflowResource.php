@@ -43,54 +43,55 @@ class CashflowResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                Tables\Columns\TextColumn::make('transaction_date')
                     ->label('Date')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(function ($record) {
+                        return $record->due_date ?? $record->transaction_date;
+                    }),
 
-                Tables\Columns\TextColumn::make('description')
+                Tables\Columns\TextColumn::make('project.title')
                     ->label('Description')
                     ->searchable()
-                    ->limit(50),
+                    ->limit(50)
+                    ->getStateUsing(function ($record) {
+                        return "Project: " . ($record->project->title ?? $record->project_key) . " - " . $record->financial_type;
+                    }),
 
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('financial_type')
                     ->label('Type')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
                     ->color(fn(string $state): string => match ($state) {
-                        'Revenue' => 'success',
-                        'Expense' => 'danger',
-                        'Deposit' => 'info',
-                        'Withdrawal' => 'warning',
+                        'revenue' => 'success',
+                        'expense' => 'danger',
                         default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('cash_in')
+                Tables\Columns\TextColumn::make('amount')
                     ->label('Cash In')
                     ->money('USD')
                     ->color('success')
                     ->getStateUsing(function ($record) {
-                        return $record->cash_in > 0 ? $record->cash_in : null;
+                        return $record->financial_type === 'revenue' ? $record->amount : null;
                     }),
 
-                Tables\Columns\TextColumn::make('cash_out')
+                Tables\Columns\TextColumn::make('amount')
                     ->label('Cash Out')
                     ->money('USD')
                     ->color('danger')
                     ->getStateUsing(function ($record) {
-                        return $record->cash_out > 0 ? $record->cash_out : null;
+                        return $record->financial_type === 'expense' ? $record->amount : null;
                     }),
-
-                Tables\Columns\TextColumn::make('running_balance')
-                    ->label('Running Balance')
-                    ->money('USD')
-                    ->color(fn($record) => $record->running_balance >= 0 ? 'success' : 'danger'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => $state === 'done' ? 'Completed' : 'Pending')
                     ->color(fn(string $state): string => match ($state) {
-                        'Completed' => 'success',
-                        'Pending' => 'warning',
+                        'done' => 'success',
+                        'pending' => 'warning',
                         default => 'gray',
                     }),
             ])
@@ -159,36 +160,10 @@ class CashflowResource extends Resource
     /**
      * Get cashflow data combining project and user transactions
      */
-
     public static function getEloquentQuery(): Builder
     {
-        // Since Filament expects an Eloquent Builder, we'll use ProjectTransaction as base
-        // and add custom attributes via accessors in a custom model or use raw selects
-
         return ProjectTransaction::query()
-            ->selectRaw('
-                COALESCE(due_date, transaction_date) as date,
-                CONCAT("Project: ", project_key, " - ", financial_type) as description,
-                CASE
-                    WHEN financial_type = "revenue" THEN "Revenue"
-                    ELSE "Expense"
-                END as type,
-                CASE
-                    WHEN financial_type = "revenue" THEN amount
-                    ELSE 0
-                END as cash_in,
-                CASE
-                    WHEN financial_type = "expense" THEN amount
-                    ELSE 0
-                END as cash_out,
-                CASE
-                    WHEN status = "done" THEN "Completed"
-                    ELSE "Pending"
-                END as status,
-                0 as running_balance,
-                id,
-                "project" as source_table
-            ')
+            ->with(['project'])
             ->where(function ($query) {
                 $query->where('due_date', '>=', now()->startOfDay())
                     ->orWhere(function ($q) {
@@ -196,7 +171,7 @@ class CashflowResource extends Resource
                             ->where('status', 'done');
                     });
             })
-            ->orderBy('date')
+            ->orderByRaw('COALESCE(due_date, transaction_date)')
             ->orderBy('id');
     }
 
