@@ -38,32 +38,6 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'pointBorderWidth' => 2,
                     'pointRadius' => 6,
                     'pointHoverRadius' => 8,
-                    'datalabels' => [
-                        'display' => true,
-                        'align' => 'top',
-                        'anchor' => 'end',
-                        'backgroundColor' => 'rgba(34, 197, 94, 0.9)',
-                        'borderColor' => 'rgba(34, 197, 94, 1)',
-                        'borderRadius' => 4,
-                        'borderWidth' => 1,
-                        'color' => '#ffffff',
-                        'font' => [
-                            'size' => 10,
-                            'weight' => 'bold'
-                        ],
-                        'padding' => [
-                            'top' => 2,
-                            'bottom' => 2,
-                            'left' => 4,
-                            'right' => 4
-                        ],
-                        'formatter' => 'function(value, context) {
-                            if (value === null || value === undefined) return "";
-                            const formatted = "$" + Math.round(value).toLocaleString();
-                            return formatted;
-                        }',
-                        'clip' => false
-                    ],
                 ],
             ],
             'labels' => array_column($monthlyData, 'month_label'),
@@ -102,6 +76,45 @@ class MonthlyCashflowChartWidget extends ChartWidget
                         }'
                     ]
                 ],
+            ],
+            'animation' => [
+                'onComplete' => 'function(animation) {
+                    const ctx = this.ctx;
+                    const chart = this;
+                    
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "bottom";
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = "bold 11px Arial";
+                    
+                    chart.data.datasets.forEach(function(dataset, i) {
+                        const meta = chart.getDatasetMeta(i);
+                        meta.data.forEach(function(bar, index) {
+                            const data = dataset.data[index];
+                            if (data !== null && data !== undefined) {
+                                const x = bar.x;
+                                const y = bar.y - 10;
+                                
+                                // Draw background rectangle
+                                const text = "$" + Math.round(data).toLocaleString();
+                                const textWidth = ctx.measureText(text).width;
+                                const padding = 6;
+                                
+                                ctx.fillStyle = "rgba(34, 197, 94, 0.9)";
+                                ctx.fillRect(x - (textWidth/2) - padding, y - 16, textWidth + (padding*2), 20);
+                                
+                                // Draw border
+                                ctx.strokeStyle = "rgba(34, 197, 94, 1)";
+                                ctx.lineWidth = 1;
+                                ctx.strokeRect(x - (textWidth/2) - padding, y - 16, textWidth + (padding*2), 20);
+                                
+                                // Draw text
+                                ctx.fillStyle = "#ffffff";
+                                ctx.fillText(text, x, y);
+                            }
+                        });
+                    });
+                }'
             ],
             'scales' => [
                 'y' => [
