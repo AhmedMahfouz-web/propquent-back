@@ -36,6 +36,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
         // Create dynamic colors for points based on balance values
         $pointColors = [];
         $borderColors = [];
+        $backgroundColor = [];
 
         foreach ($balances as $balance) {
             if ($balance < 0) {
@@ -59,7 +60,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'borderColor' => $borderColors,
                     'pointBackgroundColor' => $pointColors,
                     'pointBorderColor' => $pointColors,
-                    'borderWidth' => 3,
+                    'borderWidth' => 2,
                     'fill' => true,
                     'tension' => 0.3,
                     'pointRadius' => 4,
