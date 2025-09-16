@@ -192,7 +192,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
-            'aspectRatio' => 1.5,
+            'aspectRatio' => 4,
             'layout' => [
                 'padding' => [
                     'top' => 30,
