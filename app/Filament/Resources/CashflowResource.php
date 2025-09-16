@@ -119,7 +119,6 @@ class CashflowResource extends Resource
                     }),
 
                 Tables\Filters\SelectFilter::make('financial_type')
-                    ->label('Type')
                     ->options([
                         'Revenue' => 'Revenue',
                         'Expense' => 'Expense',
