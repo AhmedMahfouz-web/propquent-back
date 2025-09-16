@@ -15,7 +15,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '1200px';
+    protected static ?string $maxHeight = '1600px';
 
     public ?string $filter = '6';
 
@@ -175,9 +175,11 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'x' => [
                     'display' => true,
                     'ticks' => [
-                        'maxRotation' => 0,
-                        'minRotation' => 0,
-                        'maxTicksLimit' => 20
+                        'maxRotation' => 45,
+                        'minRotation' => 45,
+                        'maxTicksLimit' => 15,
+                        'autoSkip' => true,
+                        'autoSkipPadding' => 10
                     ]
                 ],
             ],
@@ -195,10 +197,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
             'maintainAspectRatio' => false,
             'layout' => [
                 'padding' => [
-                    'top' => 40,
-                    'bottom' => 20,
-                    'left' => 20,
-                    'right' => 20
+                    'top' => 50,
+                    'bottom' => 60,
+                    'left' => 30,
+                    'right' => 30
                 ]
             ]
         ];
