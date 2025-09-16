@@ -11,12 +11,13 @@ class MonthlyCashflowChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Cash in Hand Projection';
 
+    protected static string $view = 'filament.widgets.chart-widget';
 
     protected static ?int $sort = 2;
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '1200px';
+    protected static ?string $maxHeight = '2000px';
 
     public ?string $filter = '6';
 
@@ -35,12 +36,15 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
         // Create dynamic colors for points based on balance values
         $pointColors = [];
+        $borderColors = [];
 
         foreach ($balances as $balance) {
             if ($balance < 0) {
-                $pointColors[] = 'rgba(239, 68, 68, 1)'; // Red points for negative
+                $pointColors[] = 'rgba(239, 68, 68, 1)';
+                $borderColors[] = 'rgba(239, 68, 68, 1)';
             } else {
-                $pointColors[] = 'rgba(34, 197, 94, 1)'; // Green points for positive
+                $pointColors[] = 'rgba(34, 197, 94, 1)';
+                $borderColors[] = 'rgba(34, 197, 94, 1)';
             }
         }
 
@@ -51,7 +55,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'data' => $balances,
                     'weeklyNet' => array_column($weeklyData, 'weekly_net'),
                     'backgroundColor' => 'rgba(34, 197, 94, 0.1)', // Always green background
-                    'borderColor' => 'rgba(34, 197, 94, 1)', // Always green border
+                    'borderColor' => $borderColors, // Always green border
                     'pointBackgroundColor' => $pointColors, // Dynamic point colors
                     'pointBorderColor' => $pointColors, // Dynamic point border colors
                     'borderWidth' => 3,
