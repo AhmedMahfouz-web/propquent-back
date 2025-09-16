@@ -41,9 +41,11 @@ class MonthlyCashflowChartWidget extends ChartWidget
             if ($balance < 0) {
                 $pointColors[] = 'rgba(239, 68, 68, 1)';
                 $borderColors[] = 'rgba(239, 68, 68, 1)';
+                $backgroundColor[] = 'rgba(239, 68, 68, 0.1)';
             } else {
                 $pointColors[] = 'rgba(34, 197, 94, 1)';
                 $borderColors[] = 'rgba(34, 197, 94, 1)';
+                $backgroundColor[] = 'rgba(34, 197, 94, 0.1)';
             }
         }
 
@@ -53,10 +55,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'label' => 'Cash in Hand',
                     'data' => $balances,
                     'weeklyNet' => array_column($weeklyData, 'weekly_net'),
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.1)', // Always green background
-                    'borderColor' => $borderColors, // Always green border
-                    'pointBackgroundColor' => $pointColors, // Dynamic point colors
-                    'pointBorderColor' => $pointColors, // Dynamic point border colors
+                    'backgroundColor' => $backgroundColor,
+                    'borderColor' => $borderColors,
+                    'pointBackgroundColor' => $pointColors,
+                    'pointBorderColor' => $pointColors,
                     'borderWidth' => 3,
                     'fill' => true,
                     'tension' => 0.3,
