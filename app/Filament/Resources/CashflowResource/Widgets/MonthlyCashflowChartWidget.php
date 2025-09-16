@@ -11,7 +11,6 @@ class MonthlyCashflowChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Cash in Hand Projection';
 
-    protected static string $view = 'filament.widgets.chart-widget';
 
     protected static ?int $sort = 2;
 
