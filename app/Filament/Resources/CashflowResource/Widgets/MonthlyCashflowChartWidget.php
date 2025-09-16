@@ -16,7 +16,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '1400px';
+    protected static ?string $maxHeight = '1800px';
 
     public ?string $filter = '6';
 
