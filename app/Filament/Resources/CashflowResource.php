@@ -161,7 +161,7 @@ class CashflowResource extends Resource
     {
         return ProjectTransaction::query()
             ->with(['project'])
-            ->selectRaw('*, COALESCE(actual_date, due_date, transaction_date) as date')
+            ->selectRaw('*, COALESCE(actual_date, due_date, transaction_date) as actual_date')
             ->where(function ($query) {
                 $query->where('due_date', '>=', now()->startOfDay())
                     ->orWhere(function ($q) {
