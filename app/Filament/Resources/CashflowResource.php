@@ -118,7 +118,8 @@ class CashflowResource extends Resource
                         return $indicators;
                     }),
 
-                Tables\Filters\SelectFilter::make('type')
+                Tables\Filters\SelectFilter::make('financial_type')
+                    ->label('Type')
                     ->options([
                         'Revenue' => 'Revenue',
                         'Expense' => 'Expense',
@@ -241,46 +242,104 @@ class CashflowResource extends Resource
     /**
      * Get monthly cashflow data for chart
      */
-    public static function getMonthlyCashflowData(int $months = 12): array
+    public static function getMonthlyCashflowData(int $months = 12, bool $startFromToday = false): array
     {
-        return Cache::remember("monthly_cashflow_data_{$months}", now()->addMinutes(15), function () use ($months) {
-            $startDate = now()->subMonths($months)->startOfMonth();
-            $endDate = now()->endOfMonth();
+        return Cache::remember("monthly_cashflow_data_{$months}_" . ($startFromToday ? 'today' : 'historical'), now()->addMinutes(15), function () use ($months, $startFromToday) {
+            if ($startFromToday) {
+                $startDate = now()->startOfMonth();
+                $endDate = now()->addMonths($months)->endOfMonth();
+            } else {
+                $startDate = now()->subMonths($months)->startOfMonth();
+                $endDate = now()->endOfMonth();
+            }
 
-            // Get monthly project transactions
-            $monthlyProjectData = collect(DB::table('project_transactions')
-                ->where('status', 'done')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->selectRaw('
-                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
-                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
-                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
-                ')
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get()
-                ->toArray())
-                ->keyBy('month');
+            // Get current balance as starting point
+            $runningBalance = self::getCurrentCashBalance();
 
-            // Get monthly user transactions
-            $monthlyUserData = collect(DB::table('user_transactions')
-                ->where('status', 'done')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->selectRaw('
-                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
-                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
-                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
-                ')
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get()
-                ->toArray())
-                ->keyBy('month');
+            // For future projections, include pending transactions
+            if ($startFromToday) {
+                // Get completed transactions for historical months (before today)
+                $historicalProjectData = collect(DB::table('project_transactions')
+                    ->where('status', 'done')
+                    ->where('transaction_date', '<', now()->startOfMonth())
+                    ->selectRaw('
+                        DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                        SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
+                        SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
+                    ')
+                    ->groupBy('month')
+                    ->orderBy('month')
+                    ->get()
+                    ->toArray())
+                    ->keyBy('month');
+
+                $historicalUserData = collect(DB::table('user_transactions')
+                    ->where('status', 'done')
+                    ->where('transaction_date', '<', now()->startOfMonth())
+                    ->selectRaw('
+                        DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                        SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
+                        SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
+                    ')
+                    ->groupBy('month')
+                    ->orderBy('month')
+                    ->get()
+                    ->toArray())
+                    ->keyBy('month');
+
+                // Get future transactions (pending with due_date)
+                $futureProjectData = collect(DB::table('project_transactions')
+                    ->where('status', 'pending')
+                    ->whereBetween('due_date', [$startDate, $endDate])
+                    ->selectRaw('
+                        DATE_FORMAT(due_date, "%Y-%m") as month,
+                        SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
+                        SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
+                    ')
+                    ->groupBy('month')
+                    ->orderBy('month')
+                    ->get()
+                    ->toArray())
+                    ->keyBy('month');
+
+                $monthlyProjectData = $futureProjectData;
+                $monthlyUserData = collect([]); // User transactions are immediate, no future projections
+            } else {
+                // Historical view - only completed transactions
+                $monthlyProjectData = collect(DB::table('project_transactions')
+                    ->where('status', 'done')
+                    ->whereBetween('transaction_date', [$startDate, $endDate])
+                    ->selectRaw('
+                        DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                        SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
+                        SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
+                    ')
+                    ->groupBy('month')
+                    ->orderBy('month')
+                    ->get()
+                    ->toArray())
+                    ->keyBy('month');
+
+                $monthlyUserData = collect(DB::table('user_transactions')
+                    ->where('status', 'done')
+                    ->whereBetween('transaction_date', [$startDate, $endDate])
+                    ->selectRaw('
+                        DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                        SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
+                        SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
+                    ')
+                    ->groupBy('month')
+                    ->orderBy('month')
+                    ->get()
+                    ->toArray())
+                    ->keyBy('month');
+
+                $runningBalance = 0; // Start from 0 for historical view
+            }
 
             // Generate all months in range
             $monthlyData = [];
             $currentMonth = $startDate->copy();
-            $runningBalance = 0;
 
             while ($currentMonth <= $endDate) {
                 $monthKey = $currentMonth->format('Y-m');

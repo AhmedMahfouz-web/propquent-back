@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 
 class MonthlyCashflowChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Monthly Cashflow Trend';
+    protected static ?string $heading = 'Cash in Hand Projection';
 
     protected static ?int $sort = 2;
 
@@ -15,55 +15,24 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected static ?string $maxHeight = '900px';
 
-    public ?string $filter = '12';
+    public ?string $filter = '6';
 
     protected function getData(): array
     {
         $months = (int) $this->filter;
-        $monthlyData = CashflowResource::getMonthlyCashflowData($months);
+        $monthlyData = CashflowResource::getMonthlyCashflowData($months, true); // Start from today
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Revenue',
-                    'data' => array_column($monthlyData, 'revenue'),
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
-                    'borderColor' => 'rgba(34, 197, 94, 1)',
-                    'borderWidth' => 2,
-                    'fill' => false,
-                ],
-                [
-                    'label' => 'Expenses',
-                    'data' => array_column($monthlyData, 'expenses'),
-                    'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
-                    'borderColor' => 'rgba(239, 68, 68, 1)',
-                    'borderWidth' => 2,
-                    'fill' => false,
-                ],
-                [
-                    'label' => 'Deposits',
-                    'data' => array_column($monthlyData, 'deposits'),
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.2)',
-                    'borderColor' => 'rgba(59, 130, 246, 1)',
-                    'borderWidth' => 2,
-                    'fill' => false,
-                ],
-                [
-                    'label' => 'Withdrawals',
-                    'data' => array_column($monthlyData, 'withdrawals'),
-                    'backgroundColor' => 'rgba(245, 158, 11, 0.2)',
-                    'borderColor' => 'rgba(245, 158, 11, 1)',
-                    'borderWidth' => 2,
-                    'fill' => false,
-                ],
-                [
-                    'label' => 'Running Balance',
+                    'label' => 'Cash in Hand',
                     'data' => array_column($monthlyData, 'running_balance'),
-                    'backgroundColor' => 'rgba(168, 85, 247, 0.3)',
-                    'borderColor' => 'rgba(168, 85, 247, 1)',
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.1)',
+                    'borderColor' => 'rgba(34, 197, 94, 1)',
                     'borderWidth' => 3,
                     'fill' => true,
                     'type' => 'line',
+                    'tension' => 0.4,
                 ],
             ],
             'labels' => array_column($monthlyData, 'month_label'),
@@ -78,10 +47,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
+            '3' => '3 Months',
             '6' => '6 Months',
             '12' => '12 Months',
             '24' => '24 Months',
-            '36' => '36 Months',
         ];
     }
 
