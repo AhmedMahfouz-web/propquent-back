@@ -11,12 +11,13 @@ class MonthlyCashflowChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Cash in Hand Projection';
 
+    protected static string $view = 'filament.widgets.chart-widget';
 
     protected static ?int $sort = 2;
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '1200px';
+    protected static ?string $maxHeight = '1400px';
 
     public ?string $filter = '6';
 
@@ -38,11 +39,14 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 [
                     'label' => 'Cash in Hand',
                     'data' => $balances,
+                    'weeklyNet' => array_column($weeklyData, 'weekly_net'),
                     'backgroundColor' => 'rgba(34, 197, 94, 0.1)',
                     'borderColor' => 'rgba(34, 197, 94, 1)',
                     'borderWidth' => 3,
                     'fill' => true,
-                    'tension' => 0.4,
+                    'tension' => 0.3,
+                    'pointRadius' => 4,
+                    'pointHoverRadius' => 6,
                 ],
             ],
             'labels' => $labels,
@@ -89,8 +93,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
             $runningBalance += $weeklyNet;
 
             $weeklyData[] = [
-                'week_label' => $currentWeek->format('M d'),
+                'week_label' => $currentWeek->format('M d') . ' (W' . (ceil($currentWeek->day / 7)) . ')',
                 'running_balance' => (float) $runningBalance,
+                'weekly_net' => (float) $weeklyNet,
+                'week_number' => ceil($currentWeek->day / 7),
             ];
 
             $currentWeek->addWeek();
@@ -122,6 +128,19 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'display' => true,
                     'position' => 'top',
                 ],
+                'tooltip' => [
+                    'callbacks' => [
+                        'title' => 'function(context) { return context[0].label; }',
+                        'label' => 'function(context) { 
+                            const value = context.parsed.y;
+                            const weeklyNet = context.dataset.weeklyNet ? context.dataset.weeklyNet[context.dataIndex] : 0;
+                            return [
+                                "Running Balance: $" + value.toLocaleString(),
+                                "Weekly Change: $" + weeklyNet.toLocaleString()
+                            ];
+                        }'
+                    ]
+                ],
                 'datalabels' => [
                     'display' => true,
                     'align' => 'top',
@@ -131,17 +150,23 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'padding' => 6,
                     'font' => [
                         'weight' => 'bold',
+                        'size' => 10,
                     ],
+                    'formatter' => 'function(value) { return "$" + value.toLocaleString(); }'
                 ],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => false,
+                    'ticks' => [
+                        'callback' => 'function(value) { return "$" + value.toLocaleString(); }'
+                    ]
                 ],
                 'x' => [
                     'ticks' => [
                         'maxRotation' => 45,
                         'minRotation' => 45,
+                        'maxTicksLimit' => 50,
                     ],
                 ],
             ],

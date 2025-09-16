@@ -1,6 +1,6 @@
 <x-filament-widgets::widget class="fi-wi-chart">
     <div style="overflow-x: auto; overflow-y: hidden; padding-bottom: 20px;">
-        <div style="min-width: 1200px; height: {{ $this->getMaxHeight() }};">
+        <div style="min-width: 2000px; height: {{ $this->getMaxHeight() }};">
             <canvas
                 x-data="{
                     chart: null,
