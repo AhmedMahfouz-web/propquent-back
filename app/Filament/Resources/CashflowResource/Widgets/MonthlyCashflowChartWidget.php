@@ -21,7 +21,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
     protected function getData(): array
     {
         $months = (int) $this->filter;
-        $monthlyData = CashflowResource::getMonthlyCashflowData($months, false); // Include historical data for better variation
+        $monthlyData = CashflowResource::getMonthlyCashflowData($months, true); // Start from today forward
 
         // Debug: Log the data to see what's happening
         Log::info('Chart Data for ' . $months . ' months:', [
@@ -35,11 +35,22 @@ class MonthlyCashflowChartWidget extends ChartWidget
             }, $monthlyData)
         ]);
 
+        // Get current cash balance to show as starting point
+        $currentBalance = CashflowResource::getCurrentCashBalance();
+        
+        // Add current month as starting point if not already included
+        $labels = array_column($monthlyData, 'month_label');
+        $balances = array_column($monthlyData, 'running_balance');
+        
+        // Prepend current month with current balance
+        array_unshift($labels, 'Today');
+        array_unshift($balances, $currentBalance);
+
         return [
             'datasets' => [
                 [
                     'label' => 'Cash in Hand',
-                    'data' => array_column($monthlyData, 'running_balance'),
+                    'data' => $balances,
                     'backgroundColor' => 'rgba(34, 197, 94, 0.1)',
                     'borderColor' => 'rgba(34, 197, 94, 1)',
                     'borderWidth' => 3,
@@ -53,7 +64,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'pointHoverRadius' => 8,
                 ],
             ],
-            'labels' => array_column($monthlyData, 'month_label'),
+            'labels' => $labels,
         ];
     }
 
@@ -93,19 +104,33 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'display' => true,
                     'align' => 'top',
                     'anchor' => 'end',
-                    'formatter' => 'function(value) {
-                        return "$" + Math.round(value).toLocaleString();
+                    'offset' => 10,
+                    'formatter' => 'function(value, context) {
+                        if (value === null || value === undefined) return "";
+                        const formatted = new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(value);
+                        return formatted;
                     }',
                     'font' => [
                         'weight' => 'bold',
-                        'size' => 11
+                        'size' => 12
                     ],
                     'color' => '#ffffff',
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.9)',
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.95)',
                     'borderColor' => 'rgba(34, 197, 94, 1)',
-                    'borderRadius' => 4,
+                    'borderRadius' => 6,
                     'borderWidth' => 1,
-                    'padding' => 4,
+                    'padding' => [
+                        'top' => 4,
+                        'bottom' => 4,
+                        'left' => 8,
+                        'right' => 8
+                    ],
+                    'clip' => false,
                 ],
             ],
             'scales' => [
