@@ -43,13 +43,10 @@ class CashflowResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('transaction_date')
+                Tables\Columns\TextColumn::make('date')
                     ->label('Date')
                     ->date()
-                    ->sortable()
-                    ->getStateUsing(function ($record) {
-                        return $record->due_date ?? $record->transaction_date;
-                    }),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Description')
@@ -164,7 +161,7 @@ class CashflowResource extends Resource
     {
         return ProjectTransaction::query()
             ->with(['project'])
-            ->selectRaw('*, COALESCE(due_date, transaction_date) as date')
+            ->selectRaw('*, COALESCE(actual_date, due_date, transaction_date) as date')
             ->where(function ($query) {
                 $query->where('due_date', '>=', now()->startOfDay())
                     ->orWhere(function ($q) {
@@ -172,7 +169,7 @@ class CashflowResource extends Resource
                             ->where('status', 'done');
                     });
             })
-            ->orderByRaw('COALESCE(due_date, transaction_date)')
+            ->orderByRaw('COALESCE(actual_date, due_date, transaction_date)')
             ->orderBy('id');
     }
 
