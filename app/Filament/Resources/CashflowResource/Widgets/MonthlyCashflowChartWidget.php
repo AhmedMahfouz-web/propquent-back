@@ -5,7 +5,6 @@ namespace App\Filament\Resources\CashflowResource\Widgets;
 use App\Filament\Resources\CashflowResource;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Js;
 
 class MonthlyCashflowChartWidget extends ChartWidget
 {
@@ -96,9 +95,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'mode' => 'index',
                     'intersect' => false,
                     'callbacks' => [
-                        'label' => Js::from('function(context) {
+                        'label' => 'function(context) {
                             return context.dataset.label + ": $" + context.parsed.y.toLocaleString();
-                        }'),
+                        }'
                     ]
                 ],
                 'datalabels' => [
@@ -106,7 +105,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'align' => 'top',
                     'anchor' => 'end',
                     'offset' => 10,
-                    'formatter' => Js::from('function(value, context) {
+                    'formatter' => 'function(value, context) {
                         if (value === null || value === undefined) return "";
                         const formatted = new Intl.NumberFormat("en-US", {
                             style: "currency",
@@ -115,7 +114,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                             maximumFractionDigits: 0
                         }).format(value);
                         return formatted;
-                    }'),
+                    }',
                     'font' => [
                         'weight' => 'bold',
                         'size' => 12
@@ -138,9 +137,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'y' => [
                     'beginAtZero' => false,
                     'ticks' => [
-                        'callback' => Js::from('function(value) {
+                        'callback' => 'function(value) {
                             return "$" + value.toLocaleString();
-                        }')
+                        }'
                     ],
                 ],
                 'x' => [
