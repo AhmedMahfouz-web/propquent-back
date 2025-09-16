@@ -33,6 +33,37 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'fill' => true,
                     'type' => 'line',
                     'tension' => 0.4,
+                    'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
+                    'pointBorderColor' => '#ffffff',
+                    'pointBorderWidth' => 2,
+                    'pointRadius' => 6,
+                    'pointHoverRadius' => 8,
+                    'datalabels' => [
+                        'display' => true,
+                        'align' => 'top',
+                        'anchor' => 'end',
+                        'backgroundColor' => 'rgba(34, 197, 94, 0.9)',
+                        'borderColor' => 'rgba(34, 197, 94, 1)',
+                        'borderRadius' => 4,
+                        'borderWidth' => 1,
+                        'color' => '#ffffff',
+                        'font' => [
+                            'size' => 10,
+                            'weight' => 'bold'
+                        ],
+                        'padding' => [
+                            'top' => 2,
+                            'bottom' => 2,
+                            'left' => 4,
+                            'right' => 4
+                        ],
+                        'formatter' => 'function(value, context) {
+                            if (value === null || value === undefined) return "";
+                            const formatted = "$" + Math.round(value).toLocaleString();
+                            return formatted;
+                        }',
+                        'clip' => false
+                    ],
                 ],
             ],
             'labels' => array_column($monthlyData, 'month_label'),
@@ -74,7 +105,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'scales' => [
                 'y' => [
-                    'beginAtZero' => true,
+                    'beginAtZero' => false,
                     'ticks' => [
                         'callback' => 'function(value) {
                             return "$" + value.toLocaleString();
