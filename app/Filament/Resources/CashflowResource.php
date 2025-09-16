@@ -220,21 +220,12 @@ class CashflowResource extends Resource
                 ->whereBetween('due_date', [now(), $next30Days])
                 ->sum('amount') ?? 0;
 
-            $pendingIn += DB::table('user_transactions')
-                ->where('status', 'pending')
-                ->where('transaction_type', 'deposit')
-                ->whereBetween('due_date', [now(), $next30Days])
-                ->sum('amount') ?? 0;
+            // User transactions don't use due_date - they're immediate
+            // So we don't include pending user transactions in projections
 
             $pendingOut = DB::table('project_transactions')
                 ->where('status', 'pending')
                 ->where('financial_type', 'expense')
-                ->whereBetween('due_date', [now(), $next30Days])
-                ->sum('amount') ?? 0;
-
-            $pendingOut += DB::table('user_transactions')
-                ->where('status', 'pending')
-                ->where('transaction_type', 'withdraw')
                 ->whereBetween('due_date', [now(), $next30Days])
                 ->sum('amount') ?? 0;
 
