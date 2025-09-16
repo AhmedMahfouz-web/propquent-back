@@ -107,8 +107,14 @@ class CashflowResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn($q) => $q->where('date', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->where('date', '<=', $data['until']));
+                            ->when($data['from'], fn($q) => $q->where(function($subQuery) use ($data) {
+                                $subQuery->where('due_date', '>=', $data['from'])
+                                         ->orWhere('transaction_date', '>=', $data['from']);
+                            }))
+                            ->when($data['until'], fn($q) => $q->where(function($subQuery) use ($data) {
+                                $subQuery->where('due_date', '<=', $data['until'])
+                                         ->orWhere('transaction_date', '<=', $data['until']);
+                            }));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
