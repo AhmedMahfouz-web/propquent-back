@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CashflowResource\Widgets;
 use App\Filament\Resources\CashflowResource;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class MonthlyCashflowChartWidget extends ChartWidget
 {
@@ -21,28 +22,16 @@ class MonthlyCashflowChartWidget extends ChartWidget
     protected function getData(): array
     {
         $months = (int) $this->filter;
-        $monthlyData = CashflowResource::getMonthlyCashflowData($months, true); // Start from today forward
-
-        // Debug: Log the data to see what's happening
-        Log::info('Chart Data for ' . $months . ' months:', [
-            'count' => count($monthlyData),
-            'data' => array_map(function ($item) {
-                return [
-                    'month' => $item['month_label'],
-                    'balance' => $item['running_balance'],
-                    'net' => $item['monthly_net']
-                ];
-            }, $monthlyData)
-        ]);
+        $weeklyData = $this->getWeeklyCashflowData($months);
 
         // Get current cash balance to show as starting point
         $currentBalance = CashflowResource::getCurrentCashBalance();
 
-        // Add current month as starting point if not already included
-        $labels = array_column($monthlyData, 'month_label');
-        $balances = array_column($monthlyData, 'running_balance');
+        // Add current week as starting point
+        $labels = array_column($weeklyData, 'week_label');
+        $balances = array_column($weeklyData, 'running_balance');
 
-        // Prepend current month with current balance
+        // Prepend current week with current balance
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
 
@@ -66,6 +55,74 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'labels' => $labels,
         ];
+    }
+
+    private function getWeeklyCashflowData(int $months): array
+    {
+        $startDate = now();
+        $endDate = now()->addMonths($months);
+        
+        // Get current cash balance as starting point
+        $runningBalance = CashflowResource::getCurrentCashBalance();
+        
+        // Get pending transactions for future projections
+        $transactions = collect(DB::table('project_transactions')
+            ->where('status', 'pending')
+            ->whereBetween('due_date', [$startDate, $endDate])
+            ->selectRaw('
+                due_date,
+                financial_type,
+                amount
+            ')
+            ->orderBy('due_date')
+            ->get())
+            ->merge(DB::table('user_transactions')
+                ->where('status', 'pending')
+                ->whereBetween('due_date', [$startDate, $endDate])
+                ->selectRaw('
+                    due_date,
+                    transaction_type as financial_type,
+                    amount
+                ')
+                ->orderBy('due_date')
+                ->get());
+
+        // Generate weekly periods
+        $weeklyData = [];
+        $currentWeek = $startDate->copy()->startOfWeek();
+        
+        while ($currentWeek <= $endDate) {
+            $weekEnd = $currentWeek->copy()->endOfWeek();
+            
+            // Get transactions for this week
+            $weekTransactions = $transactions->filter(function ($transaction) use ($currentWeek, $weekEnd) {
+                $transactionDate = \Carbon\Carbon::parse($transaction->due_date);
+                return $transactionDate->between($currentWeek, $weekEnd);
+            });
+            
+            // Calculate weekly net change
+            $weeklyNet = 0;
+            foreach ($weekTransactions as $transaction) {
+                if (in_array($transaction->financial_type, ['revenue', 'deposit'])) {
+                    $weeklyNet += $transaction->amount;
+                } else {
+                    $weeklyNet -= $transaction->amount;
+                }
+            }
+            
+            $runningBalance += $weeklyNet;
+            
+            $weeklyData[] = [
+                'week_start' => $currentWeek->format('Y-m-d'),
+                'week_label' => $currentWeek->format('M d') . ' - ' . $weekEnd->format('M d'),
+                'weekly_net' => (float) $weeklyNet,
+                'running_balance' => (float) $runningBalance,
+            ];
+            
+            $currentWeek->addWeek();
+        }
+        
+        return $weeklyData;
     }
 
     protected function getType(): string
@@ -107,7 +164,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'padding' => 6,
                     'font' => [
                         'weight' => 'bold',
-                        'size' => 12
+                        'size' => 10
                     ],
                 ],
             ],
@@ -117,6 +174,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 ],
                 'x' => [
                     'display' => true,
+                    'ticks' => [
+                        'maxRotation' => 45,
+                        'minRotation' => 45
+                    ]
                 ],
             ],
             'interaction' => [
@@ -125,12 +186,20 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'elements' => [
                 'point' => [
-                    'radius' => 6,
-                    'hoverRadius' => 8,
+                    'radius' => 5,
+                    'hoverRadius' => 7,
                 ],
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
+            'layout' => [
+                'padding' => [
+                    'top' => 30,
+                    'bottom' => 10,
+                    'left' => 10,
+                    'right' => 10
+                ]
+            ]
         ];
     }
 }
