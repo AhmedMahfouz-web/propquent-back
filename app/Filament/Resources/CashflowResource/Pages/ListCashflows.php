@@ -7,9 +7,6 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 
@@ -40,17 +37,8 @@ class ListCashflows extends ListRecords
                 ->icon('heroicon-o-arrow-path')
                 ->action(function () {
                     // Clear cashflow related cache
-                    cache()->forget('company_cashflow_summary');
-                    cache()->forget('monthly_cashflow_data_6');
-                    cache()->forget('monthly_cashflow_data_12');
-                    cache()->forget('monthly_cashflow_data_24');
-                    cache()->forget('monthly_cashflow_data_36');
-
-                    // Clear any other cashflow cache keys
-                    $cacheKeys = ['company_cashflow_summary', 'monthly_cashflow_data_6', 'monthly_cashflow_data_12', 'monthly_cashflow_data_24', 'monthly_cashflow_data_36'];
-                    foreach ($cacheKeys as $key) {
-                        cache()->forget($key);
-                    }
+                    cache()->forget('current_cash_balance');
+                    cache()->forget('cashflow_summary');
 
                     Notification::make()
                         ->title('Success')
@@ -66,13 +54,15 @@ class ListCashflows extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('All Projects'),
-            'active' => Tab::make('Active Projects')
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'active')),
-            'profitable' => Tab::make('Profitable Projects')
-                ->modifyQueryUsing(fn(Builder $query) => $query->havingRaw('net_cashflow > 0')),
-            'loss_making' => Tab::make('Loss Making')
-                ->modifyQueryUsing(fn(Builder $query) => $query->havingRaw('net_cashflow < 0')),
+            'all' => Tab::make('All Transactions'),
+            'pending' => Tab::make('Pending')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'Pending')),
+            'completed' => Tab::make('Completed')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'Completed')),
+            'cash_in' => Tab::make('Cash In')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('cash_in', '>', 0)),
+            'cash_out' => Tab::make('Cash Out')
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('cash_out', '>', 0)),
         ];
     }
 
@@ -80,7 +70,6 @@ class ListCashflows extends ListRecords
     {
         return [
             CashflowResource\Widgets\CashflowOverviewWidget::class,
-            CashflowResource\Widgets\MonthlyCashflowChartWidget::class,
         ];
     }
 }

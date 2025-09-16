@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CashflowResource\Pages;
-use App\Models\Project;
 use App\Models\ProjectTransaction;
 use App\Models\UserTransaction;
 use Carbon\Carbon;
@@ -13,23 +12,22 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
 class CashflowResource extends Resource
 {
-    protected static ?string $model = Project::class;
+    protected static ?string $model = ProjectTransaction::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
     protected static ?string $modelLabel = 'Cashflow';
 
     protected static ?string $navigationGroup = 'Financial Reports';
 
-    protected static ?string $title = 'Cashflow Analysis';
+    protected static ?string $title = 'Cashflow Projection';
 
-    protected static ?string $pluralModelLabel = 'Cashflow Analysis';
+    protected static ?string $pluralModelLabel = 'Cashflow Projection';
 
     protected static ?int $navigationSort = 6;
 
@@ -45,329 +43,71 @@ class CashflowResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('key')
-                    ->label('Project Key')
-                    ->searchable()
+                Tables\Columns\TextColumn::make('date')
+                    ->label('Date')
+                    ->date()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('title')
-                    ->label('Project Title')
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Description')
                     ->searchable()
-                    ->sortable()
-                    ->limit(30),
+                    ->limit(50),
 
-                Tables\Columns\TextColumn::make('developer.name')
-                    ->label('Developer')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Type')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Revenue' => 'success',
+                        'Expense' => 'danger',
+                        'Deposit' => 'info',
+                        'Withdrawal' => 'warning',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\TextColumn::make('cash_in')
+                    ->label('Cash In')
+                    ->money('USD')
+                    ->color('success')
+                    ->getStateUsing(function ($record) {
+                        return $record->cash_in > 0 ? $record->cash_in : null;
+                    }),
+
+                Tables\Columns\TextColumn::make('cash_out')
+                    ->label('Cash Out')
+                    ->money('USD')
+                    ->color('danger')
+                    ->getStateUsing(function ($record) {
+                        return $record->cash_out > 0 ? $record->cash_out : null;
+                    }),
+
+                Tables\Columns\TextColumn::make('running_balance')
+                    ->label('Running Balance')
+                    ->money('USD')
+                    ->color(fn($record) => $record->running_balance >= 0 ? 'success' : 'danger'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
-                        'active' => 'success',
-                        'completed' => 'info',
-                        'exited' => 'warning',
-                        'cancelled' => 'danger',
+                        'Completed' => 'success',
+                        'Pending' => 'warning',
                         default => 'gray',
                     }),
-
-                Tables\Columns\TextColumn::make('total_revenue')
-                    ->label('Total Revenue')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('success'),
-
-                Tables\Columns\TextColumn::make('total_expenses')
-                    ->label('Total Expenses')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('danger'),
-
-                Tables\Columns\TextColumn::make('net_cashflow')
-                    ->label('Net Cashflow')
-                    ->money('USD')
-                    ->sortable()
-                    ->color(fn($record) => $record->net_cashflow >= 0 ? 'success' : 'danger'),
-
-                Tables\Columns\TextColumn::make('unpaid_installments')
-                    ->label('Unpaid Installments')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('warning'),
-
-                // Month 3 Ago - Weekly Breakdown
-                Tables\Columns\TextColumn::make('month_3_ago_w1')
-                    ->label(now()->subMonths(3)->format('M Y') . ' W1')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('month_3_ago_w2')
-                    ->label(now()->subMonths(3)->format('M Y') . ' W2')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('month_3_ago_w3')
-                    ->label(now()->subMonths(3)->format('M Y') . ' W3')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('month_3_ago_w4')
-                    ->label(now()->subMonths(3)->format('M Y') . ' W4')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                // Month 2 Ago - Weekly Breakdown
-                Tables\Columns\TextColumn::make('month_2_ago_w1')
-                    ->label(now()->subMonths(2)->format('M Y') . ' W1')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('month_2_ago_w2')
-                    ->label(now()->subMonths(2)->format('M Y') . ' W2')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('month_2_ago_w3')
-                    ->label(now()->subMonths(2)->format('M Y') . ' W3')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('month_2_ago_w4')
-                    ->label(now()->subMonths(2)->format('M Y') . ' W4')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                // Month 1 Ago - Weekly Breakdown
-                Tables\Columns\TextColumn::make('month_1_ago_w1')
-                    ->label(now()->subMonths(1)->format('M Y') . ' W1')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('info')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('month_1_ago_w2')
-                    ->label(now()->subMonths(1)->format('M Y') . ' W2')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('info')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('month_1_ago_w3')
-                    ->label(now()->subMonths(1)->format('M Y') . ' W3')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('info')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('month_1_ago_w4')
-                    ->label(now()->subMonths(1)->format('M Y') . ' W4')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('info')
-                    ->toggleable(),
-
-                // Current Month - Weekly Breakdown (Always Visible)
-                Tables\Columns\TextColumn::make('current_month_w1')
-                    ->label(now()->format('M Y') . ' W1 (Current)')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('success'),
-
-                Tables\Columns\TextColumn::make('current_month_w2')
-                    ->label(now()->format('M Y') . ' W2 (Current)')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('success'),
-
-                Tables\Columns\TextColumn::make('current_month_w3')
-                    ->label(now()->format('M Y') . ' W3 (Current)')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('success'),
-
-                Tables\Columns\TextColumn::make('current_month_w4')
-                    ->label(now()->format('M Y') . ' W4 (Current)')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('success'),
-
-                // Month 1 Ahead - Weekly Breakdown
-                Tables\Columns\TextColumn::make('month_1_ahead_w1')
-                    ->label(now()->addMonths(1)->format('M Y') . ' W1')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('warning'),
-
-                Tables\Columns\TextColumn::make('month_1_ahead_w2')
-                    ->label(now()->addMonths(1)->format('M Y') . ' W2')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('warning'),
-
-                Tables\Columns\TextColumn::make('month_1_ahead_w3')
-                    ->label(now()->addMonths(1)->format('M Y') . ' W3')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('warning'),
-
-                Tables\Columns\TextColumn::make('month_1_ahead_w4')
-                    ->label(now()->addMonths(1)->format('M Y') . ' W4')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('warning'),
-
-                // Month 2 Ahead - Weekly Breakdown
-                Tables\Columns\TextColumn::make('month_2_ahead_w1')
-                    ->label(now()->addMonths(2)->format('M Y') . ' W1')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('danger')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('month_2_ahead_w2')
-                    ->label(now()->addMonths(2)->format('M Y') . ' W2')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('danger')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('month_2_ahead_w3')
-                    ->label(now()->addMonths(2)->format('M Y') . ' W3')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('danger')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('month_2_ahead_w4')
-                    ->label(now()->addMonths(2)->format('M Y') . ' W4')
-                    ->money('USD')
-                    ->sortable()
-                    ->color('danger')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('next_installment_date')
-                    ->label('Next Installment')
-                    ->date()
-                    ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options(Project::getAvailableStatuses()),
-
-                Tables\Filters\SelectFilter::make('developer')
-                    ->relationship('developer', 'name'),
-
-                Tables\Filters\Filter::make('month_range')
-                    ->form([
-                        Forms\Components\DatePicker::make('start_month')
-                            ->label('Start Month')
-                            ->displayFormat('Y-m')
-                            ->format('Y-m-01')
-                            ->default(function () {
-                                $minDate = DB::table('project_transactions')
-                                    ->selectRaw('MIN(COALESCE(transaction_date, due_date)) as min_date')
-                                    ->first()->min_date;
-                                return $minDate ? Carbon::parse($minDate)->startOfMonth()->format('Y-m-01') : Carbon::now()->subMonths(6)->startOfMonth()->format('Y-m-01');
-                            }),
-                        Forms\Components\DatePicker::make('end_month')
-                            ->label('End Month')
-                            ->displayFormat('Y-m')
-                            ->format('Y-m-01')
-                            ->default(function () {
-                                $maxDate = DB::table('project_transactions')
-                                    ->selectRaw('MAX(COALESCE(due_date, transaction_date)) as max_date')
-                                    ->first()->max_date;
-                                return $maxDate ? Carbon::parse($maxDate)->startOfMonth()->format('Y-m-01') : Carbon::now()->addMonths(6)->startOfMonth()->format('Y-m-01');
-                            }),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        if (!$data['start_month'] && !$data['end_month']) {
-                            return $query;
-                        }
-
-                        return $query->whereHas('transactions', function ($q) use ($data) {
-                            if ($data['start_month'] && $data['end_month']) {
-                                $startDate = Carbon::parse($data['start_month'])->startOfMonth();
-                                $endDate = Carbon::parse($data['end_month'])->endOfMonth();
-
-                                $q->where(function ($subQuery) use ($startDate, $endDate) {
-                                    $subQuery->whereBetween('transaction_date', [$startDate, $endDate])
-                                        ->orWhereBetween('due_date', [$startDate, $endDate]);
-                                });
-                            } elseif ($data['start_month']) {
-                                $startDate = Carbon::parse($data['start_month'])->startOfMonth();
-
-                                $q->where(function ($subQuery) use ($startDate) {
-                                    $subQuery->where('transaction_date', '>=', $startDate)
-                                        ->orWhere('due_date', '>=', $startDate);
-                                });
-                            } elseif ($data['end_month']) {
-                                $endDate = Carbon::parse($data['end_month'])->endOfMonth();
-
-                                $q->where(function ($subQuery) use ($endDate) {
-                                    $subQuery->where('transaction_date', '<=', $endDate)
-                                        ->orWhere('due_date', '<=', $endDate);
-                                });
-                            }
-                        });
-                    })
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        if ($data['start_month']) {
-                            $indicators['start_month'] = 'From: ' . Carbon::parse($data['start_month'])->format('M Y');
-                        }
-                        if ($data['end_month']) {
-                            $indicators['end_month'] = 'Until: ' . Carbon::parse($data['end_month'])->format('M Y');
-                        }
-                        return $indicators;
-                    }),
-
                 Tables\Filters\Filter::make('date_range')
                     ->form([
                         Forms\Components\DatePicker::make('from')
-                            ->label('From Date'),
+                            ->label('From Date')
+                            ->default(now()),
                         Forms\Components\DatePicker::make('until')
-                            ->label('Until Date'),
+                            ->label('Until Date')
+                            ->default(now()->addMonths(6)),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        if (!$data['from'] && !$data['until']) {
-                            return $query;
-                        }
-
-                        return $query->whereHas('transactions', function ($q) use ($data) {
-                            if ($data['from'] && $data['until']) {
-                                $q->where(function ($subQuery) use ($data) {
-                                    $subQuery->whereBetween('transaction_date', [$data['from'], $data['until']])
-                                        ->orWhereBetween('due_date', [$data['from'], $data['until']]);
-                                });
-                            } elseif ($data['from']) {
-                                $q->where(function ($subQuery) use ($data) {
-                                    $subQuery->where('transaction_date', '>=', $data['from'])
-                                        ->orWhere('due_date', '>=', $data['from']);
-                                });
-                            } elseif ($data['until']) {
-                                $q->where(function ($subQuery) use ($data) {
-                                    $subQuery->where('transaction_date', '<=', $data['until'])
-                                        ->orWhere('due_date', '<=', $data['until']);
-                                });
-                            }
-                        });
+                        return $query
+                            ->when($data['from'], fn($q) => $q->where('date', '>=', $data['from']))
+                            ->when($data['until'], fn($q) => $q->where('date', '<=', $data['until']));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
@@ -379,395 +119,198 @@ class CashflowResource extends Resource
                         }
                         return $indicators;
                     }),
+
+                Tables\Filters\SelectFilter::make('type')
+                    ->options([
+                        'Revenue' => 'Revenue',
+                        'Expense' => 'Expense',
+                        'Deposit' => 'Deposit',
+                        'Withdrawal' => 'Withdrawal',
+                    ]),
+
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'Completed' => 'Completed',
+                        'Pending' => 'Pending',
+                    ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                // No actions needed for read-only cashflow
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    // No bulk actions for read-only resource
-                ]),
+                // No bulk actions for read-only resource
             ])
-            ->defaultSort('net_cashflow', 'desc')
-            ->poll('30s'); // Auto-refresh every 30 seconds
+            ->defaultSort('date', 'asc')
+            ->poll('60s'); // Auto-refresh every minute
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListCashflows::route('/'),
-            'view' => Pages\ViewCashflow::route('/{record}'),
         ];
     }
 
     /**
-     * Get optimized cashflow data with performance considerations
+     * Get cashflow data combining project and user transactions
      */
     public static function getEloquentQuery(): Builder
     {
-        // Don't cache the query builder itself, just the data
-        return parent::getEloquentQuery()
-            ->with(['developer', 'transactions' => function ($query) {
-                $query->where('status', 'done')
-                    ->select(['id', 'project_key', 'financial_type', 'amount', 'transaction_date', 'due_date', 'status']);
-            }])
-            ->withCount([
-                'transactions as total_revenue' => function ($query) {
-                    $query->where('financial_type', 'revenue')
-                        ->where('status', 'done')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as total_expenses' => function ($query) {
-                    $query->where('financial_type', 'expense')
-                        ->where('status', 'done')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as unpaid_installments' => function ($query) {
-                    $query->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                // Month 3 Ago - Weekly Breakdown
-                'transactions as month_3_ago_w1' => function ($query) {
-                    $date = now()->subMonths(3);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '<=', 7)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_3_ago_w2' => function ($query) {
-                    $date = now()->subMonths(3);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 7)
-                        ->whereDay('transaction_date', '<=', 14)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_3_ago_w3' => function ($query) {
-                    $date = now()->subMonths(3);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 14)
-                        ->whereDay('transaction_date', '<=', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_3_ago_w4' => function ($query) {
-                    $date = now()->subMonths(3);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                // Month 2 Ago - Weekly Breakdown
-                'transactions as month_2_ago_w1' => function ($query) {
-                    $date = now()->subMonths(2);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '<=', 7)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_2_ago_w2' => function ($query) {
-                    $date = now()->subMonths(2);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 7)
-                        ->whereDay('transaction_date', '<=', 14)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_2_ago_w3' => function ($query) {
-                    $date = now()->subMonths(2);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 14)
-                        ->whereDay('transaction_date', '<=', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_2_ago_w4' => function ($query) {
-                    $date = now()->subMonths(2);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                // Month 1 Ago - Weekly Breakdown
-                'transactions as month_1_ago_w1' => function ($query) {
-                    $date = now()->subMonths(1);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '<=', 7)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_1_ago_w2' => function ($query) {
-                    $date = now()->subMonths(1);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 7)
-                        ->whereDay('transaction_date', '<=', 14)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_1_ago_w3' => function ($query) {
-                    $date = now()->subMonths(1);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 14)
-                        ->whereDay('transaction_date', '<=', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_1_ago_w4' => function ($query) {
-                    $date = now()->subMonths(1);
-                    $query->whereYear('transaction_date', $date->year)
-                        ->whereMonth('transaction_date', $date->month)
-                        ->whereDay('transaction_date', '>', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                // Current Month - Weekly Breakdown
-                'transactions as current_month_w1' => function ($query) {
-                    $query->whereYear('transaction_date', now()->year)
-                        ->whereMonth('transaction_date', now()->month)
-                        ->whereDay('transaction_date', '<=', 7)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as current_month_w2' => function ($query) {
-                    $query->whereYear('transaction_date', now()->year)
-                        ->whereMonth('transaction_date', now()->month)
-                        ->whereDay('transaction_date', '>', 7)
-                        ->whereDay('transaction_date', '<=', 14)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as current_month_w3' => function ($query) {
-                    $query->whereYear('transaction_date', now()->year)
-                        ->whereMonth('transaction_date', now()->month)
-                        ->whereDay('transaction_date', '>', 14)
-                        ->whereDay('transaction_date', '<=', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as current_month_w4' => function ($query) {
-                    $query->whereYear('transaction_date', now()->year)
-                        ->whereMonth('transaction_date', now()->month)
-                        ->whereDay('transaction_date', '>', 21)
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                // Month 1 Ahead - Weekly Breakdown
-                'transactions as month_1_ahead_w1' => function ($query) {
-                    $date = now()->addMonths(1);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '<=', 7)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_1_ahead_w2' => function ($query) {
-                    $date = now()->addMonths(1);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '>', 7)
-                        ->whereDay('due_date', '<=', 14)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_1_ahead_w3' => function ($query) {
-                    $date = now()->addMonths(1);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '>', 14)
-                        ->whereDay('due_date', '<=', 21)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_1_ahead_w4' => function ($query) {
-                    $date = now()->addMonths(1);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '>', 21)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                // Month 2 Ahead - Weekly Breakdown
-                'transactions as month_2_ahead_w1' => function ($query) {
-                    $date = now()->addMonths(2);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '<=', 7)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_2_ahead_w2' => function ($query) {
-                    $date = now()->addMonths(2);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '>', 7)
-                        ->whereDay('due_date', '<=', 14)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_2_ahead_w3' => function ($query) {
-                    $date = now()->addMonths(2);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '>', 14)
-                        ->whereDay('due_date', '<=', 21)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
-                'transactions as month_2_ahead_w4' => function ($query) {
-                    $date = now()->addMonths(2);
-                    $query->whereYear('due_date', $date->year)
-                        ->whereMonth('due_date', $date->month)
-                        ->whereDay('due_date', '>', 21)
-                        ->where('status', 'pending')
-                        ->select(DB::raw('COALESCE(SUM(amount), 0)'));
-                },
+        // Get current cash balance from completed transactions
+        $currentBalance = self::getCurrentCashBalance();
+
+        // Create a union query for both project and user transactions
+        $projectTransactions = DB::table('project_transactions as pt')
+            ->leftJoin('projects as p', 'pt.project_key', '=', 'p.key')
+            ->select([
+                DB::raw('COALESCE(pt.due_date, pt.transaction_date) as date'),
+                DB::raw('CONCAT("Project: ", COALESCE(p.title, pt.project_key), " - ", pt.financial_type) as description'),
+                DB::raw('CASE
+                    WHEN pt.financial_type = "revenue" THEN "Revenue"
+                    ELSE "Expense"
+                END as type'),
+                DB::raw('CASE
+                    WHEN pt.financial_type = "revenue" THEN pt.amount
+                    ELSE 0
+                END as cash_in'),
+                DB::raw('CASE
+                    WHEN pt.financial_type = "expense" THEN pt.amount
+                    ELSE 0
+                END as cash_out'),
+                DB::raw('CASE
+                    WHEN pt.status = "done" THEN "Completed"
+                    ELSE "Pending"
+                END as status'),
+                'pt.id',
+                DB::raw('"project" as source_table')
             ])
+            ->where('pt.due_date', '>=', now()->startOfDay())
+            ->orWhere(function ($q) {
+                $q->where('pt.transaction_date', '>=', now()->startOfDay())
+                    ->where('pt.status', 'done');
+            });
+
+        $userTransactions = DB::table('user_transactions as ut')
+            ->leftJoin('users as u', 'ut.user_id', '=', 'u.id')
+            ->select([
+                DB::raw('COALESCE(ut.due_date, ut.transaction_date) as date'),
+                DB::raw('CONCAT("User: ", COALESCE(u.full_name, u.id), " - ", ut.transaction_type) as description'),
+                DB::raw('CASE
+                    WHEN ut.transaction_type = "deposit" THEN "Deposit"
+                    ELSE "Withdrawal"
+                END as type'),
+                DB::raw('CASE
+                    WHEN ut.transaction_type = "deposit" THEN ut.amount
+                    ELSE 0
+                END as cash_in'),
+                DB::raw('CASE
+                    WHEN ut.transaction_type = "withdraw" THEN ut.amount
+                    ELSE 0
+                END as cash_out'),
+                DB::raw('CASE
+                    WHEN ut.status = "done" THEN "Completed"
+                    ELSE "Pending"
+                END as status'),
+                'ut.id',
+                DB::raw('"user" as source_table')
+            ])
+            ->where('ut.due_date', '>=', now()->startOfDay())
+            ->orWhere(function ($q) {
+                $q->where('ut.transaction_date', '>=', now()->startOfDay())
+                    ->where('ut.status', 'done');
+            });
+
+        // Union both queries and add running balance calculation
+        $unionQuery = $projectTransactions->unionAll($userTransactions);
+
+        // Create a temporary table-like structure with running balance
+        return DB::query()
+            ->fromSub($unionQuery, 'combined_transactions')
             ->selectRaw('
-                projects.*,
-                (
-                    COALESCE((
-                        SELECT SUM(amount)
-                        FROM project_transactions
-                        WHERE project_transactions.project_key = projects.key
-                        AND financial_type = "revenue"
-                        AND status = "done"
-                    ), 0) -
-                    COALESCE((
-                        SELECT SUM(amount)
-                        FROM project_transactions
-                        WHERE project_transactions.project_key = projects.key
-                        AND financial_type = "expense"
-                        AND status = "done"
-                    ), 0)
-                ) as net_cashflow,
-                (
-                    SELECT MIN(transaction_date)
-                    FROM project_transactions
-                    WHERE project_transactions.project_key = projects.key
-                    AND status = "pending"
-                    AND transaction_date > CURDATE()
-                ) as next_installment_date
-            ');
+                *,
+                @running_balance := @running_balance + cash_in - cash_out as running_balance
+            ')
+            ->crossJoin(DB::raw("(SELECT @running_balance := {$currentBalance}) as init"))
+            ->orderBy('date')
+            ->orderBy('id');
     }
 
     /**
-     * Get overall company cashflow summary
+     * Get current cash balance from all completed transactions
      */
-    public static function getCompanyCashflowSummary(): array
+    public static function getCurrentCashBalance(): float
     {
-        return Cache::remember('company_cashflow_summary', now()->addMinutes(10), function () {
-            // Get project transactions summary - convert to array to avoid PDO serialization
-            $projectSummary = DB::table('project_transactions')
+        return Cache::remember('current_cash_balance', now()->addMinutes(5), function () {
+            // Project transactions
+            $projectBalance = DB::table('project_transactions')
                 ->where('status', 'done')
+                ->where('transaction_date', '<', now()->startOfDay())
                 ->selectRaw('
-                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as total_revenue,
-                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as total_expenses
+                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) -
+                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as balance
                 ')
-                ->first();
+                ->value('balance') ?? 0;
 
-            // Get user transactions summary - convert to array to avoid PDO serialization
-            $userSummary = DB::table('user_transactions')
+            // User transactions
+            $userBalance = DB::table('user_transactions')
                 ->where('status', 'done')
+                ->where('transaction_date', '<', now()->startOfDay())
                 ->selectRaw('
-                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as total_deposits,
-                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as total_withdrawals
+                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) -
+                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as balance
                 ')
-                ->first();
+                ->value('balance') ?? 0;
 
-            $totalRevenue = (float) ($projectSummary->total_revenue ?? 0);
-            $totalExpenses = (float) ($projectSummary->total_expenses ?? 0);
-            $totalDeposits = (float) ($userSummary->total_deposits ?? 0);
-            $totalWithdrawals = (float) ($userSummary->total_withdrawals ?? 0);
-
-            $currentAvailableCash = $totalRevenue + $totalDeposits - $totalExpenses - $totalWithdrawals;
-
-            return [
-                'current_available_cash' => (float) $currentAvailableCash,
-                'total_revenue' => $totalRevenue,
-                'total_expenses' => $totalExpenses,
-                'total_deposits' => $totalDeposits,
-                'total_withdrawals' => $totalWithdrawals,
-                'net_project_cashflow' => (float) ($totalRevenue - $totalExpenses),
-                'net_user_cashflow' => (float) ($totalDeposits - $totalWithdrawals),
-            ];
+            return (float) ($projectBalance + $userBalance);
         });
     }
 
     /**
-     * Get monthly cashflow data for chart
+     * Get cashflow summary for dashboard widgets
      */
-    public static function getMonthlyCashflowData(int $months = 12): array
+    public static function getCashflowSummary(): array
     {
-        return Cache::remember("monthly_cashflow_data_{$months}", now()->addMinutes(15), function () use ($months) {
-            $startDate = now()->subMonths($months)->startOfMonth();
-            $endDate = now()->endOfMonth();
+        return Cache::remember('cashflow_summary', now()->addMinutes(10), function () {
+            $currentBalance = self::getCurrentCashBalance();
 
-            // Get monthly project transactions - convert to array to avoid PDO serialization
-            $monthlyProjectData = collect(DB::table('project_transactions')
-                ->where('status', 'done')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->selectRaw('
-                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
-                    SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
-                    SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
-                ')
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get()
-                ->toArray())
-                ->keyBy('month');
+            // Get pending transactions for next 30 days
+            $next30Days = now()->addDays(30);
 
-            // Get monthly user transactions - convert to array to avoid PDO serialization
-            $monthlyUserData = collect(DB::table('user_transactions')
-                ->where('status', 'done')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->selectRaw('
-                    DATE_FORMAT(transaction_date, "%Y-%m") as month,
-                    SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
-                    SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
-                ')
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get()
-                ->toArray())
-                ->keyBy('month');
+            $pendingIn = DB::table('project_transactions')
+                ->where('status', 'pending')
+                ->where('financial_type', 'revenue')
+                ->whereBetween('due_date', [now(), $next30Days])
+                ->sum('amount') ?? 0;
 
-            // Generate all months in range
-            $monthlyData = [];
-            $currentMonth = $startDate->copy();
-            $runningBalance = 0;
+            $pendingIn += DB::table('user_transactions')
+                ->where('status', 'pending')
+                ->where('transaction_type', 'deposit')
+                ->whereBetween('due_date', [now(), $next30Days])
+                ->sum('amount') ?? 0;
 
-            while ($currentMonth <= $endDate) {
-                $monthKey = $currentMonth->format('Y-m');
+            $pendingOut = DB::table('project_transactions')
+                ->where('status', 'pending')
+                ->where('financial_type', 'expense')
+                ->whereBetween('due_date', [now(), $next30Days])
+                ->sum('amount') ?? 0;
 
-                $projectData = $monthlyProjectData->get($monthKey);
-                $userData = $monthlyUserData->get($monthKey);
+            $pendingOut += DB::table('user_transactions')
+                ->where('status', 'pending')
+                ->where('transaction_type', 'withdraw')
+                ->whereBetween('due_date', [now(), $next30Days])
+                ->sum('amount') ?? 0;
 
-                $revenue = $projectData->revenue ?? 0;
-                $expenses = $projectData->expenses ?? 0;
-                $deposits = $userData->deposits ?? 0;
-                $withdrawals = $userData->withdrawals ?? 0;
-
-                $monthlyNet = $revenue + $deposits - $expenses - $withdrawals;
-                $runningBalance += $monthlyNet;
-
-                $monthlyData[] = [
-                    'month' => $monthKey,
-                    'month_label' => $currentMonth->format('M Y'),
-                    'revenue' => (float) $revenue,
-                    'expenses' => (float) $expenses,
-                    'deposits' => (float) $deposits,
-                    'withdrawals' => (float) $withdrawals,
-                    'monthly_net' => (float) $monthlyNet,
-                    'running_balance' => (float) $runningBalance,
-                ];
-
-                $currentMonth->addMonth();
-            }
-
-            return $monthlyData;
+            return [
+                'current_balance' => (float) $currentBalance,
+                'pending_in_30_days' => (float) $pendingIn,
+                'pending_out_30_days' => (float) $pendingOut,
+                'projected_balance_30_days' => (float) ($currentBalance + $pendingIn - $pendingOut),
+            ];
         });
     }
 }
