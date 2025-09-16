@@ -16,7 +16,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $maxHeight = '800px';
+    protected static ?string $maxHeight = '1200px';
 
     public ?string $filter = '6';
 
@@ -35,7 +35,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
         // Create dynamic colors for points based on balance values
         $pointColors = [];
-        
+
         foreach ($balances as $balance) {
             if ($balance < 0) {
                 $pointColors[] = 'rgba(239, 68, 68, 1)'; // Red points for negative
