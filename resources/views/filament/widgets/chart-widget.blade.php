@@ -1,4 +1,4 @@
-<div class="fi-wi-chart relative" style="height: 1800px;">
+<div class="fi-wi-chart relative" style="height: 600px;">
     <canvas
         ax-load
         ax-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('chart', 'filament/widgets') }}"
@@ -8,6 +8,6 @@
             type: @js($this->getType()),
         })"
         x-ignore
-        style="height: 1800px !important; min-height: 1800px !important;"
+        style="height: 600px !important; min-height: 600px !important;"
     ></canvas>
 </div>
