@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CashflowResource\Widgets;
 
 use App\Filament\Resources\CashflowResource;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Log;
 
 class MonthlyCashflowChartWidget extends ChartWidget
 {
@@ -20,7 +21,19 @@ class MonthlyCashflowChartWidget extends ChartWidget
     protected function getData(): array
     {
         $months = (int) $this->filter;
-        $monthlyData = CashflowResource::getMonthlyCashflowData($months, true); // Start from today
+        $monthlyData = CashflowResource::getMonthlyCashflowData($months, false); // Include historical data for better variation
+
+        // Debug: Log the data to see what's happening
+        Log::info('Chart Data for ' . $months . ' months:', [
+            'count' => count($monthlyData),
+            'data' => array_map(function($item) {
+                return [
+                    'month' => $item['month_label'],
+                    'balance' => $item['running_balance'],
+                    'net' => $item['monthly_net']
+                ];
+            }, $monthlyData)
+        ]);
 
         return [
             'datasets' => [
@@ -76,45 +89,24 @@ class MonthlyCashflowChartWidget extends ChartWidget
                         }'
                     ]
                 ],
-            ],
-            'animation' => [
-                'onComplete' => 'function(animation) {
-                    const ctx = this.ctx;
-                    const chart = this;
-                    
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "bottom";
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 11px Arial";
-                    
-                    chart.data.datasets.forEach(function(dataset, i) {
-                        const meta = chart.getDatasetMeta(i);
-                        meta.data.forEach(function(bar, index) {
-                            const data = dataset.data[index];
-                            if (data !== null && data !== undefined) {
-                                const x = bar.x;
-                                const y = bar.y - 10;
-                                
-                                // Draw background rectangle
-                                const text = "$" + Math.round(data).toLocaleString();
-                                const textWidth = ctx.measureText(text).width;
-                                const padding = 6;
-                                
-                                ctx.fillStyle = "rgba(34, 197, 94, 0.9)";
-                                ctx.fillRect(x - (textWidth/2) - padding, y - 16, textWidth + (padding*2), 20);
-                                
-                                // Draw border
-                                ctx.strokeStyle = "rgba(34, 197, 94, 1)";
-                                ctx.lineWidth = 1;
-                                ctx.strokeRect(x - (textWidth/2) - padding, y - 16, textWidth + (padding*2), 20);
-                                
-                                // Draw text
-                                ctx.fillStyle = "#ffffff";
-                                ctx.fillText(text, x, y);
-                            }
-                        });
-                    });
-                }'
+                'datalabels' => [
+                    'display' => true,
+                    'align' => 'top',
+                    'anchor' => 'end',
+                    'formatter' => 'function(value) {
+                        return "$" + Math.round(value).toLocaleString();
+                    }',
+                    'font' => [
+                        'weight' => 'bold',
+                        'size' => 11
+                    ],
+                    'color' => '#ffffff',
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.9)',
+                    'borderColor' => 'rgba(34, 197, 94, 1)',
+                    'borderRadius' => 4,
+                    'borderWidth' => 1,
+                    'padding' => 4,
+                ],
             ],
             'scales' => [
                 'y' => [
