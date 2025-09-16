@@ -33,58 +33,45 @@ class MonthlyCashflowChartWidget extends ChartWidget
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
 
-        // Create separate datasets for positive and negative values
-        $positiveData = [];
-        $negativeData = [];
+        // Create point colors based on balance values
+        $pointColors = [];
         
-        foreach ($balances as $index => $balance) {
+        foreach ($balances as $balance) {
             if ($balance < 0) {
-                $positiveData[] = null;
-                $negativeData[] = $balance;
+                $pointColors[] = 'rgba(239, 68, 68, 1)';
             } else {
-                $positiveData[] = $balance;
-                $negativeData[] = null;
+                $pointColors[] = 'rgba(34, 197, 94, 1)';
             }
         }
 
-        $datasets = [];
+        // Determine overall color based on majority of values
+        $negativeCount = count(array_filter($balances, fn($val) => $val < 0));
+        $positiveCount = count($balances) - $negativeCount;
         
-        // Add positive dataset if there are positive values
-        if (array_filter($positiveData, fn($val) => $val !== null)) {
-            $datasets[] = [
-                'label' => 'Cash in Hand (Positive)',
-                'data' => $positiveData,
-                'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
-                'borderColor' => 'rgba(34, 197, 94, 1)',
-                'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
-                'pointBorderColor' => 'rgba(34, 197, 94, 1)',
-                'borderWidth' => 2,
-                'fill' => 'origin',
-                'tension' => 0.3,
-                'pointRadius' => 4,
-                'pointHoverRadius' => 6,
-            ];
-        }
-        
-        // Add negative dataset if there are negative values
-        if (array_filter($negativeData, fn($val) => $val !== null)) {
-            $datasets[] = [
-                'label' => 'Cash in Hand (Negative)',
-                'data' => $negativeData,
-                'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
-                'borderColor' => 'rgba(239, 68, 68, 1)',
-                'pointBackgroundColor' => 'rgba(239, 68, 68, 1)',
-                'pointBorderColor' => 'rgba(239, 68, 68, 1)',
-                'borderWidth' => 2,
-                'fill' => 'origin',
-                'tension' => 0.3,
-                'pointRadius' => 4,
-                'pointHoverRadius' => 6,
-            ];
+        if ($negativeCount > $positiveCount) {
+            $mainColor = 'rgba(239, 68, 68, 1)';
+            $fillColor = 'rgba(239, 68, 68, 0.2)';
+        } else {
+            $mainColor = 'rgba(34, 197, 94, 1)';
+            $fillColor = 'rgba(34, 197, 94, 0.2)';
         }
 
         return [
-            'datasets' => $datasets,
+            'datasets' => [
+                [
+                    'label' => 'Cash in Hand',
+                    'data' => $balances,
+                    'backgroundColor' => $fillColor,
+                    'borderColor' => $mainColor,
+                    'pointBackgroundColor' => $pointColors,
+                    'pointBorderColor' => $pointColors,
+                    'borderWidth' => 2,
+                    'fill' => 'origin',
+                    'tension' => 0.3,
+                    'pointRadius' => 4,
+                    'pointHoverRadius' => 6,
+                ],
+            ],
             'labels' => $labels,
         ];
     }
