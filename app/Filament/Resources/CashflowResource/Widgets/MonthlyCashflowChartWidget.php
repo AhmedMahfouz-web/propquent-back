@@ -78,13 +78,13 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ->get())
             ->merge(DB::table('user_transactions')
                 ->where('status', 'pending')
-                ->whereBetween('due_date', [$startDate, $endDate])
+                ->whereBetween('transaction_date', [$startDate, $endDate])
                 ->selectRaw('
-                    due_date,
+                    transaction_date as due_date,
                     transaction_type as financial_type,
                     amount
                 ')
-                ->orderBy('due_date')
+                ->orderBy('transaction_date')
                 ->get());
 
         // Generate weekly periods
