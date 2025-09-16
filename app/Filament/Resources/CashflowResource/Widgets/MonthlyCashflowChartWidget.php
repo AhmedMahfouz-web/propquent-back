@@ -128,38 +128,16 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'position' => 'top',
                 ],
                 'tooltip' => [
-                    'callbacks' => [
-                        'title' => 'function(context) { return context[0].label; }',
-                        'label' => 'function(context) { 
-                            const value = context.parsed.y;
-                            const weeklyNet = context.dataset.weeklyNet ? context.dataset.weeklyNet[context.dataIndex] : 0;
-                            return [
-                                "Running Balance: $" + value.toLocaleString(),
-                                "Weekly Change: $" + weeklyNet.toLocaleString()
-                            ];
-                        }'
-                    ]
+                    'mode' => 'index',
+                    'intersect' => false,
                 ],
                 'datalabels' => [
-                    'display' => true,
-                    'align' => 'top',
-                    'color' => '#ffffff',
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.9)',
-                    'borderRadius' => 4,
-                    'padding' => 6,
-                    'font' => [
-                        'weight' => 'bold',
-                        'size' => 10,
-                    ],
-                    'formatter' => 'function(value) { return "$" + value.toLocaleString(); }'
+                    'display' => false, // Disable to prevent conflicts
                 ],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => false,
-                    'ticks' => [
-                        'callback' => 'function(value) { return "$" + value.toLocaleString(); }'
-                    ]
                 ],
                 'x' => [
                     'ticks' => [
