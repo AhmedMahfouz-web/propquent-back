@@ -40,13 +40,14 @@ class ListCashflows extends ListRecords
                     cache()->forget('current_cash_balance');
                     cache()->forget('cashflow_summary');
 
+                    // Refresh the table data
+                    $this->resetTable();
+
                     Notification::make()
                         ->title('Success')
                         ->body('Cashflow data refreshed successfully!')
                         ->success()
                         ->send();
-
-                    return redirect()->to(request()->url());
                 }),
         ];
     }
