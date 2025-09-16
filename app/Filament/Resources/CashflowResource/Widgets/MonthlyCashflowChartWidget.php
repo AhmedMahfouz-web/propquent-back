@@ -11,7 +11,6 @@ class MonthlyCashflowChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Cash in Hand Projection';
 
-    protected static string $view = 'filament.widgets.chart-widget';
 
     protected static ?int $sort = 2;
 
@@ -166,6 +165,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
+            'aspectRatio' => 0.5, // This makes the chart taller
             'layout' => [
                 'padding' => 20
             ],
