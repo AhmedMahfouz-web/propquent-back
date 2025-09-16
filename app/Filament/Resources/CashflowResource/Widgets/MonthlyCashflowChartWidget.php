@@ -92,55 +92,28 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'position' => 'top',
                 ],
                 'tooltip' => [
-                    'mode' => 'index',
-                    'intersect' => false,
-                    'callbacks' => [
-                        'label' => new \Illuminate\Support\HtmlString('function(context) {
-                            return context.dataset.label + ": $" + context.parsed.y.toLocaleString();
-                        }')
-                    ]
+                    'enabled' => true,
                 ],
                 'datalabels' => [
                     'display' => true,
                     'align' => 'top',
                     'anchor' => 'end',
                     'offset' => 10,
-                    'formatter' => new \Illuminate\Support\HtmlString('function(value, context) {
-                        if (value === null || value === undefined) return "";
-                        const formatted = new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: "USD",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                        }).format(value);
-                        return formatted;
-                    }'),
-                    'font' => [
-                        'weight' => 'bold',
-                        'size' => 12
-                    ],
                     'color' => '#ffffff',
                     'backgroundColor' => 'rgba(34, 197, 94, 0.95)',
                     'borderColor' => 'rgba(34, 197, 94, 1)',
                     'borderRadius' => 6,
                     'borderWidth' => 1,
-                    'padding' => [
-                        'top' => 4,
-                        'bottom' => 4,
-                        'left' => 8,
-                        'right' => 8
+                    'padding' => 6,
+                    'font' => [
+                        'weight' => 'bold',
+                        'size' => 12
                     ],
-                    'clip' => false,
                 ],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => false,
-                    'ticks' => [
-                        'callback' => new \Illuminate\Support\HtmlString('function(value) {
-                            return "$" + value.toLocaleString();
-                        }')
-                    ],
                 ],
                 'x' => [
                     'display' => true,
@@ -152,13 +125,12 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ],
             'elements' => [
                 'point' => [
-                    'radius' => 4,
-                    'hoverRadius' => 6,
+                    'radius' => 6,
+                    'hoverRadius' => 8,
                 ],
             ],
             'responsive' => true,
             'maintainAspectRatio' => false,
-            'aspectRatio' => 0.8, // Makes chart much taller
         ];
     }
 }
