@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CashflowResource\Widgets;
 use App\Filament\Resources\CashflowResource;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Js;
 
 class MonthlyCashflowChartWidget extends ChartWidget
 {
@@ -26,7 +27,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
         // Debug: Log the data to see what's happening
         Log::info('Chart Data for ' . $months . ' months:', [
             'count' => count($monthlyData),
-            'data' => array_map(function($item) {
+            'data' => array_map(function ($item) {
                 return [
                     'month' => $item['month_label'],
                     'balance' => $item['running_balance'],
@@ -37,11 +38,11 @@ class MonthlyCashflowChartWidget extends ChartWidget
 
         // Get current cash balance to show as starting point
         $currentBalance = CashflowResource::getCurrentCashBalance();
-        
+
         // Add current month as starting point if not already included
         $labels = array_column($monthlyData, 'month_label');
         $balances = array_column($monthlyData, 'running_balance');
-        
+
         // Prepend current month with current balance
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
@@ -95,9 +96,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'mode' => 'index',
                     'intersect' => false,
                     'callbacks' => [
-                        'label' => 'function(context) {
+                        'label' => Js::from('function(context) {
                             return context.dataset.label + ": $" + context.parsed.y.toLocaleString();
-                        }'
+                        }'),
                     ]
                 ],
                 'datalabels' => [
@@ -105,7 +106,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'align' => 'top',
                     'anchor' => 'end',
                     'offset' => 10,
-                    'formatter' => 'function(value, context) {
+                    'formatter' => Js::from('function(value, context) {
                         if (value === null || value === undefined) return "";
                         const formatted = new Intl.NumberFormat("en-US", {
                             style: "currency",
@@ -114,7 +115,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                             maximumFractionDigits: 0
                         }).format(value);
                         return formatted;
-                    }',
+                    }'),
                     'font' => [
                         'weight' => 'bold',
                         'size' => 12
@@ -137,9 +138,9 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'y' => [
                     'beginAtZero' => false,
                     'ticks' => [
-                        'callback' => 'function(value) {
+                        'callback' => Js::from('function(value) {
                             return "$" + value.toLocaleString();
-                        }'
+                        }')
                     ],
                 ],
                 'x' => [
