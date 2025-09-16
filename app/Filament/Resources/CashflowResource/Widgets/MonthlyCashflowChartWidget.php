@@ -190,7 +190,7 @@ class MonthlyCashflowChartWidget extends ChartWidget
                     'hoverRadius' => 7,
                 ],
             ],
-            'responsive' => true,
+            'responsive' => false,
             'maintainAspectRatio' => false,
             'aspectRatio' => 1,
             'layout' => [
