@@ -33,45 +33,75 @@ class MonthlyCashflowChartWidget extends ChartWidget
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
 
-        // Create point colors based on balance values
-        $pointColors = [];
+        // Create datasets for positive and negative segments
+        $positiveData = [];
+        $negativeData = [];
         
-        foreach ($balances as $balance) {
+        foreach ($balances as $index => $balance) {
             if ($balance < 0) {
-                $pointColors[] = 'rgba(239, 68, 68, 1)';
+                $positiveData[] = null;
+                $negativeData[] = $balance;
             } else {
-                $pointColors[] = 'rgba(34, 197, 94, 1)';
+                $positiveData[] = $balance;
+                $negativeData[] = null;
+            }
+        }
+        
+        // Add connecting points where sign changes
+        for ($i = 0; $i < count($balances) - 1; $i++) {
+            $current = $balances[$i];
+            $next = $balances[$i + 1];
+            
+            // If signs are different, add the next point to both datasets for connection
+            if (($current < 0 && $next >= 0) || ($current >= 0 && $next < 0)) {
+                if ($current < 0) {
+                    $positiveData[$i + 1] = $next;
+                } else {
+                    $negativeData[$i + 1] = $next;
+                }
             }
         }
 
-        // Determine overall color based on majority of values
-        $negativeCount = count(array_filter($balances, fn($val) => $val < 0));
-        $positiveCount = count($balances) - $negativeCount;
+        $datasets = [];
         
-        if ($negativeCount > $positiveCount) {
-            $mainColor = 'rgba(239, 68, 68, 1)';
-            $fillColor = 'rgba(239, 68, 68, 0.2)';
-        } else {
-            $mainColor = 'rgba(34, 197, 94, 1)';
-            $fillColor = 'rgba(34, 197, 94, 0.2)';
+        // Add positive dataset if it has data
+        if (array_filter($positiveData, fn($val) => $val !== null)) {
+            $datasets[] = [
+                'label' => 'Cash in Hand (Positive)',
+                'data' => $positiveData,
+                'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
+                'borderColor' => 'rgba(34, 197, 94, 1)',
+                'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
+                'pointBorderColor' => 'rgba(34, 197, 94, 1)',
+                'borderWidth' => 2,
+                'fill' => 'origin',
+                'tension' => 0.3,
+                'pointRadius' => 4,
+                'pointHoverRadius' => 6,
+                'spanGaps' => false,
+            ];
+        }
+        
+        // Add negative dataset if it has data
+        if (array_filter($negativeData, fn($val) => $val !== null)) {
+            $datasets[] = [
+                'label' => 'Cash in Hand (Negative)',
+                'data' => $negativeData,
+                'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
+                'borderColor' => 'rgba(239, 68, 68, 1)',
+                'pointBackgroundColor' => 'rgba(239, 68, 68, 1)',
+                'pointBorderColor' => 'rgba(239, 68, 68, 1)',
+                'borderWidth' => 2,
+                'fill' => 'origin',
+                'tension' => 0.3,
+                'pointRadius' => 4,
+                'pointHoverRadius' => 6,
+                'spanGaps' => false,
+            ];
         }
 
         return [
-            'datasets' => [
-                [
-                    'label' => 'Cash in Hand',
-                    'data' => $balances,
-                    'backgroundColor' => $fillColor,
-                    'borderColor' => $mainColor,
-                    'pointBackgroundColor' => $pointColors,
-                    'pointBorderColor' => $pointColors,
-                    'borderWidth' => 2,
-                    'fill' => 'origin',
-                    'tension' => 0.3,
-                    'pointRadius' => 4,
-                    'pointHoverRadius' => 6,
-                ],
-            ],
+            'datasets' => $datasets,
             'labels' => $labels,
         ];
     }
@@ -146,40 +176,38 @@ class MonthlyCashflowChartWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
+            'aspectRatio' => 0.5,
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'layout' => [
+                'padding' => 20
+            ],
             'plugins' => [
                 'legend' => [
                     'display' => true,
-                    'position' => 'top',
                 ],
                 'tooltip' => [
-                    'mode' => 'index',
-                    'intersect' => false,
-                ],
-                'datalabels' => [
-                    'display' => false, // Disable to prevent conflicts
+                    'callbacks' => [
+                        'label' => 'function(context) { return context.dataset.label + ": " + new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(context.parsed.y); }',
+                    ],
                 ],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => false,
-                ],
-                'x' => [
                     'ticks' => [
-                        'maxRotation' => 45,
-                        'minRotation' => 45,
-                        'maxTicksLimit' => 50,
+                        'callback' => 'function(value) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value); }',
                     ],
                 ],
             ],
-            'responsive' => true,
-            'maintainAspectRatio' => false,
-            'aspectRatio' => 0.5, // This makes the chart taller
-            'layout' => [
-                'padding' => 20
+            'elements' => [
+                'point' => [
+                    'hoverRadius' => 8,
+                ],
             ],
             'interaction' => [
-                'mode' => 'index',
                 'intersect' => false,
+                'mode' => 'index',
             ],
         ];
     }
