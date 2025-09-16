@@ -5,5 +5,5 @@
             cachedData: @js($this->getCachedData()),
             options: @js($this->getOptions()),
             type: @js($this->getType()),
-        })" x-ignore style="height: 900px !important; min-height: 600px !important;"></canvas>
+        })" x-ignore style="height: 900px !important; min-height: 900px !important;"></canvas>
 </div>
