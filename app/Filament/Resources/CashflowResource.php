@@ -104,8 +104,8 @@ class CashflowResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn($q) => $q->where('date', '>=', $data['from']))
-                            ->when($data['until'], fn($q) => $q->where('date', '<=', $data['until']));
+                            ->when($data['from'], fn($q) => $q->whereRaw('COALESCE(actual_date, due_date, transaction_date) >= ?', [$data['from']]))
+                            ->when($data['until'], fn($q) => $q->whereRaw('COALESCE(actual_date, due_date, transaction_date) <= ?', [$data['until']]));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
@@ -161,7 +161,7 @@ class CashflowResource extends Resource
     {
         return ProjectTransaction::query()
             ->with(['project'])
-            ->selectRaw('*, COALESCE(actual_date, due_date, transaction_date) as actual_date')
+            ->selectRaw('*, COALESCE(actual_date, due_date, transaction_date) as date')
             ->where(function ($query) {
                 $query->where('due_date', '>=', now()->startOfDay())
                     ->orWhere(function ($q) {
