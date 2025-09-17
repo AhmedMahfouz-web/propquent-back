@@ -43,47 +43,60 @@ class CashflowResource extends Resource
 
     public static function table(Table $table): Table
     {
-        // Generate weekly columns
-        $weeklyColumns = [];
-        $startDate = now()->startOfWeek();
+        // Generate monthly columns with 4 weeks each
+        $monthlyColumns = [];
+        $startDate = now()->startOfMonth();
         
-        for ($i = 0; $i < 12; $i++) {
-            $weekStart = $startDate->copy()->addWeeks($i);
-            $weekEnd = $weekStart->copy()->endOfWeek();
-            $weekLabel = $weekStart->format('M j') . '-' . $weekEnd->format('j');
+        for ($monthIndex = 0; $monthIndex < 3; $monthIndex++) {
+            $monthStart = $startDate->copy()->addMonths($monthIndex);
+            $monthLabel = $monthStart->format('M Y');
             
-            $weeklyColumns[] = Tables\Columns\TextColumn::make("week_{$i}")
-                ->label($weekLabel)
+            // Create month header column
+            $monthlyColumns[] = Tables\Columns\TextColumn::make("month_{$monthIndex}_header")
+                ->label($monthLabel)
                 ->html()
-                ->getStateUsing(function ($record) use ($i, $weekStart, $weekEnd) {
-                    $transactions = $record->transactions()
-                        ->where('status', 'pending')
-                        ->whereBetween('due_date', [$weekStart, $weekEnd])
-                        ->get();
-                    
-                    if ($transactions->isEmpty()) {
-                        return '<div class="text-gray-400 text-xs">-</div>';
-                    }
-                    
-                    $html = '';
-                    $expectedCash = self::calculateExpectedCashForWeek($weekStart, $weekEnd);
-                    
-                    // Add expected cash header
-                    $cashColor = $expectedCash >= 0 ? 'text-green-600' : 'text-red-600';
-                    $html .= "<div class='text-xs font-semibold {$cashColor} mb-1'>$" . number_format($expectedCash, 0) . "</div>";
-                    
-                    foreach ($transactions as $transaction) {
-                        $color = $transaction->financial_type === 'revenue' ? 'text-green-600' : 'text-red-600';
-                        $bg = $transaction->financial_type === 'revenue' ? 'bg-green-50' : 'bg-red-50';
-                        $html .= "<div class='text-xs p-1 mb-1 rounded {$bg} {$color}'>";
-                        $html .= "$" . number_format($transaction->amount, 0) . "<br>";
-                        $html .= "<span class='text-gray-600'>" . ucfirst($transaction->financial_type) . "</span>";
-                        $html .= "</div>";
-                    }
-                    
-                    return $html;
+                ->getStateUsing(function () {
+                    return '<div class="text-center font-bold text-gray-700">Month</div>';
                 })
-                ->width('80px');
+                ->width('60px');
+            
+            // Create 4 weekly columns for this month
+            for ($weekIndex = 0; $weekIndex < 4; $weekIndex++) {
+                $weekStart = $monthStart->copy()->addWeeks($weekIndex)->startOfWeek();
+                $weekEnd = $weekStart->copy()->endOfWeek();
+                $weekLabel = 'W' . ($weekIndex + 1);
+                
+                $expectedCash = self::calculateExpectedCashForWeek($weekStart, $weekEnd);
+                $cashColor = $expectedCash >= 0 ? 'text-green-600' : 'text-red-600';
+                $weekHeaderHtml = "<div class='text-xs font-semibold {$cashColor} text-center'>$" . number_format($expectedCash, 0) . "</div>";
+                
+                $monthlyColumns[] = Tables\Columns\TextColumn::make("month_{$monthIndex}_week_{$weekIndex}")
+                    ->label($weekLabel)
+                    ->html()
+                    ->getStateUsing(function ($record) use ($weekStart, $weekEnd, $weekHeaderHtml) {
+                        $transactions = $record->transactions()
+                            ->where('status', 'pending')
+                            ->whereBetween('due_date', [$weekStart, $weekEnd])
+                            ->get();
+                        
+                        if ($transactions->isEmpty()) {
+                            return $weekHeaderHtml . '<div class="text-gray-400 text-xs text-center mt-1">-</div>';
+                        }
+                        
+                        $html = $weekHeaderHtml;
+                        
+                        foreach ($transactions as $transaction) {
+                            $color = $transaction->financial_type === 'revenue' ? 'text-green-600' : 'text-red-600';
+                            $bg = $transaction->financial_type === 'revenue' ? 'bg-green-50' : 'bg-red-50';
+                            $html .= "<div class='text-xs p-1 mb-1 rounded {$bg} {$color} cursor-help' title='" . ucfirst($transaction->financial_type) . " - Due: " . Carbon::parse($transaction->due_date)->format('M j') . "'>";
+                            $html .= "$" . number_format($transaction->amount, 0);
+                            $html .= "</div>";
+                        }
+                        
+                        return $html;
+                    })
+                    ->width('60px');
+            }
         }
 
         return $table
@@ -107,43 +120,10 @@ class CashflowResource extends Resource
                     })
                     ->width('100px'),
 
-                ...$weeklyColumns,
+                ...$monthlyColumns,
             ])
             ->filters([
-                Tables\Filters\Filter::make('date_range')
-                    ->form([
-                        Forms\Components\DatePicker::make('from')
-                            ->label('From Date')
-                            ->default(now()),
-                        Forms\Components\DatePicker::make('until')
-                            ->label('Until Date')
-                            ->default(now()->addWeeks(12)),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['from'], function ($q) use ($data) {
-                                $q->whereHas('transactions', function ($transactionQuery) use ($data) {
-                                    $transactionQuery->where('due_date', '>=', $data['from']);
-                                });
-                            })
-                            ->when($data['until'], function ($q) use ($data) {
-                                $q->whereHas('transactions', function ($transactionQuery) use ($data) {
-                                    $transactionQuery->where('due_date', '<=', $data['until']);
-                                });
-                            });
-                    })
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        if ($data['from']) {
-                            $indicators['from'] = 'From: ' . Carbon::parse($data['from'])->toFormattedDateString();
-                        }
-                        if ($data['until']) {
-                            $indicators['until'] = 'Until: ' . Carbon::parse($data['until'])->toFormattedDateString();
-                        }
-                        return $indicators;
-                    }),
-
-                Tables\Filters\SelectFilter::make('project_status')
+                Tables\Filters\SelectFilter::make('status')
                     ->label('Project Status')
                     ->options([
                         'active' => 'Active',
