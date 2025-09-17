@@ -1,0 +1,60 @@
+/* Fix dark mode visibility for Filament select dropdowns */
+.fi-select-option {
+    color: rgb(17 24 39) !important; /* Gray-900 for light mode */
+}
+
+.dark .fi-select-option {
+    color: rgb(243 244 246) !important; /* Gray-100 for dark mode */
+}
+
+/* Fix for select dropdown options */
+.fi-fo-select .choices__list--dropdown .choices__item {
+    color: rgb(17 24 39) !important;
+}
+
+.dark .fi-fo-select .choices__list--dropdown .choices__item {
+    color: rgb(243 244 246) !important;
+    background-color: rgb(31 41 55) !important; /* Gray-800 */
+}
+
+.dark .fi-fo-select .choices__list--dropdown .choices__item--highlighted {
+    background-color: rgb(55 65 81) !important; /* Gray-700 */
+    color: rgb(255 255 255) !important;
+}
+
+/* Fix for project selection dropdowns specifically */
+.fi-fo-select .choices__list--dropdown {
+    background-color: rgb(255 255 255) !important;
+    border: 1px solid rgb(209 213 219) !important;
+}
+
+.dark .fi-fo-select .choices__list--dropdown {
+    background-color: rgb(31 41 55) !important;
+    border: 1px solid rgb(75 85 99) !important;
+}
+
+/* Fix for SelectColumn dropdowns in tables */
+.fi-ta-select .fi-select {
+    color: rgb(17 24 39) !important;
+}
+
+.dark .fi-ta-select .fi-select {
+    color: rgb(243 244 246) !important;
+    background-color: rgb(31 41 55) !important;
+}
+
+.dark .fi-ta-select .fi-select option {
+    color: rgb(243 244 246) !important;
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Additional fixes for form select components */
+.dark .fi-fo-select select {
+    color: rgb(243 244 246) !important;
+    background-color: rgb(31 41 55) !important;
+}
+
+.dark .fi-fo-select select option {
+    color: rgb(243 244 246) !important;
+    background-color: rgb(31 41 55) !important;
+}

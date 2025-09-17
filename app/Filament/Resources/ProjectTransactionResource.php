@@ -158,7 +158,8 @@ class ProjectTransactionResource extends Resource
                 Tables\Columns\SelectColumn::make('serving')
                     ->options(fn() => ProjectTransaction::getAvailableServingTypes())
                     ->placeholder('Select serving...')
-                    ->selectablePlaceholder(false),
+                    ->selectablePlaceholder(false)
+                    ->sortable(),
 
                 Tables\Columns\TextInputColumn::make('amount')
                     ->extraInputAttributes([
@@ -174,7 +175,8 @@ class ProjectTransactionResource extends Resource
                 Tables\Columns\SelectColumn::make('method')
                     ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
                     ->placeholder('Select method...')
-                    ->selectablePlaceholder(false),
+                    ->selectablePlaceholder(false)
+                    ->sortable(),
 
                 Tables\Columns\TextInputColumn::make('reference_no')
                     ->label('Reference')
@@ -186,6 +188,7 @@ class ProjectTransactionResource extends Resource
                     ->options(fn() => ProjectTransaction::getAvailableStatuses())
                     ->rules(['required'])
                     ->selectablePlaceholder(false)
+                    ->sortable()
                     ->width(120),
 
                 Tables\Columns\TextInputColumn::make('transaction_date')
@@ -206,6 +209,7 @@ class ProjectTransactionResource extends Resource
                         'type' => 'text',
                         'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
                     ])
+                    ->sortable()
                     ->width(150),
 
                 Tables\Columns\TextInputColumn::make('actual_date')
@@ -215,6 +219,7 @@ class ProjectTransactionResource extends Resource
                         'type' => 'text',
                         'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
                     ])
+                    ->sortable()
                     ->width(150),
 
                 Tables\Columns\TextInputColumn::make('note')
