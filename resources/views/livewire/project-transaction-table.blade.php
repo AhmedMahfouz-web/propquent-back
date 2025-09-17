@@ -11,6 +11,13 @@
                     </h1>
                 </div>
                 <div class="flex items-center gap-x-4">
+                    <button wire:click="resetFilters"
+                        class="fi-btn fi-btn-size-md fi-color-gray fi-btn-color-gray inline-flex items-center justify-center gap-1 font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-outlined ring-1 bg-white text-gray-950 hover:bg-gray-50 focus-visible:ring-gray-600 ring-gray-300 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:ring-white/20 dark:focus-visible:ring-gray-500 px-3 py-2 text-sm">
+                        <svg class="fi-btn-icon h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span class="fi-btn-label">Reset Filters</span>
+                    </button>
                     <button wire:click="addNewRow"
                         class="fi-btn fi-btn-size-md fi-color-primary fi-btn-color-primary inline-flex items-center justify-center gap-1 font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-outlined ring-1 bg-white text-gray-950 hover:bg-gray-50 focus-visible:ring-primary-600 ring-gray-300 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:ring-white/20 dark:focus-visible:ring-primary-500 px-3 py-2 text-sm">
                         <svg class="fi-btn-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,6 +257,104 @@
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Actions</span>
                             </span>
+                        </th>
+                    </tr>
+                    <!-- Filter Row -->
+                    <tr class="fi-ta-header-row bg-gray-50 dark:bg-gray-800/50">
+                        <!-- Project Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 200px;">
+                            <input type="text" wire:model.live.debounce.300ms="filters.project" placeholder="Search project..."
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500">
+                        </th>
+                        <!-- Financial Type Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <select wire:model.live="filters.financial_type"
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <option value="">All Types</option>
+                                @foreach ($financialTypes as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Serving Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <select wire:model.live="filters.serving"
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <option value="">All Serving</option>
+                                @foreach ($servingTypes as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Amount Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="number" wire:model.live.debounce.300ms="filters.amount_min" placeholder="Min"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500">
+                                <input type="number" wire:model.live.debounce.300ms="filters.amount_max" placeholder="Max"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                        </th>
+                        <!-- Method Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <select wire:model.live="filters.method"
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <option value="">All Methods</option>
+                                @foreach ($transactionMethods as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Reference Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <input type="text" wire:model.live.debounce.300ms="filters.reference_no" placeholder="Search reference..."
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500">
+                        </th>
+                        <!-- Status Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <select wire:model.live="filters.status"
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <option value="">All Status</option>
+                                @foreach ($statuses as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Transaction Date Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="date" wire:model.live="filters.transaction_date_from"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <input type="date" wire:model.live="filters.transaction_date_to"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                        </th>
+                        <!-- Due Date Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="date" wire:model.live="filters.due_date_from"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <input type="date" wire:model.live="filters.due_date_to"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                        </th>
+                        <!-- Actual Date Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="date" wire:model.live="filters.actual_date_from"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                                <input type="date" wire:model.live="filters.actual_date_to"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500">
+                            </div>
+                        </th>
+                        <!-- Notes Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 200px;">
+                            <input type="text" wire:model.live.debounce.300ms="filters.note" placeholder="Search notes..."
+                                class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500">
+                        </th>
+                        <!-- Actions Column (no filter) -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                            <!-- Empty for actions column -->
                         </th>
                     </tr>
                 </thead>

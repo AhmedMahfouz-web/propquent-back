@@ -22,6 +22,25 @@ class ProjectTransactionTable extends Component
     public $sortField = 'transaction_date';
     public $sortDirection = 'desc';
     public $isLoading = false;
+    
+    // Filter properties
+    public $filters = [
+        'project' => '',
+        'financial_type' => '',
+        'serving' => '',
+        'amount_min' => '',
+        'amount_max' => '',
+        'method' => '',
+        'reference_no' => '',
+        'status' => '',
+        'transaction_date_from' => '',
+        'transaction_date_to' => '',
+        'due_date_from' => '',
+        'due_date_to' => '',
+        'actual_date_from' => '',
+        'actual_date_to' => '',
+        'note' => '',
+    ];
 
     public function mount()
     {
@@ -32,6 +51,9 @@ class ProjectTransactionTable extends Component
     public function loadData()
     {
         $query = ProjectTransaction::with('project.developer');
+        
+        // Apply filters
+        $this->applyFilters($query);
         
         // Apply sorting
         if ($this->sortField === 'project') {
@@ -234,6 +256,106 @@ class ProjectTransactionTable extends Component
         }
     }
 
+    private function applyFilters($query)
+    {
+        // Project filter
+        if (!empty($this->filters['project'])) {
+            $query->whereHas('project', function ($q) {
+                $q->where('title', 'like', '%' . $this->filters['project'] . '%')
+                  ->orWhere('key', 'like', '%' . $this->filters['project'] . '%');
+            });
+        }
+        
+        // Financial type filter
+        if (!empty($this->filters['financial_type'])) {
+            $query->where('financial_type', $this->filters['financial_type']);
+        }
+        
+        // Serving filter
+        if (!empty($this->filters['serving'])) {
+            $query->where('serving', $this->filters['serving']);
+        }
+        
+        // Amount range filter
+        if (!empty($this->filters['amount_min'])) {
+            $query->where('amount', '>=', $this->filters['amount_min']);
+        }
+        if (!empty($this->filters['amount_max'])) {
+            $query->where('amount', '<=', $this->filters['amount_max']);
+        }
+        
+        // Method filter
+        if (!empty($this->filters['method'])) {
+            $query->where('method', $this->filters['method']);
+        }
+        
+        // Reference filter
+        if (!empty($this->filters['reference_no'])) {
+            $query->where('reference_no', 'like', '%' . $this->filters['reference_no'] . '%');
+        }
+        
+        // Status filter
+        if (!empty($this->filters['status'])) {
+            $query->where('status', $this->filters['status']);
+        }
+        
+        // Transaction date range filter
+        if (!empty($this->filters['transaction_date_from'])) {
+            $query->where('transaction_date', '>=', $this->filters['transaction_date_from']);
+        }
+        if (!empty($this->filters['transaction_date_to'])) {
+            $query->where('transaction_date', '<=', $this->filters['transaction_date_to']);
+        }
+        
+        // Due date range filter
+        if (!empty($this->filters['due_date_from'])) {
+            $query->where('due_date', '>=', $this->filters['due_date_from']);
+        }
+        if (!empty($this->filters['due_date_to'])) {
+            $query->where('due_date', '<=', $this->filters['due_date_to']);
+        }
+        
+        // Actual date range filter
+        if (!empty($this->filters['actual_date_from'])) {
+            $query->where('actual_date', '>=', $this->filters['actual_date_from']);
+        }
+        if (!empty($this->filters['actual_date_to'])) {
+            $query->where('actual_date', '<=', $this->filters['actual_date_to']);
+        }
+        
+        // Note filter
+        if (!empty($this->filters['note'])) {
+            $query->where('note', 'like', '%' . $this->filters['note'] . '%');
+        }
+    }
+    
+    public function updatedFilters()
+    {
+        $this->loadData();
+    }
+    
+    public function resetFilters()
+    {
+        $this->filters = [
+            'project' => '',
+            'financial_type' => '',
+            'serving' => '',
+            'amount_min' => '',
+            'amount_max' => '',
+            'method' => '',
+            'reference_no' => '',
+            'status' => '',
+            'transaction_date_from' => '',
+            'transaction_date_to' => '',
+            'due_date_from' => '',
+            'due_date_to' => '',
+            'actual_date_from' => '',
+            'actual_date_to' => '',
+            'note' => '',
+        ];
+        $this->loadData();
+    }
+    
     public function sortBy($field)
     {
         $this->isLoading = true;
