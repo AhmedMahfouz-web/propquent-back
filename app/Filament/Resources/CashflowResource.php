@@ -117,12 +117,20 @@ class CashflowResource extends Resource
                             ->default(now()),
                         Forms\Components\DatePicker::make('until')
                             ->label('Until Date')
-                            ->default(now()->addMonths(6)),
+                            ->default(now()->addWeeks(12)),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['from'], fn($q) => $q->whereRaw('COALESCE(actual_date, due_date, transaction_date) >= ?', [$data['from']]))
-                            ->when($data['until'], fn($q) => $q->whereRaw('COALESCE(actual_date, due_date, transaction_date) <= ?', [$data['until']]));
+                            ->when($data['from'], function ($q) use ($data) {
+                                $q->whereHas('transactions', function ($transactionQuery) use ($data) {
+                                    $transactionQuery->where('due_date', '>=', $data['from']);
+                                });
+                            })
+                            ->when($data['until'], function ($q) use ($data) {
+                                $q->whereHas('transactions', function ($transactionQuery) use ($data) {
+                                    $transactionQuery->where('due_date', '<=', $data['until']);
+                                });
+                            });
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
@@ -135,18 +143,13 @@ class CashflowResource extends Resource
                         return $indicators;
                     }),
 
-                Tables\Filters\SelectFilter::make('financial_type')
+                Tables\Filters\SelectFilter::make('project_status')
+                    ->label('Project Status')
                     ->options([
-                        'Revenue' => 'Revenue',
-                        'Expense' => 'Expense',
-                        'Deposit' => 'Deposit',
-                        'Withdrawal' => 'Withdrawal',
-                    ]),
-
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'Completed' => 'Completed',
-                        'Pending' => 'Pending',
+                        'active' => 'Active',
+                        'pending' => 'Pending',
+                        'completed' => 'Completed',
+                        'cancelled' => 'Cancelled',
                     ]),
             ])
             ->actions([
@@ -155,7 +158,7 @@ class CashflowResource extends Resource
             ->bulkActions([
                 // No bulk actions for read-only resource
             ])
-            ->defaultSort('date', 'asc')
+            ->defaultSort('title', 'asc')
             ->poll('60s'); // Auto-refresh every minute
     }
 
