@@ -18,6 +18,8 @@ class ListCashflows extends ListRecords
     
     public $monthsFilter = 3;
     public $statusFilter = '';
+    public $sortField = 'status';
+    public $sortDirection = 'asc';
 
     public function mount(): void
     {
@@ -38,7 +40,30 @@ class ListCashflows extends ListRecords
             $query->where('status', $this->statusFilter);
         }
         
+        // Sort by status to put ongoing projects on top, then by other fields
+        if ($this->sortField === 'status') {
+            $query->orderByRaw("CASE WHEN status = 'active' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END");
+            if ($this->sortDirection === 'desc') {
+                $query->orderByRaw("CASE WHEN status = 'active' THEN 3 WHEN status = 'pending' THEN 2 ELSE 1 END");
+            }
+        } else {
+            // First sort by status to keep ongoing on top
+            $query->orderByRaw("CASE WHEN status = 'active' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END");
+            // Then sort by the selected field
+            $query->orderBy($this->sortField, $this->sortDirection);
+        }
+        
         return $query->get();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
     }
 
     protected function getHeaderActions(): array
