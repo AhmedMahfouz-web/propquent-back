@@ -182,6 +182,7 @@ class ProjectTransactionResource extends Resource
                     ->label('Reference')
                     ->placeholder('Reference number...')
                     ->rules(['max:255'])
+                    ->sortable()
                     ->width(150),
 
                 Tables\Columns\SelectColumn::make('status')
@@ -225,6 +226,7 @@ class ProjectTransactionResource extends Resource
                 Tables\Columns\TextInputColumn::make('note')
                     ->placeholder('Add note...')
                     ->rules(['max:65535'])
+                    ->sortable()
                     ->width(200),
                 // Read-only columns for existing records
                 Tables\Columns\TextColumn::make('project.title')
