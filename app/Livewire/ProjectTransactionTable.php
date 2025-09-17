@@ -110,6 +110,11 @@ class ProjectTransactionTable extends Component
     public function updateDraftRow($rowId, $field, $value)
     {
         if (isset($this->draftRows[$rowId])) {
+            // Convert empty date strings to null
+            if (in_array($field, ['transaction_date', 'due_date', 'actual_date']) && empty($value)) {
+                $value = null;
+            }
+            
             $this->draftRows[$rowId][$field] = $value;
 
             // Check if all required fields are filled and attempt to save
@@ -122,6 +127,11 @@ class ProjectTransactionTable extends Component
         try {
             $transaction = ProjectTransaction::find($transactionId);
             if ($transaction) {
+                // Convert empty date strings to null
+                if (in_array($field, ['transaction_date', 'due_date', 'actual_date']) && empty($value)) {
+                    $value = null;
+                }
+                
                 // Validate the single field update
                 $validator = Validator::make([$field => $value], [
                     $field => $this->getFieldValidationRule($field)
@@ -203,6 +213,13 @@ class ProjectTransactionTable extends Component
         }
 
         if ($hasAllRequired) {
+            // Convert empty date strings to null before validation and saving
+            foreach (['transaction_date', 'due_date', 'actual_date'] as $dateField) {
+                if (isset($row[$dateField]) && empty($row[$dateField])) {
+                    $row[$dateField] = null;
+                }
+            }
+            
             // Validate the data
             $validator = Validator::make($row, ProjectTransaction::getValidationRules());
 

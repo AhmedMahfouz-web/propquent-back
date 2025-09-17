@@ -115,10 +115,14 @@ class CashflowResource extends Resource
                     ->formatStateUsing(fn(string $state): string => ucfirst($state))
                     ->color(fn(string $state): string => match ($state) {
                         'active' => 'success',
-                        'pending' => 'warning',
-                        'completed' => 'gray',
+                        'pending' => 'warning', 
+                        'completed' => 'info',
+                        'cancelled' => 'danger',
                         default => 'gray',
                     })
+                    ->extraAttributes([
+                        'class' => 'project-status-badge'
+                    ])
                     ->width('100px'),
 
                 ...$weeklyColumns,
