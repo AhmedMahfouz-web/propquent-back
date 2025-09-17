@@ -186,17 +186,12 @@ class MonthlyCashflowChartWidget extends ChartWidget
                 'legend' => [
                     'display' => true,
                 ],
-                'tooltip' => [
-                    'callbacks' => [
-                        'label' => 'function(context) { return context.dataset.label + ": " + new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(context.parsed.y); }',
-                    ],
-                ],
             ],
             'scales' => [
                 'y' => [
                     'beginAtZero' => false,
                     'ticks' => [
-                        'callback' => 'function(value) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value); }',
+                        'callback' => 'function(value) { return "$" + value.toLocaleString(); }',
                     ],
                 ],
             ],
