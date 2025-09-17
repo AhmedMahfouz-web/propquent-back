@@ -13,6 +13,8 @@ use Filament\Notifications\Notification;
 class ListCashflows extends ListRecords
 {
     protected static string $resource = CashflowResource::class;
+    
+    protected static string $view = 'filament.resources.cashflow-resource.pages.list-cashflows';
 
     public function mount(): void
     {

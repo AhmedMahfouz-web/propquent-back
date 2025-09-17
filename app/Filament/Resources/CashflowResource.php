@@ -43,60 +43,54 @@ class CashflowResource extends Resource
 
     public static function table(Table $table): Table
     {
-        // Generate monthly columns with 4 weeks each
-        $monthlyColumns = [];
-        $startDate = now()->startOfMonth();
+        // Generate weekly columns for 3 months (12 weeks)
+        $weeklyColumns = [];
+        $startDate = now()->startOfWeek();
         
-        for ($monthIndex = 0; $monthIndex < 3; $monthIndex++) {
-            $monthStart = $startDate->copy()->addMonths($monthIndex);
-            $monthLabel = $monthStart->format('M Y');
+        for ($i = 0; $i < 12; $i++) {
+            $weekStart = $startDate->copy()->addWeeks($i);
+            $weekEnd = $weekStart->copy()->endOfWeek();
             
-            // Create month header column
-            $monthlyColumns[] = Tables\Columns\TextColumn::make("month_{$monthIndex}_header")
-                ->label($monthLabel)
+            // Determine which month this week belongs to
+            $monthName = $weekStart->format('M-y');
+            $weekNumber = 'W' . (($i % 4) + 1);
+            
+            $expectedCash = self::calculateExpectedCashForWeek($weekStart, $weekEnd);
+            
+            $weeklyColumns[] = Tables\Columns\TextColumn::make("week_{$i}")
+                ->label($weekNumber)
                 ->html()
-                ->getStateUsing(function () {
-                    return '<div class="text-center font-bold text-gray-700">Month</div>';
-                })
-                ->width('60px');
-            
-            // Create 4 weekly columns for this month
-            for ($weekIndex = 0; $weekIndex < 4; $weekIndex++) {
-                $weekStart = $monthStart->copy()->addWeeks($weekIndex)->startOfWeek();
-                $weekEnd = $weekStart->copy()->endOfWeek();
-                $weekLabel = 'W' . ($weekIndex + 1);
-                
-                $expectedCash = self::calculateExpectedCashForWeek($weekStart, $weekEnd);
-                $cashColor = $expectedCash >= 0 ? 'text-green-600' : 'text-red-600';
-                $weekHeaderHtml = "<div class='text-xs font-semibold {$cashColor} text-center'>$" . number_format($expectedCash, 0) . "</div>";
-                
-                $monthlyColumns[] = Tables\Columns\TextColumn::make("month_{$monthIndex}_week_{$weekIndex}")
-                    ->label($weekLabel)
-                    ->html()
-                    ->getStateUsing(function ($record) use ($weekStart, $weekEnd, $weekHeaderHtml) {
-                        $transactions = $record->transactions()
-                            ->where('status', 'pending')
-                            ->whereBetween('due_date', [$weekStart, $weekEnd])
-                            ->get();
-                        
-                        if ($transactions->isEmpty()) {
-                            return $weekHeaderHtml . '<div class="text-gray-400 text-xs text-center mt-1">-</div>';
-                        }
-                        
-                        $html = $weekHeaderHtml;
-                        
-                        foreach ($transactions as $transaction) {
-                            $color = $transaction->financial_type === 'revenue' ? 'text-green-600' : 'text-red-600';
-                            $bg = $transaction->financial_type === 'revenue' ? 'bg-green-50' : 'bg-red-50';
-                            $html .= "<div class='text-xs p-1 mb-1 rounded {$bg} {$color} cursor-help' title='" . ucfirst($transaction->financial_type) . " - Due: " . Carbon::parse($transaction->due_date)->format('M j') . "'>";
-                            $html .= "$" . number_format($transaction->amount, 0);
-                            $html .= "</div>";
-                        }
-                        
+                ->getStateUsing(function ($record) use ($weekStart, $weekEnd, $expectedCash) {
+                    $transactions = $record->transactions()
+                        ->where('status', 'pending')
+                        ->whereBetween('due_date', [$weekStart, $weekEnd])
+                        ->get();
+                    
+                    $cashColor = $expectedCash >= 0 ? 'text-green-600' : 'text-red-600';
+                    $html = "<div class='text-xs font-semibold {$cashColor} text-center mb-2 p-1 bg-gray-100 rounded'>";
+                    $html .= number_format($expectedCash, 0);
+                    $html .= "</div>";
+                    
+                    if ($transactions->isEmpty()) {
+                        $html .= '<div class="text-gray-400 text-xs text-center">-</div>';
                         return $html;
-                    })
-                    ->width('60px');
-            }
+                    }
+                    
+                    foreach ($transactions as $transaction) {
+                        $color = $transaction->financial_type === 'revenue' ? 'text-green-600' : 'text-red-600';
+                        $bg = $transaction->financial_type === 'revenue' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+                        $html .= "<div class='text-xs p-2 mb-1 rounded border {$bg} {$color} cursor-help' title='" . ucfirst($transaction->financial_type) . " - Due: " . Carbon::parse($transaction->due_date)->format('M j') . "'>";
+                        $html .= number_format($transaction->amount, 0);
+                        $html .= "</div>";
+                    }
+                    
+                    return $html;
+                })
+                ->width('80px')
+                ->extraHeaderAttributes([
+                    'data-month' => $monthName,
+                    'class' => 'text-center border-l border-gray-300'
+                ]);
         }
 
         return $table
@@ -120,7 +114,15 @@ class CashflowResource extends Resource
                     })
                     ->width('100px'),
 
-                ...$monthlyColumns,
+                ...$weeklyColumns,
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('add_month_headers')
+                    ->label('')
+                    ->action(function () {})
+                    ->extraAttributes([
+                        'style' => 'display: none;'
+                    ])
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
