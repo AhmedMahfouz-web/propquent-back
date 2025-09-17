@@ -3,16 +3,18 @@
 namespace App\Filament\Resources\CashflowResource\Widgets;
 
 use App\Filament\Resources\CashflowResource;
-use Filament\Widgets\ChartWidget;
+use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
-class MonthlyCashflowChartWidget extends ChartWidget
+class MonthlyCashflowChartWidget extends LineChartWidget
 {
-    protected static ?string $heading = 'Cash in Hand Projection';
-
+    protected static ?string $heading = 'Monthly Cashflow Breakdown';
 
     protected static ?int $sort = 2;
+
+    protected $minValue;
+    protected $maxValue;
 
     protected int | string | array $columnSpan = 'full';
 
@@ -100,6 +102,10 @@ class MonthlyCashflowChartWidget extends ChartWidget
             ];
         }
 
+        // Store min/max values for Y-axis configuration
+        $this->minValue = min($balances);
+        $this->maxValue = max($balances);
+        
         return [
             'datasets' => $datasets,
             'labels' => $labels,
@@ -190,6 +196,8 @@ class MonthlyCashflowChartWidget extends ChartWidget
             'scales' => [
                 'y' => [
                     'beginAtZero' => false,
+                    'min' => $this->minValue > 0 ? 0 : $this->minValue,
+                    'max' => $this->maxValue,
                     'ticks' => [
                         'callback' => 'function(value) { return "$" + value.toLocaleString(); }',
                     ],
