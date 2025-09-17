@@ -195,11 +195,34 @@ class MonthlyCashflowChartWidget extends LineChartWidget
             ],
             'scales' => [
                 'y' => [
+                    'display' => true,
                     'beginAtZero' => false,
-                    'min' => $this->minValue > 0 ? 0 : $this->minValue,
-                    'max' => $this->maxValue,
+                    'position' => 'left',
                     'ticks' => [
+                        'display' => true,
+                        'color' => '#374151',
+                        'font' => [
+                            'size' => 12,
+                        ],
                         'callback' => 'function(value) { return "$" + value.toLocaleString(); }',
+                    ],
+                    'grid' => [
+                        'display' => true,
+                        'color' => '#e5e7eb',
+                    ],
+                    'border' => [
+                        'display' => true,
+                        'color' => '#374151',
+                    ],
+                ],
+                'x' => [
+                    'display' => true,
+                    'ticks' => [
+                        'display' => true,
+                        'color' => '#374151',
+                    ],
+                    'grid' => [
+                        'display' => false,
                     ],
                 ],
             ],
