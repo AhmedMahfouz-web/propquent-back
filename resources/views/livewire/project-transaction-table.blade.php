@@ -371,7 +371,7 @@
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'project_key', $event.target.value)"
                                     data-row="{{ $rowId }}" data-col="0"
-                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6">
+                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Select Project...</option>
                                     @foreach ($projects as $key => $label)
                                         <option value="{{ $key }}"
@@ -386,7 +386,7 @@
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'financial_type', $event.target.value)"
                                     data-row="{{ $rowId }}" data-col="1"
-                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6">
+                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Select Financial Type...</option>
                                     @foreach ($financialTypes as $key => $label)
                                         <option value="{{ $key }}"
@@ -401,7 +401,7 @@
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'serving', $event.target.value)"
                                     data-row="{{ $rowId }}" data-col="2"
-                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6">
+                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Serving...</option>
                                     @foreach ($servingTypes as $key => $label)
                                         <option value="{{ $key }}"
@@ -424,7 +424,7 @@
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'method', $event.target.value)"
                                     data-row="{{ $rowId }}" data-col="4"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Method...</option>
                                     @foreach ($transactionMethods as $key => $label)
                                         <option value="{{ $key }}"
@@ -447,7 +447,7 @@
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'status', $event.target.value)"
                                     data-row="{{ $rowId }}" data-col="6"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Status...</option>
                                     @foreach ($statuses as $key => $label)
                                         <option value="{{ $key }}"
@@ -504,7 +504,7 @@
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'project_key', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="0"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     @foreach ($projects as $key => $label)
                                         <option value="{{ $key }}"
                                             {{ $transaction['project_key'] == $key ? 'selected' : '' }}>
@@ -517,7 +517,7 @@
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'financial_type', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="1"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     @foreach ($financialTypes as $key => $label)
                                         <option value="{{ $key }}"
                                             {{ $transaction['financial_type'] == $key ? 'selected' : '' }}>
@@ -530,7 +530,7 @@
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'serving', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="2"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Serving...</option>
                                     @foreach ($servingTypes as $key => $label)
                                         <option value="{{ $key }}"
@@ -551,7 +551,7 @@
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'method', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="4"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Method...</option>
                                     @foreach ($transactionMethods as $key => $label)
                                         <option value="{{ $key }}"
@@ -572,7 +572,7 @@
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'status', $event.target.value)"
                                     data-row="existing-{{ $transaction['id'] }}" data-col="6"
-                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     @foreach ($statuses as $key => $label)
                                         <option value="{{ $key }}"
                                             {{ $transaction['status'] == $key ? 'selected' : '' }}>
