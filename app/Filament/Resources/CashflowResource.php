@@ -95,6 +95,13 @@ class CashflowResource extends Resource
 
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('key')
+                    ->label('Key')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->width('100px'),
+
                 Tables\Columns\TextColumn::make('title')
                     ->label('Project')
                     ->searchable()
@@ -140,7 +147,7 @@ class CashflowResource extends Resource
             ->bulkActions([
                 // No bulk actions for read-only resource
             ])
-            ->defaultSort('title', 'asc')
+            ->defaultSort('status', 'asc')
             ->poll('60s'); // Auto-refresh every minute
     }
 
@@ -157,7 +164,7 @@ class CashflowResource extends Resource
     }
 
     /**
-     * Get projects with pending transactions for cashflow projection
+     * Get all projects for cashflow projection with ongoing projects on top
      */
     public static function getEloquentQuery(): Builder
     {
@@ -168,11 +175,7 @@ class CashflowResource extends Resource
                       ->where('due_date', '<=', now()->addWeeks(12))
                       ->orderBy('due_date');
             }])
-            ->whereHas('transactions', function ($query) {
-                $query->where('status', 'pending')
-                      ->where('due_date', '>=', now())
-                      ->where('due_date', '<=', now()->addWeeks(12));
-            })
+            ->orderByRaw("CASE WHEN status = 'active' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END")
             ->orderBy('title');
     }
 
