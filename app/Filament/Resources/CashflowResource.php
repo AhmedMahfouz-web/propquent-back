@@ -27,9 +27,9 @@ class CashflowResource extends Resource
 
     protected static ?string $navigationGroup = 'Financial Reports';
 
-    protected static ?string $title = 'Cashflow Projection';
+    protected static ?string $title = 'Cashflow';
 
-    protected static ?string $pluralModelLabel = 'Cashflow Projection';
+    protected static ?string $pluralModelLabel = 'Cashflow';
 
     protected static ?int $navigationSort = 6;
 
@@ -46,17 +46,17 @@ class CashflowResource extends Resource
         // Generate weekly columns for 3 months (12 weeks)
         $weeklyColumns = [];
         $startDate = now()->startOfWeek();
-        
+
         for ($i = 0; $i < 12; $i++) {
             $weekStart = $startDate->copy()->addWeeks($i);
             $weekEnd = $weekStart->copy()->endOfWeek();
-            
+
             // Determine which month this week belongs to
             $monthName = $weekStart->format('M-y');
             $weekNumber = 'W' . (($i % 4) + 1);
-            
+
             $expectedCash = self::calculateExpectedCashForWeek($weekStart, $weekEnd);
-            
+
             $weeklyColumns[] = Tables\Columns\TextColumn::make("week_{$i}")
                 ->label($weekNumber)
                 ->html()
@@ -65,17 +65,17 @@ class CashflowResource extends Resource
                         ->where('status', 'pending')
                         ->whereBetween('due_date', [$weekStart, $weekEnd])
                         ->get();
-                    
+
                     $cashColor = $expectedCash >= 0 ? 'text-green-600' : 'text-red-600';
                     $html = "<div class='text-xs font-semibold {$cashColor} text-center mb-2 p-1 bg-gray-100 rounded'>";
                     $html .= number_format($expectedCash, 0);
                     $html .= "</div>";
-                    
+
                     if ($transactions->isEmpty()) {
                         $html .= '<div class="text-gray-400 text-xs text-center">-</div>';
                         return $html;
                     }
-                    
+
                     foreach ($transactions as $transaction) {
                         $color = $transaction->financial_type === 'revenue' ? 'text-green-600' : 'text-red-600';
                         $bg = $transaction->financial_type === 'revenue' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
@@ -83,7 +83,7 @@ class CashflowResource extends Resource
                         $html .= number_format($transaction->amount, 0);
                         $html .= "</div>";
                     }
-                    
+
                     return $html;
                 })
                 ->width('80px')
@@ -171,9 +171,9 @@ class CashflowResource extends Resource
         return Project::query()
             ->with(['transactions' => function ($query) {
                 $query->where('status', 'pending')
-                      ->where('due_date', '>=', now())
-                      ->where('due_date', '<=', now()->addWeeks(12))
-                      ->orderBy('due_date');
+                    ->where('due_date', '>=', now())
+                    ->where('due_date', '<=', now()->addWeeks(12))
+                    ->orderBy('due_date');
             }])
             ->orderByRaw("CASE WHEN status = 'active' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END")
             ->orderBy('title');
@@ -385,7 +385,7 @@ class CashflowResource extends Resource
     {
         // Start with current balance
         $currentBalance = self::getCurrentCashBalance();
-        
+
         // Add all transactions that should be completed by the end of this week
         $weeklyTransactions = DB::table('project_transactions')
             ->where('status', 'pending')
@@ -396,10 +396,10 @@ class CashflowResource extends Resource
                 SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
             ')
             ->first();
-        
+
         $revenue = $weeklyTransactions->revenue ?? 0;
         $expenses = $weeklyTransactions->expenses ?? 0;
-        
+
         return $currentBalance + $revenue - $expenses;
     }
 }
