@@ -35,23 +35,72 @@ class MonthlyCashflowChartWidget extends LineChartWidget
         array_unshift($labels, 'Today');
         array_unshift($balances, $currentBalance);
 
-        // Create single connected gray line dataset
-        $datasets = [
-            [
-                'label' => 'Cash Balance',
-                'data' => $balances,
-                'backgroundColor' => 'rgba(107, 114, 128, 0.1)',
+        // Create datasets for positive and negative segments with gray line
+        $positiveData = [];
+        $negativeData = [];
+        
+        foreach ($balances as $index => $balance) {
+            if ($balance < 0) {
+                $positiveData[] = null;
+                $negativeData[] = $balance;
+            } else {
+                $positiveData[] = $balance;
+                $negativeData[] = null;
+            }
+        }
+        
+        // Add connecting points where sign changes
+        for ($i = 0; $i < count($balances) - 1; $i++) {
+            $current = $balances[$i];
+            $next = $balances[$i + 1];
+            
+            // If signs are different, add the next point to both datasets for connection
+            if (($current < 0 && $next >= 0) || ($current >= 0 && $next < 0)) {
+                if ($current < 0) {
+                    $positiveData[$i + 1] = $next;
+                } else {
+                    $negativeData[$i + 1] = $next;
+                }
+            }
+        }
+
+        $datasets = [];
+        
+        // Add positive dataset if it has data
+        if (array_filter($positiveData, fn($val) => $val !== null)) {
+            $datasets[] = [
+                'label' => 'Cash in Hand (Positive)',
+                'data' => $positiveData,
+                'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
                 'borderColor' => 'rgba(107, 114, 128, 1)',
-                'pointBackgroundColor' => 'rgba(107, 114, 128, 1)',
-                'pointBorderColor' => 'rgba(107, 114, 128, 1)',
+                'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
+                'pointBorderColor' => 'rgba(34, 197, 94, 1)',
                 'borderWidth' => 2,
-                'fill' => false,
+                'fill' => 'origin',
                 'tension' => 0.3,
                 'pointRadius' => 4,
                 'pointHoverRadius' => 6,
-                'spanGaps' => true,
-            ]
-        ];
+                'spanGaps' => false,
+            ];
+        }
+        
+        // Add negative dataset if it has data
+        if (array_filter($negativeData, fn($val) => $val !== null)) {
+            $datasets[] = [
+                'label' => 'Cash in Hand (Negative)',
+                'data' => $negativeData,
+                'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
+                'borderColor' => 'rgba(107, 114, 128, 1)',
+                'pointBackgroundColor' => 'rgba(239, 68, 68, 1)',
+                'pointBorderColor' => 'rgba(239, 68, 68, 1)',
+                'borderWidth' => 2,
+                'fill' => 'origin',
+                'tension' => 0.3,
+                'pointRadius' => 4,
+                'pointHoverRadius' => 6,
+                'spanGaps' => false,
+            ];
+        }
 
         // Store min/max values for Y-axis configuration
         $this->minValue = min($balances);
