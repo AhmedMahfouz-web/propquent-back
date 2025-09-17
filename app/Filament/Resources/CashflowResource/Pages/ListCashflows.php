@@ -72,6 +72,7 @@ class ListCashflows extends ListRecords
         return [
             CashflowResource\Widgets\CashflowOverviewWidget::class,
             CashflowResource\Widgets\MonthlyCashflowChartWidget::class,
+            CashflowResource\Widgets\ProjectsWeeklyWidget::class,
         ];
     }
 }
