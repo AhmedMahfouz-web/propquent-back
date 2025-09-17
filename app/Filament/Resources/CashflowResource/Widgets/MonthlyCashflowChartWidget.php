@@ -66,21 +66,39 @@ class MonthlyCashflowChartWidget extends LineChartWidget
 
         $datasets = [];
         
+        // Add connecting line dataset first (behind the fill areas)
+        $datasets[] = [
+            'label' => 'Cash Balance Line',
+            'data' => $balances,
+            'backgroundColor' => 'transparent',
+            'borderColor' => 'rgba(107, 114, 128, 1)',
+            'pointBackgroundColor' => 'transparent',
+            'pointBorderColor' => 'transparent',
+            'borderWidth' => 2,
+            'fill' => false,
+            'tension' => 0.3,
+            'pointRadius' => 0,
+            'pointHoverRadius' => 0,
+            'spanGaps' => true,
+            'order' => 1,
+        ];
+        
         // Add positive dataset if it has data
         if (array_filter($positiveData, fn($val) => $val !== null)) {
             $datasets[] = [
                 'label' => 'Cash in Hand (Positive)',
                 'data' => $positiveData,
                 'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
-                'borderColor' => 'rgba(107, 114, 128, 1)',
+                'borderColor' => 'transparent',
                 'pointBackgroundColor' => 'rgba(34, 197, 94, 1)',
                 'pointBorderColor' => 'rgba(34, 197, 94, 1)',
-                'borderWidth' => 2,
+                'borderWidth' => 0,
                 'fill' => 'origin',
                 'tension' => 0.3,
                 'pointRadius' => 4,
                 'pointHoverRadius' => 6,
                 'spanGaps' => false,
+                'order' => 2,
             ];
         }
         
@@ -90,15 +108,16 @@ class MonthlyCashflowChartWidget extends LineChartWidget
                 'label' => 'Cash in Hand (Negative)',
                 'data' => $negativeData,
                 'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
-                'borderColor' => 'rgba(107, 114, 128, 1)',
+                'borderColor' => 'transparent',
                 'pointBackgroundColor' => 'rgba(239, 68, 68, 1)',
                 'pointBorderColor' => 'rgba(239, 68, 68, 1)',
-                'borderWidth' => 2,
+                'borderWidth' => 0,
                 'fill' => 'origin',
                 'tension' => 0.3,
                 'pointRadius' => 4,
                 'pointHoverRadius' => 6,
                 'spanGaps' => false,
+                'order' => 3,
             ];
         }
 
