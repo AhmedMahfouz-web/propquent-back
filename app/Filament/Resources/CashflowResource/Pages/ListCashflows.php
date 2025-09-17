@@ -20,6 +20,8 @@ class ListCashflows extends ListRecords
     public $statusFilter = '';
     public $sortField = 'status';
     public $sortDirection = 'asc';
+    public $weekSortField = null;
+    public $weekSortDirection = 'desc';
 
     public function mount(): void
     {
@@ -40,30 +42,98 @@ class ListCashflows extends ListRecords
             $query->where('status', $this->statusFilter);
         }
         
-        // Sort by status to put ongoing projects on top, then by other fields
-        if ($this->sortField === 'status') {
-            $query->orderByRaw("CASE WHEN status = 'active' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END");
-            if ($this->sortDirection === 'desc') {
-                $query->orderByRaw("CASE WHEN status = 'active' THEN 3 WHEN status = 'pending' THEN 2 ELSE 1 END");
-            }
+        $projects = $query->get();
+        
+        // Apply sorting
+        if ($this->weekSortField !== null) {
+            // Sort by week transaction amounts
+            $projects = $this->sortProjectsByWeek($projects);
         } else {
-            // First sort by status to keep ongoing on top
-            $query->orderByRaw("CASE WHEN status = 'active' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END");
-            // Then sort by the selected field
-            $query->orderBy($this->sortField, $this->sortDirection);
+            // Sort by regular fields
+            $projects = $this->sortProjectsByField($projects);
         }
         
-        return $query->get();
+        return $projects;
+    }
+
+    private function sortProjectsByField($projects)
+    {
+        return $projects->sort(function ($a, $b) {
+            // Always prioritize active projects first
+            $statusPriorityA = $a->status === 'active' ? 1 : ($a->status === 'pending' ? 2 : 3);
+            $statusPriorityB = $b->status === 'active' ? 1 : ($b->status === 'pending' ? 2 : 3);
+            
+            if ($this->sortField === 'status') {
+                if ($this->sortDirection === 'desc') {
+                    return $statusPriorityB <=> $statusPriorityA;
+                }
+                return $statusPriorityA <=> $statusPriorityB;
+            }
+            
+            // For other fields, first sort by status priority, then by the field
+            if ($statusPriorityA !== $statusPriorityB) {
+                return $statusPriorityA <=> $statusPriorityB;
+            }
+            
+            $valueA = $a->{$this->sortField} ?? '';
+            $valueB = $b->{$this->sortField} ?? '';
+            
+            if ($this->sortDirection === 'desc') {
+                return $valueB <=> $valueA;
+            }
+            return $valueA <=> $valueB;
+        });
+    }
+
+    private function sortProjectsByWeek($projects)
+    {
+        $weekIndex = (int) str_replace('week_', '', $this->weekSortField);
+        $startDate = now()->startOfWeek();
+        $weekStart = $startDate->copy()->addWeeks($weekIndex);
+        $weekEnd = $weekStart->copy()->endOfWeek();
+        
+        return $projects->sort(function ($a, $b) use ($weekStart, $weekEnd) {
+            $amountA = $a->transactions()
+                ->where('status', 'pending')
+                ->whereBetween('due_date', [$weekStart, $weekEnd])
+                ->sum('amount');
+                
+            $amountB = $b->transactions()
+                ->where('status', 'pending')
+                ->whereBetween('due_date', [$weekStart, $weekEnd])
+                ->sum('amount');
+            
+            if ($this->weekSortDirection === 'desc') {
+                return $amountB <=> $amountA;
+            }
+            return $amountA <=> $amountB;
+        });
     }
 
     public function sortBy($field)
     {
+        // Reset week sorting when sorting by regular fields
+        $this->weekSortField = null;
+        
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
             $this->sortField = $field;
             $this->sortDirection = 'asc';
         }
+    }
+
+    public function sortByWeek($weekField)
+    {
+        if ($this->weekSortField === $weekField) {
+            $this->weekSortDirection = $this->weekSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->weekSortField = $weekField;
+            $this->weekSortDirection = 'desc'; // Default to highest amounts first
+        }
+        
+        // Reset regular field sorting
+        $this->sortField = null;
     }
 
     protected function getHeaderActions(): array

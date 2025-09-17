@@ -28,7 +28,6 @@
             <!-- Table Header -->
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Project Cashflow Projection</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Ongoing projects with weekly installments</p>
             </div>
 
             <!-- Month Headers -->
@@ -42,11 +41,17 @@
                                 wire:click="sortBy('key')">
                                 <div class="flex items-center">
                                     Key
-                                    @if($sortField === 'key')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                    @if ($sortField === 'key')
+                                        @if ($sortDirection === 'asc')
+                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
                                         @else
-                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/></svg>
+                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" />
+                                            </svg>
                                         @endif
                                     @endif
                                 </div>
@@ -56,11 +61,17 @@
                                 wire:click="sortBy('title')">
                                 <div class="flex items-center">
                                     Project
-                                    @if($sortField === 'title')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                    @if ($sortField === 'title')
+                                        @if ($sortDirection === 'asc')
+                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
                                         @else
-                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/></svg>
+                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" />
+                                            </svg>
                                         @endif
                                     @endif
                                 </div>
@@ -70,11 +81,17 @@
                                 wire:click="sortBy('status')">
                                 <div class="flex items-center">
                                     Status
-                                    @if($sortField === 'status')
-                                        @if($sortDirection === 'asc')
-                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                                    @if ($sortField === 'status')
+                                        @if ($sortDirection === 'asc')
+                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
                                         @else
-                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/></svg>
+                                            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" />
+                                            </svg>
                                         @endif
                                     @endif
                                 </div>
@@ -107,17 +124,34 @@
                                     $weekStart = $startDate->copy()->addWeeks($i);
                                     $weekEnd = $weekStart->copy()->endOfWeek();
                                     $weekNumber = 'W' . (($i % 4) + 1);
+                                    $weekField = 'week_' . $i;
+
                                     $expectedCash = \App\Filament\Resources\CashflowResource::calculateExpectedCashForWeek(
                                         $weekStart,
                                         $weekEnd,
                                     );
                                 @endphp
-                                <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600">
-                                    <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        {{ $weekNumber }}</div>
-                                    <div
-                                        class="text-xs px-2 py-1 rounded {{ $expectedCash >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
-                                        {{ number_format($expectedCash, 0) }}
+                                <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                                    wire:click="sortByWeek('{{ $weekField }}')">
+                                    <div class="flex flex-col items-center">
+                                        <div class="flex items-center text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            {{ $weekNumber }}
+                                            @if($weekSortField === $weekField)
+                                                @if($weekSortDirection === 'asc')
+                                                    <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                                                    </svg>
+                                                @else
+                                                    <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"/>
+                                                    </svg>
+                                                @endif
+                                            @endif
+                                        </div>
+                                        <div
+                                            class="text-xs px-2 py-1 rounded {{ $expectedCash >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
+                                            {{ number_format($expectedCash, 0) }}
+                                        </div>
                                     </div>
                                 </th>
                             @endfor
