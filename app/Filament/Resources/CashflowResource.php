@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CashflowResource\Pages;
+use App\Models\Project;
 use App\Models\ProjectTransaction;
 use App\Models\UserTransaction;
 use Carbon\Carbon;
@@ -18,7 +19,7 @@ use Illuminate\Support\Js;
 
 class CashflowResource extends Resource
 {
-    protected static ?string $model = ProjectTransaction::class;
+    protected static ?string $model = Project::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
@@ -42,56 +43,71 @@ class CashflowResource extends Resource
 
     public static function table(Table $table): Table
     {
+        // Generate weekly columns
+        $weeklyColumns = [];
+        $startDate = now()->startOfWeek();
+        
+        for ($i = 0; $i < 12; $i++) {
+            $weekStart = $startDate->copy()->addWeeks($i);
+            $weekEnd = $weekStart->copy()->endOfWeek();
+            $weekLabel = $weekStart->format('M j') . '-' . $weekEnd->format('j');
+            
+            $weeklyColumns[] = Tables\Columns\TextColumn::make("week_{$i}")
+                ->label($weekLabel)
+                ->html()
+                ->getStateUsing(function ($record) use ($i, $weekStart, $weekEnd) {
+                    $transactions = $record->transactions()
+                        ->where('status', 'pending')
+                        ->whereBetween('due_date', [$weekStart, $weekEnd])
+                        ->get();
+                    
+                    if ($transactions->isEmpty()) {
+                        return '<div class="text-gray-400 text-xs">-</div>';
+                    }
+                    
+                    $html = '';
+                    $expectedCash = self::calculateExpectedCashForWeek($weekStart, $weekEnd);
+                    
+                    // Add expected cash header
+                    $cashColor = $expectedCash >= 0 ? 'text-green-600' : 'text-red-600';
+                    $html .= "<div class='text-xs font-semibold {$cashColor} mb-1'>$" . number_format($expectedCash, 0) . "</div>";
+                    
+                    foreach ($transactions as $transaction) {
+                        $color = $transaction->financial_type === 'revenue' ? 'text-green-600' : 'text-red-600';
+                        $bg = $transaction->financial_type === 'revenue' ? 'bg-green-50' : 'bg-red-50';
+                        $html .= "<div class='text-xs p-1 mb-1 rounded {$bg} {$color}'>";
+                        $html .= "$" . number_format($transaction->amount, 0) . "<br>";
+                        $html .= "<span class='text-gray-600'>" . ucfirst($transaction->financial_type) . "</span>";
+                        $html .= "</div>";
+                    }
+                    
+                    return $html;
+                })
+                ->width('80px');
+        }
+
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('date')
-                    ->label('Date')
-                    ->date()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('project.title')
-                    ->label('Description')
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Project')
                     ->searchable()
-                    ->limit(50)
-                    ->getStateUsing(function ($record) {
-                        return "Project: " . ($record->project->title ?? $record->project_key) . " - " . $record->financial_type;
-                    }),
-
-                Tables\Columns\TextColumn::make('financial_type')
-                    ->label('Type')
-                    ->badge()
-                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
-                    ->color(fn(string $state): string => match ($state) {
-                        'revenue' => 'success',
-                        'expense' => 'danger',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('amount')
-                    ->label('Cash In')
-                    ->money('USD')
-                    ->color('success')
-                    ->getStateUsing(function ($record) {
-                        return $record->financial_type === 'revenue' ? $record->amount : null;
-                    }),
-
-                Tables\Columns\TextColumn::make('amount')
-                    ->label('Cash Out')
-                    ->money('USD')
-                    ->color('danger')
-                    ->getStateUsing(function ($record) {
-                        return $record->financial_type === 'expense' ? $record->amount : null;
-                    }),
+                    ->sortable()
+                    ->weight('bold')
+                    ->width('200px'),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => $state === 'done' ? 'Completed' : 'Pending')
+                    ->formatStateUsing(fn(string $state): string => ucfirst($state))
                     ->color(fn(string $state): string => match ($state) {
-                        'done' => 'success',
+                        'active' => 'success',
                         'pending' => 'warning',
+                        'completed' => 'gray',
                         default => 'gray',
-                    }),
+                    })
+                    ->width('100px'),
+
+                ...$weeklyColumns,
             ])
             ->filters([
                 Tables\Filters\Filter::make('date_range')
@@ -156,22 +172,23 @@ class CashflowResource extends Resource
     }
 
     /**
-     * Get cashflow data combining project and user transactions
+     * Get projects with pending transactions for cashflow projection
      */
     public static function getEloquentQuery(): Builder
     {
-        return ProjectTransaction::query()
-            ->with(['project'])
-            ->selectRaw('*, COALESCE(actual_date, due_date, transaction_date) as date')
-            ->where(function ($query) {
-                $query->where('due_date', '>=', now()->startOfDay())
-                    ->orWhere(function ($q) {
-                        $q->where('transaction_date', '>=', now()->startOfDay())
-                            ->where('status', 'done');
-                    });
+        return Project::query()
+            ->with(['transactions' => function ($query) {
+                $query->where('status', 'pending')
+                      ->where('due_date', '>=', now())
+                      ->where('due_date', '<=', now()->addWeeks(12))
+                      ->orderBy('due_date');
+            }])
+            ->whereHas('transactions', function ($query) {
+                $query->where('status', 'pending')
+                      ->where('due_date', '>=', now())
+                      ->where('due_date', '<=', now()->addWeeks(12));
             })
-            ->orderByRaw('COALESCE(actual_date, due_date, transaction_date)')
-            ->orderBy('id');
+            ->orderBy('title');
     }
 
     /**
@@ -371,5 +388,30 @@ class CashflowResource extends Resource
 
             return $monthlyData;
         });
+    }
+
+    /**
+     * Calculate expected cash in hand for a specific week
+     */
+    public static function calculateExpectedCashForWeek($weekStart, $weekEnd): float
+    {
+        // Start with current balance
+        $currentBalance = self::getCurrentCashBalance();
+        
+        // Add all transactions that should be completed by the end of this week
+        $weeklyTransactions = DB::table('project_transactions')
+            ->where('status', 'pending')
+            ->where('due_date', '<=', $weekEnd)
+            ->where('due_date', '>=', now())
+            ->selectRaw('
+                SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
+                SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
+            ')
+            ->first();
+        
+        $revenue = $weeklyTransactions->revenue ?? 0;
+        $expenses = $weeklyTransactions->expenses ?? 0;
+        
+        return $currentBalance + $revenue - $expenses;
     }
 }
