@@ -196,34 +196,10 @@ class MonthlyCashflowChartWidget extends LineChartWidget
             'scales' => [
                 'y' => [
                     'display' => true,
-                    'beginAtZero' => false,
-                    'position' => 'left',
-                    'ticks' => [
-                        'display' => true,
-                        'color' => '#374151',
-                        'font' => [
-                            'size' => 12,
-                        ],
-                        'callback' => 'function(value) { return "$" + value.toLocaleString(); }',
-                    ],
-                    'grid' => [
-                        'display' => true,
-                        'color' => '#e5e7eb',
-                    ],
-                    'border' => [
-                        'display' => true,
-                        'color' => '#374151',
-                    ],
+                    'beginAtZero' => true,
                 ],
                 'x' => [
                     'display' => true,
-                    'ticks' => [
-                        'display' => true,
-                        'color' => '#374151',
-                    ],
-                    'grid' => [
-                        'display' => false,
-                    ],
                 ],
             ],
             'elements' => [
