@@ -28,6 +28,11 @@ class ListCashflows extends ListRecords
         parent::mount();
     }
 
+    public function loadData()
+    {
+        // Initialize data loading
+    }
+
     public function filterTable()
     {
         // This method will trigger a re-render of the table with new filter values
@@ -59,7 +64,7 @@ class ListCashflows extends ListRecords
     private function sortProjectsByField($projects)
     {
         return $projects->sort(function ($a, $b) {
-            // Always prioritize active projects first
+            // Always prioritize active projects first unless sorting by status in desc
             $statusPriorityA = $a->status === 'active' ? 1 : ($a->status === 'pending' ? 2 : 3);
             $statusPriorityB = $b->status === 'active' ? 1 : ($b->status === 'pending' ? 2 : 3);
             
@@ -71,7 +76,7 @@ class ListCashflows extends ListRecords
             }
             
             // For other fields, first sort by status priority, then by the field
-            if ($statusPriorityA !== $statusPriorityB) {
+            if ($statusPriorityA !== $statusPriorityB && $this->sortField !== 'key' && $this->sortField !== 'title') {
                 return $statusPriorityA <=> $statusPriorityB;
             }
             

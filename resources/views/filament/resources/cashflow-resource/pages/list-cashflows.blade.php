@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
+    <div class="space-y-6" wire:init="loadData">
 
         <!-- Filters -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
@@ -38,7 +38,8 @@
                         <tr>
                             <th rowspan="2"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                                wire:click="sortBy('key')">
+                                wire:click="sortBy('key')" 
+                                wire:loading.class="opacity-50">
                                 <div class="flex items-center">
                                     Key
                                     @if ($sortField === 'key')
@@ -58,7 +59,8 @@
                             </th>
                             <th rowspan="2"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                                wire:click="sortBy('title')">
+                                wire:click="sortBy('title')" 
+                                wire:loading.class="opacity-50">
                                 <div class="flex items-center">
                                     Project
                                     @if ($sortField === 'title')
@@ -78,7 +80,8 @@
                             </th>
                             <th rowspan="2"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                                wire:click="sortBy('status')">
+                                wire:click="sortBy('status')" 
+                                wire:loading.class="opacity-50">
                                 <div class="flex items-center">
                                     Status
                                     @if ($sortField === 'status')
