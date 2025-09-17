@@ -15,20 +15,30 @@ class ListCashflows extends ListRecords
     protected static string $resource = CashflowResource::class;
     
     protected static string $view = 'filament.resources.cashflow-resource.pages.list-cashflows';
+    
+    public $monthsFilter = 3;
+    public $statusFilter = '';
 
     public function mount(): void
     {
         parent::mount();
+    }
 
-        // Set default date range filter if not already set
-        if (empty($this->tableFilters['date_range']['from']) && empty($this->tableFilters['date_range']['until'])) {
-            $this->tableFilters = array_merge($this->tableFilters ?? [], [
-                'date_range' => [
-                    'from' => Carbon::now()->format('Y-m-d'),
-                    'until' => Carbon::now()->addMonths(6)->format('Y-m-d'),
-                ]
-            ]);
+    public function filterTable()
+    {
+        // This method will trigger a re-render of the table with new filter values
+        $this->dispatch('table-filtered');
+    }
+
+    public function getFilteredProjects()
+    {
+        $query = $this->getResource()::getEloquentQuery();
+        
+        if ($this->statusFilter) {
+            $query->where('status', $this->statusFilter);
         }
+        
+        return $query->get();
     }
 
     protected function getHeaderActions(): array
