@@ -38,7 +38,7 @@ class MonthlyCashflowChartWidget extends LineChartWidget
         // Create datasets for positive and negative segments with gray line
         $positiveData = [];
         $negativeData = [];
-        
+
         foreach ($balances as $index => $balance) {
             if ($balance < 0) {
                 $positiveData[] = null;
@@ -48,12 +48,12 @@ class MonthlyCashflowChartWidget extends LineChartWidget
                 $negativeData[] = null;
             }
         }
-        
+
         // Add connecting points where sign changes
         for ($i = 0; $i < count($balances) - 1; $i++) {
             $current = $balances[$i];
             $next = $balances[$i + 1];
-            
+
             // If signs are different, add the next point to both datasets for connection
             if (($current < 0 && $next >= 0) || ($current >= 0 && $next < 0)) {
                 if ($current < 0) {
@@ -65,7 +65,7 @@ class MonthlyCashflowChartWidget extends LineChartWidget
         }
 
         $datasets = [];
-        
+
         // Add connecting line dataset first (behind the fill areas)
         $datasets[] = [
             'label' => 'Cash Balance Line',
@@ -80,9 +80,9 @@ class MonthlyCashflowChartWidget extends LineChartWidget
             'pointRadius' => 0,
             'pointHoverRadius' => 0,
             'spanGaps' => true,
-            'order' => 1,
+            'order' => 3,
         ];
-        
+
         // Add positive dataset if it has data
         if (array_filter($positiveData, fn($val) => $val !== null)) {
             $datasets[] = [
@@ -101,7 +101,7 @@ class MonthlyCashflowChartWidget extends LineChartWidget
                 'order' => 2,
             ];
         }
-        
+
         // Add negative dataset if it has data
         if (array_filter($negativeData, fn($val) => $val !== null)) {
             $datasets[] = [
@@ -117,14 +117,14 @@ class MonthlyCashflowChartWidget extends LineChartWidget
                 'pointRadius' => 4,
                 'pointHoverRadius' => 6,
                 'spanGaps' => false,
-                'order' => 3,
+                'order' => 1,
             ];
         }
 
         // Store min/max values for Y-axis configuration
         $this->minValue = min($balances);
         $this->maxValue = max($balances);
-        
+
         return [
             'datasets' => $datasets,
             'labels' => $labels,
