@@ -17,6 +17,11 @@ class ProjectTransactionTable extends Component
     public $servingTypes = [];
     public $transactionMethods = [];
     public $statuses = [];
+    
+    // Sorting properties
+    public $sortField = 'transaction_date';
+    public $sortDirection = 'desc';
+    public $isLoading = false;
 
     public function mount()
     {
@@ -26,10 +31,23 @@ class ProjectTransactionTable extends Component
 
     public function loadData()
     {
-        $this->transactions = ProjectTransaction::with('project.developer')
-            ->orderBy('transaction_date', 'desc')
-            ->get()
-            ->toArray();
+        $query = ProjectTransaction::with('project.developer');
+        
+        // Apply sorting
+        if ($this->sortField === 'project') {
+            $query->join('projects', 'project_transactions.project_key', '=', 'projects.key')
+                  ->orderBy('projects.title', $this->sortDirection)
+                  ->select('project_transactions.*');
+        } elseif ($this->sortField === 'developer') {
+            $query->join('projects', 'project_transactions.project_key', '=', 'projects.key')
+                  ->join('developers', 'projects.developer_id', '=', 'developers.id')
+                  ->orderBy('developers.name', $this->sortDirection)
+                  ->select('project_transactions.*');
+        } else {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        }
+        
+        $this->transactions = $query->get()->toArray();
     }
 
     public function loadOptions()
@@ -216,6 +234,21 @@ class ProjectTransactionTable extends Component
         }
     }
 
+    public function sortBy($field)
+    {
+        $this->isLoading = true;
+        
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+        
+        $this->loadData();
+        $this->isLoading = false;
+    }
+    
     public function render()
     {
         return view('livewire.project-transaction-table');
