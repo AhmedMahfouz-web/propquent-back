@@ -97,7 +97,7 @@
                     <!-- Table Body -->
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach ($this->getFilteredProjects() as $project)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $project->key }}
                                     </div>
