@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectTransaction;
 use App\Models\ValueCorrection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 
 class ProjectStatusReport extends Component
@@ -118,11 +119,13 @@ class ProjectStatusReport extends Component
 
     public function toggleColumnFilter($column)
     {
+        \Log::info('toggleColumnFilter called', ['column' => $column, 'current' => $this->openFilterColumn]);
         $this->openFilterColumn = $this->openFilterColumn === $column ? null : $column;
     }
 
     public function toggleSectionState($sectionName)
     {
+        \Log::info('toggleSectionState called', ['section' => $sectionName, 'current_state' => $this->sectionStates[$sectionName] ?? 'not_found']);
         if (isset($this->sectionStates[$sectionName])) {
             $this->sectionStates[$sectionName] = $this->sectionStates[$sectionName] === 'expanded' ? 'collapsed' : 'expanded';
         }

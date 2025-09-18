@@ -40,7 +40,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                 <div class="project-status-table-container">
                     <table class="project-status-table">
-                        <thead class="bg-gray-50 dark:bg-gray-700" wire:ignore>
+                        <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
                                 <!-- Fixed Project Column -->
                                 <th class="project-column-header">
@@ -741,7 +741,7 @@
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
-            table-layout: auto;
+            table-layout: fixed;
         }
 
         /* Fixed Project Column */
@@ -826,19 +826,20 @@
             cursor: pointer;
             white-space: nowrap;
             position: relative;
+            overflow: hidden;
         }
 
         .section-header[data-state="collapsed"] {
-            width: 60px;
-            min-width: 60px;
-            max-width: 60px;
-            padding: 8px 4px;
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+            padding: 8px 4px !important;
         }
 
         .section-header[data-state="expanded"] {
-            width: auto;
-            min-width: 280px;
-            padding: 8px 12px;
+            width: auto !important;
+            min-width: 280px !important;
+            padding: 8px 12px !important;
         }
 
         .dark .section-header {
@@ -923,16 +924,17 @@
         }
 
         .section-subheader[data-state="collapsed"] {
-            width: 60px;
-            min-width: 60px;
-            max-width: 60px;
-            padding: 8px 4px;
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+            padding: 8px 4px !important;
+            overflow: hidden;
         }
 
         .section-subheader[data-state="expanded"] {
-            width: auto;
-            min-width: 280px;
-            padding: 8px 12px;
+            width: auto !important;
+            min-width: 280px !important;
+            padding: 8px 12px !important;
         }
 
         .dark .section-subheader {
@@ -989,11 +991,12 @@
         }
 
         .section-content[data-state="collapsed"] {
-            width: 60px;
-            min-width: 60px;
-            max-width: 60px;
-            padding: 8px 4px;
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+            padding: 8px 4px !important;
             text-align: center;
+            overflow: hidden;
         }
 
         .section-content[data-state="collapsed"] .section-expanded-content {
@@ -1011,9 +1014,9 @@
         }
 
         .section-content[data-state="expanded"] {
-            width: auto;
-            min-width: 280px;
-            padding: 16px 12px;
+            width: auto !important;
+            min-width: 280px !important;
+            padding: 16px 12px !important;
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
@@ -1439,16 +1442,23 @@
     </style>
 
     <script>
-        // Close filter dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
-            // Check if click is outside any filter dropdown
-            if (!event.target.closest('.excel-column-header')) {
-                // Trigger a click on a hidden button to close filters
-                const closeButton = document.getElementById('close-filters-btn');
-                if (closeButton) {
-                    closeButton.click();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close filter dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                // Check if click is outside any filter dropdown
+                if (!event.target.closest('.excel-column-header')) {
+                    // Trigger a click on a hidden button to close filters
+                    const closeButton = document.getElementById('close-filters-btn');
+                    if (closeButton) {
+                        closeButton.click();
+                    }
                 }
-            }
+            });
+        });
+
+        // Livewire hook to ensure functionality after DOM updates
+        document.addEventListener('livewire:navigated', function () {
+            console.log('Livewire navigated - reinitializing');
         });
     </script>
 </div>
