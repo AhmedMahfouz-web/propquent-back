@@ -1413,11 +1413,14 @@
             position: relative;
         }
         
-        th[data-state="collapsed"] *,
-        td[data-state="collapsed"] * {
+        /* Hide content ONLY when collapsed */
+        th[data-state="collapsed"] .sub-header-grid,
+        th[data-state="collapsed"] .header-content > *:not(.toggle-arrow),
+        td[data-state="collapsed"] .section-expanded-content {
             display: none;
         }
         
+        /* Show dots ONLY when collapsed */
         th[data-state="collapsed"]::after,
         td[data-state="collapsed"]::after {
             content: '•••';
