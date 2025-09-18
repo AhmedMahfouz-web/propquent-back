@@ -98,8 +98,7 @@
 
                                 <!-- Project Details Section Header -->
                                 <th class="section-header details-header" data-state="{{ $sectionStates['details'] }}"
-                                    wire:click.prevent="toggleSectionState('details')"
-                                    title="Current state: {{ $sectionStates['details'] }}">
+                                    wire:click.prevent="toggleSectionState('details')">
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
                                         <span class="section-title-short">P.D</span>
@@ -1401,29 +1400,21 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* MINIMAL COLLAPSE - ONLY AFFECT COLLAPSED SECTIONS */
-        
-        /* When collapsed: make narrow and show dots */
-        th[data-state="collapsed"] {
-            width: 60px !important;
-        }
-        
+        /* BASIC COLLAPSE - TEST */
+        th[data-state="collapsed"],
         td[data-state="collapsed"] {
-            width: 60px !important;
+            width: 60px;
+            text-align: center;
         }
         
-        th[data-state="collapsed"] .sub-header-grid {
-            display: none;
-        }
-        
-        td[data-state="collapsed"] .section-expanded-content {
-            display: none;
-        }
-        
-        th[data-state="collapsed"]::after,
-        td[data-state="collapsed"]::after {
+        th[data-state="collapsed"]::before,
+        td[data-state="collapsed"]::before {
             content: '•••';
-            color: #666;
+        }
+        
+        th[data-state="collapsed"] > *,
+        td[data-state="collapsed"] > * {
+            display: none;
         }
 
         .section-header {
