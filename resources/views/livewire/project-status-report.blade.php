@@ -98,7 +98,7 @@
 
                                 <!-- Project Details Section Header -->
                                 <th class="section-header details-header" data-section="details"
-                                    onclick="toggleSection('details')">
+                                    onclick="toggleSection('details')" wire:ignore>
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
                                         <span class="section-title-short">P.D</span>
@@ -112,7 +112,7 @@
 
                                 <!-- Contract Details Section Header -->
                                 <th class="section-header contract-header" data-section="contract"
-                                    onclick="toggleSection('contract')">
+                                    onclick="toggleSection('contract')" wire:ignore>
                                     <div class="header-content">
                                         <span class="section-title-full">Contract Details</span>
                                         <span class="section-title-short">C.D</span>
@@ -126,7 +126,7 @@
 
                                 <!-- Expenses Section Header -->
                                 <th class="section-header expenses-header" data-section="expenses"
-                                    onclick="toggleSection('expenses')">
+                                    onclick="toggleSection('expenses')" wire:ignore>
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
                                         <span class="section-title-short">Exp</span>
@@ -140,7 +140,7 @@
 
                                 <!-- Status Section Header -->
                                 <th class="section-header status-header" data-section="status"
-                                    onclick="toggleSection('status')">
+                                    onclick="toggleSection('status')" wire:ignore>
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
                                         <span class="section-title-short">S&D</span>
@@ -158,7 +158,7 @@
                                 <th></th> <!-- Empty for project column -->
 
                                 <!-- Project Details Sub-headers -->
-                                <th class="section-subheader details-section">
+                                <th class="section-subheader details-section" wire:ignore>
                                     <div class="sub-header-grid details-grid">
                                         <!-- Unit Column -->
                                         <div class="excel-column-header">
@@ -281,7 +281,7 @@
                                 </th>
 
                                 <!-- Contract Details Sub-headers -->
-                                <th class="section-subheader contract-section">
+                                <th class="section-subheader contract-section" wire:ignore>
                                     <div class="sub-header-grid contract-grid">
                                         <!-- Reserved Date Column -->
                                         <div class="excel-column-header">
@@ -398,7 +398,7 @@
                                 </th>
 
                                 <!-- Expenses Sub-headers -->
-                                <th class="section-subheader expenses-section">
+                                <th class="section-subheader expenses-section" wire:ignore>
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
@@ -460,7 +460,7 @@
                                 </th>
 
                                 <!-- Status Sub-headers -->
-                                <th class="section-subheader status-section">
+                                <th class="section-subheader status-section" wire:ignore>
                                     <div class="sub-header-grid status-grid">
                                         <!-- Status Column -->
                                         <div class="excel-column-header">
@@ -559,7 +559,7 @@
                                     </td>
 
                                     <!-- Project Details Section -->
-                                    <td class="section-content details-section expanded" data-section="details">
+                                    <td class="section-content details-section expanded" data-section="details" wire:ignore>
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -593,7 +593,7 @@
                                     </td>
 
                                     <!-- Contract Details Section -->
-                                    <td class="section-content contract-section expanded" data-section="contract">
+                                    <td class="section-content contract-section expanded" data-section="contract" wire:ignore>
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -637,7 +637,7 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section expanded" data-section="expenses">
+                                    <td class="section-content expenses-section expanded" data-section="expenses" wire:ignore>
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -669,7 +669,7 @@
                                     </td>
 
                                     <!-- Status Section -->
-                                    <td class="section-content status-section expanded" data-section="status">
+                                    <td class="section-content status-section expanded" data-section="status" wire:ignore>
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
