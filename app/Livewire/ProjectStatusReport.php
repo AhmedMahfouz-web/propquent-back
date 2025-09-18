@@ -26,43 +26,31 @@ class ProjectStatusReport extends Component
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
 
-    // Additional filters
-    public $minArea = '';
-    public $maxArea = '';
-    public $minContractValue = '';
-    public $maxContractValue = '';
-    public $contractDateFrom = '';
-    public $contractDateTo = '';
-    public $reservationDateFrom = '';
-    public $reservationDateTo = '';
-    public $minExpenses = '';
-    public $maxExpenses = '';
-    public $minRevenues = '';
-    public $maxRevenues = '';
-    public $compound = '';
+    // Column-specific filters (Excel-style)
+    public $columnFilters = [
+        'status' => [],
+        'stage' => [],
+        'type' => [],
+        'investment_type' => [],
+        'compound' => [],
+        'unit_no' => [],
+        'area_range' => ['min' => '', 'max' => ''],
+        'garden_area_range' => ['min' => '', 'max' => ''],
+        'contract_value_range' => ['min' => '', 'max' => ''],
+        'years_range' => ['min' => '', 'max' => ''],
+        'contract_date_range' => ['from' => '', 'to' => ''],
+        'reservation_date_range' => ['from' => '', 'to' => ''],
+    ];
+
+    // Track which column filters are open
+    public $openFilterColumn = null;
 
     protected $queryString = [
         'search' => ['except' => ''],
-        'status' => ['except' => ''],
-        'stage' => ['except' => ''],
-        'type' => ['except' => ''],
-        'investment_type' => ['except' => ''],
         'perPage' => ['except' => 25],
         'sortBy' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
-        'minArea' => ['except' => ''],
-        'maxArea' => ['except' => ''],
-        'minContractValue' => ['except' => ''],
-        'maxContractValue' => ['except' => ''],
-        'contractDateFrom' => ['except' => ''],
-        'contractDateTo' => ['except' => ''],
-        'reservationDateFrom' => ['except' => ''],
-        'reservationDateTo' => ['except' => ''],
-        'minExpenses' => ['except' => ''],
-        'maxExpenses' => ['except' => ''],
-        'minRevenues' => ['except' => ''],
-        'maxRevenues' => ['except' => ''],
-        'compound' => ['except' => ''],
+        'columnFilters' => ['except' => []],
     ];
 
     public function mount()
@@ -116,29 +104,67 @@ class ProjectStatusReport extends Component
         $this->resetPage();
     }
 
-    // Additional filter update methods
-    public function updatedMinArea() { $this->resetPage(); }
-    public function updatedMaxArea() { $this->resetPage(); }
-    public function updatedMinContractValue() { $this->resetPage(); }
-    public function updatedMaxContractValue() { $this->resetPage(); }
-    public function updatedContractDateFrom() { $this->resetPage(); }
-    public function updatedContractDateTo() { $this->resetPage(); }
-    public function updatedReservationDateFrom() { $this->resetPage(); }
-    public function updatedReservationDateTo() { $this->resetPage(); }
-    public function updatedMinExpenses() { $this->resetPage(); }
-    public function updatedMaxExpenses() { $this->resetPage(); }
-    public function updatedMinRevenues() { $this->resetPage(); }
-    public function updatedMaxRevenues() { $this->resetPage(); }
-    public function updatedCompound() { $this->resetPage(); }
-
-    public function clearFilters()
+    public function toggleColumnFilter($column)
     {
-        $this->reset([
-            'search', 'status', 'stage', 'type', 'investment_type',
-            'minArea', 'maxArea', 'minContractValue', 'maxContractValue',
-            'contractDateFrom', 'contractDateTo', 'reservationDateFrom', 'reservationDateTo',
-            'minExpenses', 'maxExpenses', 'minRevenues', 'maxRevenues', 'compound'
-        ]);
+        $this->openFilterColumn = $this->openFilterColumn === $column ? null : $column;
+    }
+
+    public function closeColumnFilter()
+    {
+        $this->openFilterColumn = null;
+    }
+
+    public function updateColumnFilter($column, $value, $type = 'checkbox')
+    {
+        if ($type === 'checkbox') {
+            if (in_array($value, $this->columnFilters[$column])) {
+                $this->columnFilters[$column] = array_diff($this->columnFilters[$column], [$value]);
+            } else {
+                $this->columnFilters[$column][] = $value;
+            }
+        } elseif ($type === 'range') {
+            $this->columnFilters[$column] = $value;
+        }
+        
+        $this->resetPage();
+    }
+
+    public function clearColumnFilter($column)
+    {
+        if (isset($this->columnFilters[$column])) {
+            if (is_array($this->columnFilters[$column]) && isset($this->columnFilters[$column]['min'])) {
+                // Range filter
+                $this->columnFilters[$column] = ['min' => '', 'max' => ''];
+            } else {
+                // Checkbox filter
+                $this->columnFilters[$column] = [];
+            }
+        }
+        $this->resetPage();
+    }
+
+    public function clearAllFilters()
+    {
+        $this->columnFilters = [
+            'status' => [],
+            'stage' => [],
+            'type' => [],
+            'investment_type' => [],
+            'compound' => [],
+            'unit_no' => [],
+            'area_range' => ['min' => '', 'max' => ''],
+            'garden_area_range' => ['min' => '', 'max' => ''],
+            'contract_value_range' => ['min' => '', 'max' => ''],
+            'years_range' => ['min' => '', 'max' => ''],
+            'contract_date_range' => ['from' => '', 'to' => ''],
+            'reservation_date_range' => ['from' => '', 'to' => ''],
+        ];
+        $this->search = '';
+        $this->resetPage();
+    }
+
+    public function updatedColumnFilters()
+    {
         $this->resetPage();
     }
 
@@ -156,30 +182,110 @@ class ProjectStatusReport extends Component
                     $query->where('title', 'like', '%' . $this->search . '%')
                         ->orWhere('key', 'like', '%' . $this->search . '%');
                 });
-            })
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->when($this->stage, fn($q) => $q->where('stage', $this->stage))
-            ->when($this->type, fn($q) => $q->where('type', $this->type))
-            ->when($this->investment_type, fn($q) => $q->where('investment_type', $this->investment_type))
-            ->when($this->compound, fn($q) => $q->whereHas('compound', function($query) {
-                $query->where('name', 'like', '%' . $this->compound . '%');
-            }))
-            // Area filters
-            ->when($this->minArea, fn($q) => $q->where('area', '>=', $this->minArea))
-            ->when($this->maxArea, fn($q) => $q->where('area', '<=', $this->maxArea))
-            // Contract value filters
-            ->when($this->minContractValue, fn($q) => $q->where('total_contract_value', '>=', $this->minContractValue))
-            ->when($this->maxContractValue, fn($q) => $q->where('total_contract_value', '<=', $this->maxContractValue))
-            // Date filters
-            ->when($this->contractDateFrom, fn($q) => $q->where('contract_date', '>=', $this->contractDateFrom))
-            ->when($this->contractDateTo, fn($q) => $q->where('contract_date', '<=', $this->contractDateTo))
-            ->when($this->reservationDateFrom, fn($q) => $q->where('reservation_date', '>=', $this->reservationDateFrom))
-            ->when($this->reservationDateTo, fn($q) => $q->where('reservation_date', '<=', $this->reservationDateTo));
+            });
+
+        // Apply column filters
+        $this->applyColumnFilters($query);
 
         // Apply sorting
         $this->applySorting($query);
 
         return $query->paginate($this->perPage);
+    }
+
+    private function applyColumnFilters($query)
+    {
+        // Status filter
+        if (!empty($this->columnFilters['status'])) {
+            $query->whereIn('status', $this->columnFilters['status']);
+        }
+
+        // Stage filter
+        if (!empty($this->columnFilters['stage'])) {
+            $query->whereIn('stage', $this->columnFilters['stage']);
+        }
+
+        // Type filter
+        if (!empty($this->columnFilters['type'])) {
+            $query->whereIn('type', $this->columnFilters['type']);
+        }
+
+        // Investment type filter
+        if (!empty($this->columnFilters['investment_type'])) {
+            $query->whereIn('investment_type', $this->columnFilters['investment_type']);
+        }
+
+        // Compound filter
+        if (!empty($this->columnFilters['compound'])) {
+            $query->whereHas('compound', function($q) {
+                $q->whereIn('name', $this->columnFilters['compound']);
+            });
+        }
+
+        // Unit number filter
+        if (!empty($this->columnFilters['unit_no'])) {
+            $query->whereIn('unit_no', $this->columnFilters['unit_no']);
+        }
+
+        // Area range filter
+        if (!empty($this->columnFilters['area_range']['min']) || !empty($this->columnFilters['area_range']['max'])) {
+            if (!empty($this->columnFilters['area_range']['min'])) {
+                $query->where('area', '>=', $this->columnFilters['area_range']['min']);
+            }
+            if (!empty($this->columnFilters['area_range']['max'])) {
+                $query->where('area', '<=', $this->columnFilters['area_range']['max']);
+            }
+        }
+
+        // Garden area range filter
+        if (!empty($this->columnFilters['garden_area_range']['min']) || !empty($this->columnFilters['garden_area_range']['max'])) {
+            if (!empty($this->columnFilters['garden_area_range']['min'])) {
+                $query->where('garden_area', '>=', $this->columnFilters['garden_area_range']['min']);
+            }
+            if (!empty($this->columnFilters['garden_area_range']['max'])) {
+                $query->where('garden_area', '<=', $this->columnFilters['garden_area_range']['max']);
+            }
+        }
+
+        // Contract value range filter
+        if (!empty($this->columnFilters['contract_value_range']['min']) || !empty($this->columnFilters['contract_value_range']['max'])) {
+            if (!empty($this->columnFilters['contract_value_range']['min'])) {
+                $query->where('total_contract_value', '>=', $this->columnFilters['contract_value_range']['min']);
+            }
+            if (!empty($this->columnFilters['contract_value_range']['max'])) {
+                $query->where('total_contract_value', '<=', $this->columnFilters['contract_value_range']['max']);
+            }
+        }
+
+        // Years range filter
+        if (!empty($this->columnFilters['years_range']['min']) || !empty($this->columnFilters['years_range']['max'])) {
+            if (!empty($this->columnFilters['years_range']['min'])) {
+                $query->where('years_of_installment', '>=', $this->columnFilters['years_range']['min']);
+            }
+            if (!empty($this->columnFilters['years_range']['max'])) {
+                $query->where('years_of_installment', '<=', $this->columnFilters['years_range']['max']);
+            }
+        }
+
+        // Contract date range filter
+        if (!empty($this->columnFilters['contract_date_range']['from']) || !empty($this->columnFilters['contract_date_range']['to'])) {
+            if (!empty($this->columnFilters['contract_date_range']['from'])) {
+                $query->where('contract_date', '>=', $this->columnFilters['contract_date_range']['from']);
+            }
+            if (!empty($this->columnFilters['contract_date_range']['to'])) {
+                $query->where('contract_date', '<=', $this->columnFilters['contract_date_range']['to']);
+            }
+        }
+
+        // Reservation date range filter
+        if (!empty($this->columnFilters['reservation_date_range']['from']) || !empty($this->columnFilters['reservation_date_range']['to'])) {
+            if (!empty($this->columnFilters['reservation_date_range']['from'])) {
+                $query->where('reservation_date', '>=', $this->columnFilters['reservation_date_range']['from']);
+            }
+            if (!empty($this->columnFilters['reservation_date_range']['to'])) {
+                $query->where('reservation_date', '<=', $this->columnFilters['reservation_date_range']['to']);
+            }
+        }
     }
 
     private function applySorting($query)
@@ -318,6 +424,19 @@ class ProjectStatusReport extends Component
     public function availableCompounds()
     {
         return \App\Models\Compound::orderBy('name')->pluck('name', 'name')->toArray();
+    }
+
+    #[Computed]
+    public function getUniqueValues()
+    {
+        return [
+            'status' => Project::distinct()->pluck('status')->filter()->sort()->values(),
+            'stage' => Project::distinct()->pluck('stage')->filter()->sort()->values(),
+            'type' => Project::distinct()->pluck('type')->filter()->sort()->values(),
+            'investment_type' => Project::distinct()->pluck('investment_type')->filter()->sort()->values(),
+            'compound' => \App\Models\Compound::orderBy('name')->pluck('name')->values(),
+            'unit_no' => Project::distinct()->pluck('unit_no')->filter()->sort()->values(),
+        ];
     }
 
     private function calculateProjectData(Project $project)

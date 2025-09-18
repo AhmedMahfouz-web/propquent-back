@@ -1,153 +1,27 @@
 <div>
     <div class="space-y-6">
-        <!-- Filters Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
-                    <input type="text" wire:model.live.debounce.500ms="search" placeholder="Project title or key..."
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <select wire:model.live="status"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">All Statuses</option>
-                        @foreach (\App\Models\Project::getAvailableStatuses() as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Stage</label>
-                    <select wire:model.live="stage"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">All Stages</option>
-                        @foreach (\App\Models\Project::getAvailableStages() as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                    <select wire:model.live="type"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">All Types</option>
-                        @foreach (\App\Models\Project::getAvailablePropertyTypes() as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Investment
-                        Type</label>
-                    <select wire:model.live="investment_type"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">All Investment Types</option>
-                        @foreach (\App\Models\Project::getAvailableInvestmentTypes() as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Compound</label>
-                    <select wire:model.live="compound"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">All Compounds</option>
-                        @foreach ($this->availableCompounds as $compoundName)
-                            <option value="{{ $compoundName }}">{{ $compoundName }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <!-- Advanced Filters Row -->
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <!-- Area Range -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Area (m²)</label>
-                    <input type="number" wire:model.live.debounce.500ms="minArea" placeholder="0"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+        <!-- Simple Search and Controls -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div>
+                        <input type="text" wire:model.live.debounce.500ms="search" placeholder="Search projects..."
+                            class="text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <select wire:model.live="perPage"
+                            class="text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Area (m²)</label>
-                    <input type="number" wire:model.live.debounce.500ms="maxArea" placeholder="∞"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-
-                <!-- Contract Value Range -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Contract Value</label>
-                    <input type="number" wire:model.live.debounce.500ms="minContractValue" placeholder="0"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Contract Value</label>
-                    <input type="number" wire:model.live.debounce.500ms="maxContractValue" placeholder="∞"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-
-                <!-- Financial Range -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Expenses</label>
-                    <input type="number" wire:model.live.debounce.500ms="minExpenses" placeholder="0"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Expenses</label>
-                    <input type="number" wire:model.live.debounce.500ms="maxExpenses" placeholder="∞"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-            </div>
-
-            <!-- Date Filters Row -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <!-- Contract Date Range -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Date From</label>
-                    <input type="date" wire:model.live="contractDateFrom"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Date To</label>
-                    <input type="date" wire:model.live="contractDateTo"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-
-                <!-- Reservation Date Range -->
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Reservation Date From</label>
-                    <input type="date" wire:model.live="reservationDateFrom"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Reservation Date To</label>
-                    <input type="date" wire:model.live="reservationDateTo"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-            </div>
-
-            <!-- Control Row -->
-            <div class="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Per Page</label>
-                    <select wire:model.live="perPage"
-                        class="text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-                <div class="flex space-x-2">
-                    <button wire:click="clearFilters" 
-                        class="px-3 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
-                        Clear Filters
+                    <button wire:click="clearAllFilters" 
+                        class="px-4 py-2 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
+                        Clear All Filters
                     </button>
                 </div>
             </div>
@@ -243,67 +117,247 @@
                                 </th>
                             </tr>
 
-                            <!-- Sub-headers row -->
+                            <!-- Excel-style Sub-headers with filters -->
                             <tr class="sub-headers-row">
                                 <th></th> <!-- Empty for project column -->
 
                                 <!-- Project Details Sub-headers -->
                                 <th class="section-subheader details-section">
                                     <div class="sub-header-grid details-grid">
-                                        <button wire:click="sortBy('unit_no')" class="sortable-header">
-                                            Unit
-                                            @if($sortBy === 'unit_no')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        <!-- Unit Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('unit_no')" class="column-sort-btn">
+                                                Unit
+                                                @if($sortBy === 'unit_no')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('unit_no')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'unit_no')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content">
+                                                        @foreach($this->getUniqueValues['unit_no'] as $value)
+                                                            <label class="filter-option">
+                                                                <input type="checkbox" 
+                                                                    wire:model.live="columnFilters.unit_no" 
+                                                                    value="{{ $value }}"
+                                                                    class="filter-checkbox">
+                                                                <span>{{ $value ?: 'N/A' }}</span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('area')" class="sortable-header">
-                                            Area
-                                            @if($sortBy === 'area')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Area Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('area')" class="column-sort-btn">
+                                                Area
+                                                @if($sortBy === 'area')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('area_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'area_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content range-filter">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.area_range.min" 
+                                                            placeholder="Min"
+                                                            class="range-input">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.area_range.max" 
+                                                            placeholder="Max"
+                                                            class="range-input">
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('garden_area')" class="sortable-header">
-                                            Garden
-                                            @if($sortBy === 'garden_area')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Garden Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('garden_area')" class="column-sort-btn">
+                                                Garden
+                                                @if($sortBy === 'garden_area')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('garden_area_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'garden_area_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content range-filter">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.garden_area_range.min" 
+                                                            placeholder="Min"
+                                                            class="range-input">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.garden_area_range.max" 
+                                                            placeholder="Max"
+                                                            class="range-input">
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('compound')" class="sortable-header">
-                                            Compound
-                                            @if($sortBy === 'compound')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Compound Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('compound')" class="column-sort-btn">
+                                                Compound
+                                                @if($sortBy === 'compound')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('compound')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'compound')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content">
+                                                        @foreach($this->getUniqueValues['compound'] as $value)
+                                                            <label class="filter-option">
+                                                                <input type="checkbox" 
+                                                                    wire:model.live="columnFilters.compound" 
+                                                                    value="{{ $value }}"
+                                                                    class="filter-checkbox">
+                                                                <span>{{ $value ?: 'N/A' }}</span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
+                                        </div>
                                     </div>
                                 </th>
 
                                 <!-- Contract Details Sub-headers -->
                                 <th class="section-subheader contract-section">
                                     <div class="sub-header-grid contract-grid">
-                                        <button wire:click="sortBy('reservation_date')" class="sortable-header">
-                                            Reserved
-                                            @if($sortBy === 'reservation_date')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        <!-- Reserved Date Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('reservation_date')" class="column-sort-btn">
+                                                Reserved
+                                                @if($sortBy === 'reservation_date')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('reservation_date_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'reservation_date_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content date-filter">
+                                                        <input type="date" 
+                                                            wire:model.live="columnFilters.reservation_date_range.from" 
+                                                            class="date-input">
+                                                        <input type="date" 
+                                                            wire:model.live="columnFilters.reservation_date_range.to" 
+                                                            class="date-input">
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('contract_date')" class="sortable-header">
-                                            Contract Date
-                                            @if($sortBy === 'contract_date')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Contract Date Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('contract_date')" class="column-sort-btn">
+                                                Contract Date
+                                                @if($sortBy === 'contract_date')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('contract_date_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'contract_date_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content date-filter">
+                                                        <input type="date" 
+                                                            wire:model.live="columnFilters.contract_date_range.from" 
+                                                            class="date-input">
+                                                        <input type="date" 
+                                                            wire:model.live="columnFilters.contract_date_range.to" 
+                                                            class="date-input">
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('total_contract_value')" class="sortable-header">
-                                            Total Value
-                                            @if($sortBy === 'total_contract_value')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Total Value Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('total_contract_value')" class="column-sort-btn">
+                                                Total Value
+                                                @if($sortBy === 'total_contract_value')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('contract_value_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'contract_value_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content range-filter">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.contract_value_range.min" 
+                                                            placeholder="Min"
+                                                            class="range-input">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.contract_value_range.max" 
+                                                            placeholder="Max"
+                                                            class="range-input">
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('years_of_installment')" class="sortable-header">
-                                            Years
-                                            @if($sortBy === 'years_of_installment')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Years Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('years_of_installment')" class="column-sort-btn">
+                                                Years
+                                                @if($sortBy === 'years_of_installment')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('years_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'years_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content range-filter">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.years_range.min" 
+                                                            placeholder="Min"
+                                                            class="range-input">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.years_range.max" 
+                                                            placeholder="Max"
+                                                            class="range-input">
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
+                                        </div>
                                     </div>
                                 </th>
 
@@ -312,36 +366,88 @@
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
-                                        <button wire:click="sortBy('total_expenses')" class="sortable-header">
-                                            Total
-                                            @if($sortBy === 'total_expenses')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                                            @endif
-                                        </button>
-                                        <button wire:click="sortBy('net_profit')" class="sortable-header">
-                                            Net Profit
-                                            @if($sortBy === 'net_profit')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
-                                            @endif
-                                        </button>
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('total_expenses')" class="column-sort-btn">
+                                                Total
+                                                @if($sortBy === 'total_expenses')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                        </div>
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('net_profit')" class="column-sort-btn">
+                                                Net Profit
+                                                @if($sortBy === 'net_profit')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                        </div>
                                     </div>
                                 </th>
 
                                 <!-- Status Sub-headers -->
                                 <th class="section-subheader status-section">
                                     <div class="sub-header-grid status-grid">
-                                        <button wire:click="sortBy('status')" class="sortable-header">
-                                            Status
-                                            @if($sortBy === 'status')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        <!-- Status Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('status')" class="column-sort-btn">
+                                                Status
+                                                @if($sortBy === 'status')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('status')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'status')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content">
+                                                        @foreach($this->getUniqueValues['status'] as $value)
+                                                            <label class="filter-option">
+                                                                <input type="checkbox" 
+                                                                    wire:model.live="columnFilters.status" 
+                                                                    value="{{ $value }}"
+                                                                    class="filter-checkbox">
+                                                                <span>{{ ucfirst($value) }}</span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
-                                        <button wire:click="sortBy('stage')" class="sortable-header">
-                                            Stage
-                                            @if($sortBy === 'stage')
-                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        </div>
+
+                                        <!-- Stage Column -->
+                                        <div class="excel-column-header">
+                                            <button wire:click="sortBy('stage')" class="column-sort-btn">
+                                                Stage
+                                                @if($sortBy === 'stage')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="toggleColumnFilter('stage')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'stage')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content">
+                                                        @foreach($this->getUniqueValues['stage'] as $value)
+                                                            <label class="filter-option">
+                                                                <input type="checkbox" 
+                                                                    wire:model.live="columnFilters.stage" 
+                                                                    value="{{ $value }}"
+                                                                    class="filter-checkbox">
+                                                                <span>{{ ucfirst($value) }}</span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
                                             @endif
-                                        </button>
+                                        </div>
+
                                         <span>Start Date</span>
                                         <span>End Date</span>
                                     </div>
@@ -1018,6 +1124,180 @@
         .dark .sortable-header:has(.sort-indicator) {
             color: #60a5fa;
         }
+
+        /* Excel-style Column Header Styles */
+        .excel-column-header {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .column-sort-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            text-transform: inherit;
+            letter-spacing: inherit;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .column-sort-btn:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+
+        .dark .column-sort-btn:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .filter-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-btn:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+
+        .dark .filter-btn {
+            color: #9ca3af;
+        }
+
+        .dark .filter-btn:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        /* Filter Dropdown Styles */
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 50;
+            min-width: 200px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            margin-top: 4px;
+        }
+
+        .dark .filter-dropdown {
+            background: #374151;
+            border-color: #4b5563;
+        }
+
+        .filter-content {
+            padding: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .filter-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .dark .filter-option:hover {
+            background-color: #4b5563;
+        }
+
+        .filter-checkbox {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+        }
+
+        .dark .filter-checkbox {
+            border-color: #4b5563;
+            background-color: #374151;
+        }
+
+        /* Range Filter Styles */
+        .range-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .range-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .dark .range-input {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: white;
+        }
+
+        /* Date Filter Styles */
+        .date-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .dark .date-input {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: white;
+        }
+
+        /* Active filter indicator */
+        .filter-btn.active {
+            color: #2563eb;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .dark .filter-btn.active {
+            color: #60a5fa;
+            background-color: rgba(59, 130, 246, 0.2);
+        }
     </style>
 
     <script>
@@ -1109,6 +1389,20 @@
                     }
                 });
             });
+        });
+
+        // Close filter dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            // Check if click is outside any filter dropdown
+            if (!event.target.closest('.excel-column-header')) {
+                // Close all filter dropdowns by calling Livewire method
+                if (window.Livewire) {
+                    const component = window.Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'));
+                    if (component) {
+                        component.call('closeColumnFilter');
+                    }
+                }
+            }
         });
     </script>
 </div>
