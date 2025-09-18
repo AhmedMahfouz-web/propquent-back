@@ -106,11 +106,6 @@ class ProjectStatusReport extends Component
             $this->sortDirection = 'asc';
         }
         $this->resetPage();
-        
-        // Force refresh for calculated fields by clearing computed property cache
-        if (in_array($field, ['total_expenses', 'total_revenues', 'net_profit'])) {
-            $this->clearComputedPropertyCache(['projects', 'projectsData']);
-        }
     }
 
     public function toggleColumnFilter($column)
