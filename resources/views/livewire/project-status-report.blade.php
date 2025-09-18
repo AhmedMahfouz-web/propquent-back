@@ -1373,6 +1373,60 @@
             color: #60a5fa;
             background-color: rgba(59, 130, 246, 0.2);
         }
+
+        /* Section Collapse/Expand Styles */
+        .section-header {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .section-header:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .dark .section-header:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        /* Toggle Arrow Animation */
+        .toggle-arrow {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .section-header.expanded .toggle-arrow {
+            transform: rotate(180deg);
+        }
+
+        .section-header.collapsed .toggle-arrow {
+            transform: rotate(0deg);
+        }
+
+        /* Section Content Visibility */
+        .section-subheader.collapsed,
+        .section-content.collapsed {
+            display: none;
+        }
+
+        .section-subheader.expanded,
+        .section-content.expanded {
+            display: table-cell;
+        }
+
+        /* Default state - all sections expanded */
+        .section-subheader,
+        .section-content {
+            display: table-cell;
+        }
+
+        .section-header {
+            position: relative;
+        }
+
+        .section-header.expanded {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
     </style>
 
     <script>
@@ -1418,53 +1472,30 @@
         }
 
         // Initialize all sections as expanded by default
-        document.addEventListener('DOMContentLoaded', function() {
+        function initializeSections() {
             const sections = ['details', 'contract', 'expenses', 'status'];
 
             sections.forEach(section => {
-                // Set headers as expanded
                 const header = document.querySelector(`[data-section="${section}"]`);
                 if (header) {
                     header.classList.add('expanded');
-                    // Rotate arrow to expanded state
-                    const arrow = header.querySelector('.toggle-arrow');
-                    if (arrow) {
-                        arrow.classList.add('expanded');
-                    }
+                    header.classList.remove('collapsed');
                 }
 
                 // Set all section elements (content and sub-headers) as expanded
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
                     element.classList.add('expanded');
+                    element.classList.remove('collapsed');
                 });
             });
-        });
+        }
 
-        // Handle Livewire updates to maintain section states
-        document.addEventListener('livewire:navigated', function() {
-            // Re-initialize expanded states after Livewire updates
-            const sections = ['details', 'contract', 'expenses', 'status'];
-
-            sections.forEach(section => {
-                const header = document.querySelector(`[data-section="${section}"]`);
-                if (header && !header.classList.contains('collapsed')) {
-                    header.classList.add('expanded');
-                    // Rotate arrow to expanded state
-                    const arrow = header.querySelector('.toggle-arrow');
-                    if (arrow) {
-                        arrow.classList.add('expanded');
-                    }
-                }
-
-                const elements = document.querySelectorAll(`.${section}-section`);
-                elements.forEach(element => {
-                    if (!element.classList.contains('collapsed')) {
-                        element.classList.add('expanded');
-                    }
-                });
-            });
-        });
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializeSections);
+        
+        // Re-initialize after Livewire updates
+        document.addEventListener('livewire:navigated', initializeSections);
 
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
