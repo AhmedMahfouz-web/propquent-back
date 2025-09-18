@@ -158,7 +158,7 @@
                                 <th></th> <!-- Empty for project column -->
 
                                 <!-- Project Details Sub-headers -->
-                                <th class="section-subheader details-section" data-state="{{ $sectionStates['details'] }}">
+                                <th class="section-subheader details-section" data-state="{{ $sectionStates['details'] }}" wire:key="subheader-details">
                                     <div class="sub-header-grid details-grid">
                                         <!-- Unit Column -->
                                         <div class="excel-column-header">
@@ -281,7 +281,7 @@
                                 </th>
 
                                 <!-- Contract Details Sub-headers -->
-                                <th class="section-subheader contract-section" data-state="{{ $sectionStates['contract'] }}">
+                                <th class="section-subheader contract-section" data-state="{{ $sectionStates['contract'] }}" wire:key="subheader-contract">
                                     <div class="sub-header-grid contract-grid">
                                         <!-- Reserved Date Column -->
                                         <div class="excel-column-header">
@@ -398,7 +398,7 @@
                                 </th>
 
                                 <!-- Expenses Sub-headers -->
-                                <th class="section-subheader expenses-section" data-state="{{ $sectionStates['expenses'] }}">
+                                <th class="section-subheader expenses-section" data-state="{{ $sectionStates['expenses'] }}" wire:key="subheader-expenses">
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
@@ -460,7 +460,7 @@
                                 </th>
 
                                 <!-- Status Sub-headers -->
-                                <th class="section-subheader status-section" data-state="{{ $sectionStates['status'] }}">
+                                <th class="section-subheader status-section" data-state="{{ $sectionStates['status'] }}" wire:key="subheader-status">
                                     <div class="sub-header-grid status-grid">
                                         <!-- Status Column -->
                                         <div class="excel-column-header">
@@ -559,7 +559,7 @@
                                     </td>
 
                                     <!-- Project Details Section -->
-                                    <td class="section-content details-section" data-state="{{ $sectionStates['details'] }}">
+                                    <td class="section-content details-section" data-state="{{ $sectionStates['details'] }}" wire:key="content-details-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -593,7 +593,7 @@
                                     </td>
 
                                     <!-- Contract Details Section -->
-                                    <td class="section-content contract-section" data-state="{{ $sectionStates['contract'] }}">
+                                    <td class="section-content contract-section" data-state="{{ $sectionStates['contract'] }}" wire:key="content-contract-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -637,7 +637,7 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section" data-state="{{ $sectionStates['expenses'] }}">
+                                    <td class="section-content expenses-section" data-state="{{ $sectionStates['expenses'] }}" wire:key="content-expenses-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -669,7 +669,7 @@
                                     </td>
 
                                     <!-- Status Section -->
-                                    <td class="section-content status-section" data-state="{{ $sectionStates['status'] }}">
+                                    <td class="section-content status-section" data-state="{{ $sectionStates['status'] }}" wire:key="content-status-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -1393,33 +1393,33 @@
             width: 20px;
             height: 20px;
             transition: transform 0.3s ease;
-            transform: rotate(180deg); /* Default expanded state */
+            transform: rotate(0deg); /* Default: collapsed */
         }
 
-        [data-state="collapsed"] .toggle-arrow {
-            transform: rotate(0deg); /* Collapsed state */
+        [data-state="expanded"] .toggle-arrow {
+            transform: rotate(180deg); /* Expanded state */
         }
 
-        /* Section Content Visibility */
-        .section-subheader[data-state="collapsed"],
-        .section-content[data-state="collapsed"] {
+        /* --- The Definitive Collapse Styling --- */
+
+        /* 1. Shrink the container cells (both sub-header and content) */
+        [data-state="collapsed"].section-subheader,
+        [data-state="collapsed"].section-content {
             width: 50px;
             min-width: 50px;
             max-width: 50px;
             padding: 8px 4px;
             text-align: center;
+            overflow: hidden;
         }
 
-        .section-subheader[data-state="collapsed"] .sub-header-grid,
-        /* Final approach: Use visibility and overflow to robustly hide content */
-        td.section-content[data-state="collapsed"] .section-expanded-content {
-            visibility: hidden !important;
-            overflow: hidden !important;
-            height: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
+        /* 2. Hide the inner content of the collapsed cells */
+        [data-state="collapsed"].section-subheader > .sub-header-grid,
+        [data-state="collapsed"].section-content > .section-expanded-content {
+            display: none !important;
         }
 
+        /* 3. Show the '...' indicator in the collapsed cells */
         .section-subheader[data-state="collapsed"]::after,
         .section-content[data-state="collapsed"]::after {
             content: '•••';
