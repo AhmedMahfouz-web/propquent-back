@@ -1393,14 +1393,12 @@
             width: 20px;
             height: 20px;
             transition: transform 0.3s ease;
+            transform: rotate(180deg); /* Default expanded state */
         }
 
-        .section-header.expanded .toggle-arrow {
-            transform: rotate(180deg);
-        }
-
-        .section-header.collapsed .toggle-arrow {
-            transform: rotate(0deg);
+        .section-header.collapsed .toggle-arrow,
+        .toggle-arrow.collapsed {
+            transform: rotate(0deg); /* Collapsed state */
         }
 
         /* Section Content Visibility - Use existing collapse system */
@@ -1447,87 +1445,31 @@
             // Toggle section content elements and sub-headers
             const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
 
-            const isExpanded = sectionHeader.classList.contains('expanded');
+            // Simple toggle approach - just add/remove collapsed class
+            const isCollapsed = sectionHeader.classList.contains('collapsed');
 
-            if (isExpanded) {
-                // Collapse section
-                sectionHeader.classList.remove('expanded');
-                sectionHeader.classList.add('collapsed');
-
-                sectionElements.forEach(element => {
-                    element.classList.remove('expanded');
-                    element.classList.add('collapsed');
-                });
-
-                // Rotate arrow back
-                if (arrow) {
-                    arrow.classList.remove('expanded');
-                }
-            } else {
-                // Expand section
+            if (isCollapsed) {
+                // Expand section - remove collapsed class
                 sectionHeader.classList.remove('collapsed');
-                sectionHeader.classList.add('expanded');
-
                 sectionElements.forEach(element => {
                     element.classList.remove('collapsed');
-                    element.classList.add('expanded');
                 });
-
-                // Rotate arrow
                 if (arrow) {
-                    arrow.classList.add('expanded');
+                    arrow.classList.remove('collapsed');
                 }
-            }
-        }
-
-        // Initialize all sections as expanded by default (only if not already set)
-        function initializeSections() {
-            const sections = ['details', 'contract', 'expenses', 'status'];
-
-            sections.forEach(section => {
-                const header = document.querySelector(`[data-section="${section}"]`);
-                if (header && !header.classList.contains('expanded') && !header.classList.contains('collapsed')) {
-                    header.classList.add('expanded');
-                    
-                    // Initialize arrow
-                    const arrow = header.querySelector('.toggle-arrow');
-                    if (arrow) {
-                        arrow.classList.add('expanded');
-                    }
-                }
-
-                // Set all section elements (content and sub-headers) as expanded only if not already set
-                const elements = document.querySelectorAll(`.${section}-section`);
-                elements.forEach(element => {
-                    if (!element.classList.contains('expanded') && !element.classList.contains('collapsed')) {
-                        element.classList.add('expanded');
-                    }
+            } else {
+                // Collapse section - add collapsed class
+                sectionHeader.classList.add('collapsed');
+                sectionElements.forEach(element => {
+                    element.classList.add('collapsed');
                 });
-            });
-        }
-
-        // Initialize sections only once
-        let sectionsInitialized = false;
-        
-        function initializeOnce() {
-            if (!sectionsInitialized) {
-                initializeSections();
-                sectionsInitialized = true;
+                if (arrow) {
+                    arrow.classList.add('collapsed');
+                }
             }
         }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initializeOnce, 100);
-        });
-        
-        // Re-initialize after Livewire updates (but preserve existing states)
-        document.addEventListener('livewire:navigated', function() {
-            setTimeout(initializeSections, 100);
-        });
-
-        // Fallback initialization
-        setTimeout(initializeOnce, 500);
+        // No initialization needed - CSS handles default expanded state
 
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
