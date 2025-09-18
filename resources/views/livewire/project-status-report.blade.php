@@ -784,12 +784,12 @@
         }
 
         .project-status-table {
-            width: 100%;
+            width: auto; /* Let table size itself based on content */
             min-width: 1200px; /* Minimum width to trigger horizontal scroll */
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
-            table-layout: fixed;
+            table-layout: auto; /* Auto layout for content-based sizing */
         }
 
         /* Fixed Project Column */
@@ -886,8 +886,9 @@
 
         .section-header[data-state="expanded"] {
             width: auto !important;
-            min-width: 280px !important;
+            min-width: fit-content !important;
             padding: 8px 12px !important;
+            white-space: nowrap;
         }
 
         .dark .section-header {
@@ -981,8 +982,9 @@
 
         .section-subheader[data-state="expanded"] {
             width: auto !important;
-            min-width: 280px !important;
+            min-width: fit-content !important;
             padding: 8px 12px !important;
+            white-space: nowrap;
         }
 
         .dark .section-subheader {
@@ -999,7 +1001,8 @@
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.025em;
-            width: 100%;
+            width: fit-content;
+            min-width: fit-content;
         }
 
         .section-subheader[data-state="collapsed"] .sub-header-grid {
@@ -1023,7 +1026,8 @@
         .contract-grid,
         .expenses-grid,
         .status-grid {
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: repeat(4, fit-content);
+            gap: 16px;
         }
 
         .section-subheader[data-state="expanded"] .sub-header-grid {
@@ -1063,16 +1067,18 @@
 
         .section-content[data-state="expanded"] {
             width: auto !important;
-            min-width: 280px !important;
+            min-width: fit-content !important;
             padding: 16px 12px !important;
+            white-space: nowrap;
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: repeat(4, fit-content);
+            gap: 16px;
             align-items: start;
-            width: 100%;
+            width: fit-content;
+            min-width: fit-content;
         }
 
         .section-content[data-state="expanded"] .content-row {
