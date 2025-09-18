@@ -107,10 +107,9 @@ class ProjectStatusReport extends Component
         }
         $this->resetPage();
         
-        // Force refresh for calculated fields
+        // Force refresh for calculated fields by clearing computed property cache
         if (in_array($field, ['total_expenses', 'total_revenues', 'net_profit'])) {
-            // Clear any cached data to force recalculation
-            unset($this->cachedProjectsData);
+            $this->clearComputedPropertyCache(['projects', 'projectsData']);
         }
     }
 
@@ -201,10 +200,60 @@ class ProjectStatusReport extends Component
         // Apply column filters
         $this->applyColumnFilters($query);
 
-        // Apply sorting
-        $this->applySorting($query);
+        // For calculated field sorting, we need to handle it differently
+        if (in_array($this->sortBy, ['total_expenses', 'total_revenues', 'net_profit'])) {
+            // Get all projects without pagination first
+            $allProjects = $query->get();
+            
+            // Calculate data for all projects and sort
+            $projectsWithData = [];
+            foreach ($allProjects as $project) {
+                $projectData = $this->calculateProjectData($project);
+                $projectsWithData[] = [
+                    'project' => $project,
+                    'data' => $projectData
+                ];
+            }
 
-        return $query->paginate($this->perPage);
+            // Sort by the calculated field
+            usort($projectsWithData, function($a, $b) {
+                $aValue = $a['data'][$this->sortBy] ?? 0;
+                $bValue = $b['data'][$this->sortBy] ?? 0;
+                
+                if ($this->sortBy === 'net_profit') {
+                    $aValue = $a['data']['total_revenues'] - $a['data']['total_expenses'];
+                    $bValue = $b['data']['total_revenues'] - $b['data']['total_expenses'];
+                }
+                
+                return $this->sortDirection === 'asc' ? $aValue <=> $bValue : $bValue <=> $aValue;
+            });
+
+            // Get sorted projects and paginate
+            $sortedProjects = collect($projectsWithData)->pluck('project');
+            
+            $currentPage = $this->getPage();
+            $perPage = $this->perPage;
+            $total = $sortedProjects->count();
+            
+            $paginatedProjects = $sortedProjects->forPage($currentPage, $perPage);
+            
+            return new \Illuminate\Pagination\LengthAwarePaginator(
+                $paginatedProjects,
+                $total,
+                $perPage,
+                $currentPage,
+                [
+                    'path' => request()->url(),
+                    'pageName' => 'page',
+                    'fragment' => null,
+                    'query' => request()->query(),
+                ]
+            );
+        } else {
+            // Apply normal sorting for non-calculated fields
+            $this->applySorting($query);
+            return $query->paginate($this->perPage);
+        }
     }
 
     private function applyColumnFilters($query)
@@ -379,70 +428,10 @@ class ProjectStatusReport extends Component
         $data = [];
         $projects = $this->projects;
 
-        // If sorting by calculated fields, we need to sort the collection after calculations
-        if (in_array($this->sortBy, ['total_expenses', 'total_revenues', 'net_profit'])) {
-            $projectsWithData = [];
-            
-            foreach ($projects as $project) {
-                $projectData = $this->calculateProjectData($project);
-                $data[$project->key] = $projectData;
-                $projectsWithData[] = [
-                    'project' => $project,
-                    'data' => $projectData
-                ];
-            }
-
-            // Sort by the calculated field
-            usort($projectsWithData, function($a, $b) {
-                $aValue = $a['data'][$this->sortBy] ?? 0;
-                $bValue = $b['data'][$this->sortBy] ?? 0;
-                
-                if ($this->sortBy === 'net_profit') {
-                    $aValue = $a['data']['total_revenues'] - $a['data']['total_expenses'];
-                    $bValue = $b['data']['total_revenues'] - $b['data']['total_expenses'];
-                }
-                
-                return $this->sortDirection === 'asc' ? $aValue <=> $bValue : $bValue <=> $aValue;
-            });
-
-            // For calculated field sorting, we need to handle pagination differently
-            // Get the sorted projects and re-paginate them
-            $sortedProjects = collect($projectsWithData)->pluck('project');
-            
-            // Create a new paginated collection with the sorted projects
-            $currentPage = $this->getPage();
-            $perPage = $this->perPage;
-            $total = $sortedProjects->count();
-            
-            $paginatedProjects = $sortedProjects->forPage($currentPage, $perPage);
-            
-            // Create new paginator instance
-            $projects = new \Illuminate\Pagination\LengthAwarePaginator(
-                $paginatedProjects,
-                $total,
-                $perPage,
-                $currentPage,
-                [
-                    'path' => request()->url(),
-                    'pageName' => 'page',
-                    'fragment' => null,
-                    'query' => request()->query(),
-                ]
-            );
-            
-            // Only keep data for the current page projects
-            $currentPageData = [];
-            foreach ($paginatedProjects as $project) {
-                if (isset($data[$project->key])) {
-                    $currentPageData[$project->key] = $data[$project->key];
-                }
-            }
-            $data = $currentPageData;
-        } else {
-            foreach ($projects as $project) {
-                $projectData = $this->calculateProjectData($project);
-                $data[$project->key] = $projectData;
-            }
+        // Calculate data for all projects in the current page
+        foreach ($projects as $project) {
+            $projectData = $this->calculateProjectData($project);
+            $data[$project->key] = $projectData;
         }
 
         // Apply financial filters after calculation (for calculated fields)
