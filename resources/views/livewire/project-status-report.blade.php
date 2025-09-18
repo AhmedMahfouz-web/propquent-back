@@ -1396,13 +1396,13 @@
             transform: rotate(180deg); /* Default expanded state */
         }
 
-        .section-header.collapsed .toggle-arrow,
-        .toggle-arrow.collapsed {
+        [data-state="collapsed"] .toggle-arrow {
             transform: rotate(0deg); /* Collapsed state */
         }
 
-        /* Section Content Visibility - Use existing collapse system */
-        .section-subheader.collapsed {
+        /* Section Content Visibility */
+        .section-subheader[data-state="collapsed"],
+        .section-content[data-state="collapsed"] {
             width: 50px;
             min-width: 50px;
             max-width: 50px;
@@ -1410,11 +1410,13 @@
             text-align: center;
         }
 
-        .section-subheader.collapsed .sub-header-grid {
+        .section-subheader[data-state="collapsed"] .sub-header-grid,
+        .section-content[data-state="collapsed"] .section-expanded-content {
             display: none;
         }
 
-        .section-subheader.collapsed::after {
+        .section-subheader[data-state="collapsed"]::after,
+        .section-content[data-state="collapsed"]::after {
             content: '•••';
             display: block;
             text-align: center;
@@ -1427,49 +1429,74 @@
             position: relative;
         }
 
-        .section-header.expanded {
+        .section-header[data-state="expanded"] {
             background-color: rgba(59, 130, 246, 0.05);
         }
     </style>
 
     <script>
         function toggleSection(sectionName) {
-            // Toggle section header state
-            const sectionHeader = document.querySelector(`[data-section="${sectionName}"]`);
+            console.log(`--- Toggling section: "${sectionName}" ---`);
+            
+            const sectionHeader = document.querySelector(`th[data-section="${sectionName}"]`);
             if (!sectionHeader) {
+                console.error(`Header for section "${sectionName}" not found.`);
                 return;
             }
             
-            const arrow = sectionHeader.querySelector('.toggle-arrow');
-
-            // Toggle section content elements and sub-headers
             const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
+            console.log(`Found ${sectionElements.length} elements for section "${sectionName}".`);
 
-            // Simple toggle approach - just add/remove collapsed class
-            const isCollapsed = sectionHeader.classList.contains('collapsed');
+            // We will use a data-attribute to store the state to avoid class conflicts
+            const isExpanded = sectionHeader.dataset.state === 'expanded';
+            console.log(`Current state: ${isExpanded ? 'EXPANDED' : 'COLLAPSED'}`);
 
-            if (isCollapsed) {
-                // Expand section - remove collapsed class
-                sectionHeader.classList.remove('collapsed');
-                sectionElements.forEach(element => {
-                    element.classList.remove('collapsed');
-                });
-                if (arrow) {
-                    arrow.classList.remove('collapsed');
-                }
+            if (isExpanded) {
+                console.log('Action: Collapsing section...');
+                sectionHeader.dataset.state = 'collapsed';
+                sectionElements.forEach(el => el.dataset.state = 'collapsed');
             } else {
-                // Collapse section - add collapsed class
-                sectionHeader.classList.add('collapsed');
-                sectionElements.forEach(element => {
-                    element.classList.add('collapsed');
-                });
-                if (arrow) {
-                    arrow.classList.add('collapsed');
-                }
+                console.log('Action: Expanding section...');
+                sectionHeader.dataset.state = 'expanded';
+                sectionElements.forEach(el => el.dataset.state = 'expanded');
             }
+            
+            console.log(`New state: ${sectionHeader.dataset.state}`);
+            console.log('--- Toggle complete ---');
         }
 
-        // No initialization needed - CSS handles default expanded state
+        // Helper function for you to use in the console
+        window.checkSectionState = function(sectionName) {
+            console.log(`--- Checking state for "${sectionName}" ---`);
+            const header = document.querySelector(`th[data-section="${sectionName}"]`);
+            const elements = document.querySelectorAll(`.${sectionName}-section`);
+            if (header) {
+                console.log('Header element:', header);
+                console.log('Header state (data-state):', header.dataset.state);
+            } else {
+                console.error('Header not found!');
+            }
+            if (elements.length > 0) {
+                console.log('Content elements:', elements);
+                console.log('First content element state (data-state):', elements[0].dataset.state);
+            } else {
+                console.error('Content elements not found!');
+            }
+            console.log('--- Check complete ---');
+        }
+
+        function initializeSections() {
+            const sections = ['details', 'contract', 'expenses', 'status'];
+            sections.forEach(section => {
+                const header = document.querySelector(`th[data-section="${section}"]`);
+                const elements = document.querySelectorAll(`.${section}-section`);
+                // Set initial state only if it's not already set
+                if (header && !header.dataset.state) {
+                    header.dataset.state = 'expanded';
+                    elements.forEach(el => el.dataset.state = 'expanded');
+                }
+            });
+        }
 
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
