@@ -98,7 +98,8 @@
 
                                 <!-- Project Details Section Header -->
                                 <th class="section-header details-header" data-state="{{ $sectionStates['details'] }}"
-                                    wire:click.prevent="toggleSectionState('details')">
+                                    wire:click.prevent="toggleSectionState('details')"
+                                    title="Current state: {{ $sectionStates['details'] }}">
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
                                         <span class="section-title-short">P.D</span>

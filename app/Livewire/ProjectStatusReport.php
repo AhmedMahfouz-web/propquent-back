@@ -125,6 +125,9 @@ class ProjectStatusReport extends Component
     {
         if (isset($this->sectionStates[$sectionName])) {
             $this->sectionStates[$sectionName] = $this->sectionStates[$sectionName] === 'expanded' ? 'collapsed' : 'expanded';
+            
+            // Debug: Log the state change
+            logger("Section {$sectionName} toggled to: " . $this->sectionStates[$sectionName]);
         }
     }
 
