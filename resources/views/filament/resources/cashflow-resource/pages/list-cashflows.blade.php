@@ -31,80 +31,98 @@
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             <!-- Table Header -->
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Project Transactions</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Projects & Transactions</h3>
             </div>
 
             <!-- Scrollable Table Container -->
             <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <!-- Project Transactions Header -->
-                    <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Project Key
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Project Title
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Type
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Amount
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Due Date
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Status
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <!-- Project Transactions Body -->
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @php
-                            $projectTransactions = \App\Models\ProjectTransaction::with('project')
-                                ->orderBy('due_date', 'desc')
-                                ->limit(50)
-                                ->get();
-                        @endphp
-                        @foreach ($projectTransactions as $transaction)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    {{ $transaction->project->key ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ $transaction->project->title ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                        {{ $transaction->financial_type === 'revenue' 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
-                                        {{ ucfirst($transaction->financial_type) }}
+                <div class="space-y-4">
+                    @php
+                        $projects = \App\Models\Project::with(['transactions' => function($query) {
+                            $query->orderBy('due_date', 'desc');
+                        }])->orderBy('title')->limit(20)->get();
+                    @endphp
+                    
+                    @foreach ($projects as $project)
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                            <!-- Project Header -->
+                            <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {{ $project->key }} - {{ $project->title }}
+                                        </h4>
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                            {{ $project->status === 'active'
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                                : ($project->status === 'pending'
+                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200') }}">
+                                            {{ ucfirst($project->status) }}
+                                        </span>
+                                    </div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ $project->transactions->count() }} transactions
                                     </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    ${{ number_format($transaction->amount, 2) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ \Carbon\Carbon::parse($transaction->due_date)->format('M j, Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                        {{ $transaction->status === 'done' 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                            : ($transaction->status === 'pending'
-                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200') }}">
-                                        {{ ucfirst($transaction->status) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Project Transactions -->
+                            @if($project->transactions->count() > 0)
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Amount</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Due Date</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Note</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            @foreach($project->transactions as $transaction)
+                                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                    <td class="px-4 py-2 whitespace-nowrap">
+                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                            {{ $transaction->financial_type === 'revenue' 
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                                                : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
+                                                            {{ ucfirst($transaction->financial_type) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                                        ${{ number_format($transaction->amount, 2) }}
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                        {{ \Carbon\Carbon::parse($transaction->due_date)->format('M j, Y') }}
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap">
+                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                            {{ $transaction->status === 'done' 
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                                                : ($transaction->status === 'pending'
+                                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200') }}">
+                                                            {{ ucfirst($transaction->status) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                                                        {{ $transaction->note ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                                    No transactions found for this project
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
 
@@ -113,82 +131,93 @@
             class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
             <!-- Table Header -->
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Transactions</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Users & Transactions</h3>
             </div>
 
             <!-- Scrollable Table Container -->
             <div class="overflow-x-auto" style="max-height: 400px; overflow-y: auto;">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <!-- User Transactions Header -->
-                    <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                User
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Custom ID
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Type
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Amount
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Transaction Date
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Status
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <!-- User Transactions Body -->
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @php
-                            $userTransactions = \App\Models\UserTransaction::with('user')
-                                ->orderBy('transaction_date', 'desc')
-                                ->limit(50)
-                                ->get();
-                        @endphp
-                        @foreach ($userTransactions as $transaction)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    {{ $transaction->user->full_name ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
-                                        {{ $transaction->user->custom_id ?? 'N/A' }}
+                <div class="space-y-4">
+                    @php
+                        $users = \App\Models\User::with(['transactions' => function($query) {
+                            $query->orderBy('transaction_date', 'desc');
+                        }])->orderBy('full_name')->limit(20)->get();
+                    @endphp
+                    
+                    @foreach ($users as $user)
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                            <!-- User Header -->
+                            <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {{ $user->full_name }}
+                                        </h4>
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                            {{ $user->custom_id ?? 'N/A' }}
+                                        </span>
+                                    </div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ $user->transactions->count() }} transactions
                                     </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                        {{ $transaction->transaction_type === 'deposit' 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
-                                        {{ ucfirst($transaction->transaction_type) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                    ${{ number_format($transaction->amount, 2) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j, Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                        {{ $transaction->status === 'done' 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                            : ($transaction->status === 'pending'
-                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200') }}">
-                                        {{ ucfirst($transaction->status) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                            
+                            <!-- User Transactions -->
+                            @if($user->transactions->count() > 0)
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Type</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Amount</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Transaction Date</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Note</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            @foreach($user->transactions as $transaction)
+                                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                    <td class="px-4 py-2 whitespace-nowrap">
+                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                            {{ $transaction->transaction_type === 'deposit' 
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                                                : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
+                                                            {{ ucfirst($transaction->transaction_type) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                                        ${{ number_format($transaction->amount, 2) }}
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                        {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j, Y') }}
+                                                    </td>
+                                                    <td class="px-4 py-2 whitespace-nowrap">
+                                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                            {{ $transaction->status === 'done' 
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                                                : ($transaction->status === 'pending'
+                                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200') }}">
+                                                            {{ ucfirst($transaction->status) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                                                        {{ $transaction->note ?? '-' }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                                    No transactions found for this user
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
