@@ -97,8 +97,8 @@
                                 </th>
 
                                 <!-- Project Details Section Header -->
-                                <th class="section-header details-header" data-section="details"
-                                    onclick="toggleSection('details')" wire:ignore>
+                                <th class="section-header details-header" data-state="{{ $sectionStates['details'] }}"
+                                    wire:click.prevent="toggleSectionState('details')">
                                     <div class="header-content">
                                         <span class="section-title-full">Project Details</span>
                                         <span class="section-title-short">P.D</span>
@@ -111,8 +111,8 @@
                                 </th>
 
                                 <!-- Contract Details Section Header -->
-                                <th class="section-header contract-header" data-section="contract"
-                                    onclick="toggleSection('contract')" wire:ignore>
+                                <th class="section-header contract-header" data-state="{{ $sectionStates['contract'] }}"
+                                    wire:click.prevent="toggleSectionState('contract')">
                                     <div class="header-content">
                                         <span class="section-title-full">Contract Details</span>
                                         <span class="section-title-short">C.D</span>
@@ -125,8 +125,8 @@
                                 </th>
 
                                 <!-- Expenses Section Header -->
-                                <th class="section-header expenses-header" data-section="expenses"
-                                    onclick="toggleSection('expenses')" wire:ignore>
+                                <th class="section-header expenses-header" data-state="{{ $sectionStates['expenses'] }}"
+                                    wire:click.prevent="toggleSectionState('expenses')">
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
                                         <span class="section-title-short">Exp</span>
@@ -139,8 +139,8 @@
                                 </th>
 
                                 <!-- Status Section Header -->
-                                <th class="section-header status-header" data-section="status"
-                                    onclick="toggleSection('status')" wire:ignore>
+                                <th class="section-header status-header" data-state="{{ $sectionStates['status'] }}"
+                                    wire:click.prevent="toggleSectionState('status')">
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
                                         <span class="section-title-short">S&D</span>
@@ -158,7 +158,7 @@
                                 <th></th> <!-- Empty for project column -->
 
                                 <!-- Project Details Sub-headers -->
-                                <th class="section-subheader details-section" wire:ignore>
+                                <th class="section-subheader details-section" data-state="{{ $sectionStates['details'] }}">
                                     <div class="sub-header-grid details-grid">
                                         <!-- Unit Column -->
                                         <div class="excel-column-header">
@@ -281,7 +281,7 @@
                                 </th>
 
                                 <!-- Contract Details Sub-headers -->
-                                <th class="section-subheader contract-section" wire:ignore>
+                                <th class="section-subheader contract-section" data-state="{{ $sectionStates['contract'] }}">
                                     <div class="sub-header-grid contract-grid">
                                         <!-- Reserved Date Column -->
                                         <div class="excel-column-header">
@@ -398,7 +398,7 @@
                                 </th>
 
                                 <!-- Expenses Sub-headers -->
-                                <th class="section-subheader expenses-section" wire:ignore>
+                                <th class="section-subheader expenses-section" data-state="{{ $sectionStates['expenses'] }}">
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
@@ -460,7 +460,7 @@
                                 </th>
 
                                 <!-- Status Sub-headers -->
-                                <th class="section-subheader status-section" wire:ignore>
+                                <th class="section-subheader status-section" data-state="{{ $sectionStates['status'] }}">
                                     <div class="sub-header-grid status-grid">
                                         <!-- Status Column -->
                                         <div class="excel-column-header">
@@ -559,7 +559,7 @@
                                     </td>
 
                                     <!-- Project Details Section -->
-                                    <td class="section-content details-section expanded" data-section="details" wire:ignore>
+                                    <td class="section-content details-section" data-state="{{ $sectionStates['details'] }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -593,7 +593,7 @@
                                     </td>
 
                                     <!-- Contract Details Section -->
-                                    <td class="section-content contract-section expanded" data-section="contract" wire:ignore>
+                                    <td class="section-content contract-section" data-state="{{ $sectionStates['contract'] }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -637,7 +637,7 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section expanded" data-section="expenses" wire:ignore>
+                                    <td class="section-content expenses-section" data-state="{{ $sectionStates['expenses'] }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -669,7 +669,7 @@
                                     </td>
 
                                     <!-- Status Section -->
-                                    <td class="section-content status-section expanded" data-section="status" wire:ignore>
+                                    <td class="section-content status-section" data-state="{{ $sectionStates['status'] }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -1440,33 +1440,6 @@
     </style>
 
     <script>
-        function toggleSection(sectionName) {
-            const sectionHeader = document.querySelector(`th[data-section="${sectionName}"]`);
-            if (!sectionHeader) return;
-
-            const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
-            const isExpanded = sectionHeader.dataset.state === 'expanded';
-            const newState = isExpanded ? 'collapsed' : 'expanded';
-
-            sectionHeader.dataset.state = newState;
-            sectionElements.forEach(el => el.dataset.state = newState);
-        }
-
-        function initializeSections() {
-            const sections = ['details', 'contract', 'expenses', 'status'];
-            sections.forEach(section => {
-                const header = document.querySelector(`th[data-section="${section}"]`);
-                const elements = document.querySelectorAll(`.${section}-section`);
-                if (header && !header.dataset.state) {
-                    header.dataset.state = 'expanded';
-                    elements.forEach(el => el.dataset.state = 'expanded');
-                }
-            });
-        }
-
-        // Initialize on first load
-        document.addEventListener('DOMContentLoaded', initializeSections);
-
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
             // Check if click is outside any filter dropdown

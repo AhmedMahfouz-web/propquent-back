@@ -22,6 +22,14 @@ class ProjectStatusReport extends Component
     public $investment_type = '';
     public bool $readyToLoad = false;
 
+    // State for collapsible sections
+    public $sectionStates = [
+        'details' => 'expanded',
+        'contract' => 'expanded',
+        'expenses' => 'expanded',
+        'status' => 'expanded',
+    ];
+
     // Sorting properties
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
@@ -111,6 +119,13 @@ class ProjectStatusReport extends Component
     public function toggleColumnFilter($column)
     {
         $this->openFilterColumn = $this->openFilterColumn === $column ? null : $column;
+    }
+
+    public function toggleSectionState($sectionName)
+    {
+        if (isset($this->sectionStates[$sectionName])) {
+            $this->sectionStates[$sectionName] = $this->sectionStates[$sectionName] === 'expanded' ? 'collapsed' : 'expanded';
+        }
     }
 
     public function closeColumnFilter()
