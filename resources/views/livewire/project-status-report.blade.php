@@ -55,14 +55,100 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Compound</label>
+                    <select wire:model.live="compound"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                        <option value="">All Compounds</option>
+                        @foreach ($this->availableCompounds as $compoundName)
+                            <option value="{{ $compoundName }}">{{ $compoundName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Advanced Filters Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <!-- Area Range -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Area (m²)</label>
+                    <input type="number" wire:model.live.debounce.500ms="minArea" placeholder="0"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Area (m²)</label>
+                    <input type="number" wire:model.live.debounce.500ms="maxArea" placeholder="∞"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <!-- Contract Value Range -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Contract Value</label>
+                    <input type="number" wire:model.live.debounce.500ms="minContractValue" placeholder="0"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Contract Value</label>
+                    <input type="number" wire:model.live.debounce.500ms="maxContractValue" placeholder="∞"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <!-- Financial Range -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Min Expenses</label>
+                    <input type="number" wire:model.live.debounce.500ms="minExpenses" placeholder="0"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Max Expenses</label>
+                    <input type="number" wire:model.live.debounce.500ms="maxExpenses" placeholder="∞"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+            </div>
+
+            <!-- Date Filters Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <!-- Contract Date Range -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Date From</label>
+                    <input type="date" wire:model.live="contractDateFrom"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Contract Date To</label>
+                    <input type="date" wire:model.live="contractDateTo"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <!-- Reservation Date Range -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Reservation Date From</label>
+                    <input type="date" wire:model.live="reservationDateFrom"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Reservation Date To</label>
+                    <input type="date" wire:model.live="reservationDateTo"
+                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                </div>
+            </div>
+
+            <!-- Control Row -->
+            <div class="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
+                <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Per Page</label>
                     <select wire:model.live="perPage"
-                        class="w-full text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                        class="text-xs border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
+                </div>
+                <div class="flex space-x-2">
+                    <button wire:click="clearFilters" 
+                        class="px-3 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
+                        Clear Filters
+                    </button>
                 </div>
             </div>
         </div>
@@ -82,8 +168,21 @@
                             <tr>
                                 <!-- Fixed Project Column -->
                                 <th class="project-column-header">
-                                    <div class="flex items-center space-x-2">
-                                        <span>Project</span>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col space-y-1">
+                                            <button wire:click="sortBy('title')" class="sortable-header text-left">
+                                                Title
+                                                @if($sortBy === 'title')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                            <button wire:click="sortBy('key')" class="sortable-header text-left">
+                                                Key
+                                                @if($sortBy === 'key')
+                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @endif
+                                            </button>
+                                        </div>
                                     </div>
                                 </th>
 
@@ -151,20 +250,60 @@
                                 <!-- Project Details Sub-headers -->
                                 <th class="section-subheader details-section">
                                     <div class="sub-header-grid details-grid">
-                                        <span>Unit</span>
-                                        <span>Area</span>
-                                        <span>Garden</span>
-                                        <span>Compound</span>
+                                        <button wire:click="sortBy('unit_no')" class="sortable-header">
+                                            Unit
+                                            @if($sortBy === 'unit_no')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('area')" class="sortable-header">
+                                            Area
+                                            @if($sortBy === 'area')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('garden_area')" class="sortable-header">
+                                            Garden
+                                            @if($sortBy === 'garden_area')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('compound')" class="sortable-header">
+                                            Compound
+                                            @if($sortBy === 'compound')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
                                     </div>
                                 </th>
 
                                 <!-- Contract Details Sub-headers -->
                                 <th class="section-subheader contract-section">
                                     <div class="sub-header-grid contract-grid">
-                                        <span>Reserved</span>
-                                        <span>Contract Date</span>
-                                        <span>Total Value</span>
-                                        <span>Years</span>
+                                        <button wire:click="sortBy('reservation_date')" class="sortable-header">
+                                            Reserved
+                                            @if($sortBy === 'reservation_date')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('contract_date')" class="sortable-header">
+                                            Contract Date
+                                            @if($sortBy === 'contract_date')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('total_contract_value')" class="sortable-header">
+                                            Total Value
+                                            @if($sortBy === 'total_contract_value')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('years_of_installment')" class="sortable-header">
+                                            Years
+                                            @if($sortBy === 'years_of_installment')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
                                     </div>
                                 </th>
 
@@ -173,16 +312,36 @@
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
-                                        <span>Total</span>
-                                        <span>Net Profit</span>
+                                        <button wire:click="sortBy('total_expenses')" class="sortable-header">
+                                            Total
+                                            @if($sortBy === 'total_expenses')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('net_profit')" class="sortable-header">
+                                            Net Profit
+                                            @if($sortBy === 'net_profit')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
                                     </div>
                                 </th>
 
                                 <!-- Status Sub-headers -->
                                 <th class="section-subheader status-section">
                                     <div class="sub-header-grid status-grid">
-                                        <span>Status</span>
-                                        <span>Stage</span>
+                                        <button wire:click="sortBy('status')" class="sortable-header">
+                                            Status
+                                            @if($sortBy === 'status')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
+                                        <button wire:click="sortBy('stage')" class="sortable-header">
+                                            Stage
+                                            @if($sortBy === 'stage')
+                                                <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            @endif
+                                        </button>
                                         <span>Start Date</span>
                                         <span>End Date</span>
                                     </div>
@@ -808,6 +967,56 @@
 
         .dark .project-status-table-container::-webkit-scrollbar-thumb:hover {
             background: #9ca3af;
+        }
+
+        /* Sortable Header Styles */
+        .sortable-header {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            text-transform: inherit;
+            letter-spacing: inherit;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            text-align: inherit;
+        }
+
+        .sortable-header:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+
+        .dark .sortable-header:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .sort-indicator {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #2563eb;
+            margin-left: 2px;
+        }
+
+        .dark .sort-indicator {
+            color: #60a5fa;
+        }
+
+        /* Active sort styling */
+        .sortable-header:has(.sort-indicator) {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .dark .sortable-header:has(.sort-indicator) {
+            color: #60a5fa;
         }
     </style>
 
