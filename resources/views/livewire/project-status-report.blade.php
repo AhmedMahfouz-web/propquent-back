@@ -780,16 +780,20 @@
             overflow-y: visible;
             max-width: 100%;
             width: 100%;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+            -webkit-overflow-scrolling: touch;
+            /* Smooth scrolling on mobile */
         }
 
         .project-status-table {
-            width: auto; /* Let table size itself based on content */
-            min-width: 1200px; /* Minimum width to trigger horizontal scroll */
+            width: auto;
+            /* Let table size itself based on content */
+            min-width: 1200px;
+            /* Minimum width to trigger horizontal scroll */
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
-            table-layout: auto; /* Auto layout for content-based sizing */
+            table-layout: auto;
+            /* Auto layout for content-based sizing */
         }
 
         /* Fixed Project Column */
@@ -1024,6 +1028,7 @@
         .expenses-grid,
         .status-grid {
             grid-template-columns: 1fr 1fr 1fr 1fr;
+            min-width: 400px;
         }
 
         .section-subheader[data-state="expanded"] .sub-header-grid {
@@ -1303,6 +1308,7 @@
             padding: 2px 4px;
             border-radius: 4px;
             flex: 1;
+            justify-content: center
         }
 
         .column-sort-btn:hover {
