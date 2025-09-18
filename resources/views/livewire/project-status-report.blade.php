@@ -1400,12 +1400,17 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* SIMPLE AND DIRECT COLLAPSE SOLUTION */
+        /* CORRECTED COLLAPSE SOLUTION */
         
-        /* Hide ALL content when collapsed */
-        th[data-state="collapsed"] *,
-        td[data-state="collapsed"] * {
+        /* Only hide content when collapsed, show when expanded */
+        th[data-state="collapsed"] .sub-header-grid,
+        td[data-state="collapsed"] .section-expanded-content {
             display: none !important;
+        }
+        
+        th[data-state="expanded"] .sub-header-grid,
+        td[data-state="expanded"] .section-expanded-content {
+            display: block !important;
         }
         
         /* Force collapsed cells to be narrow */
@@ -1420,7 +1425,7 @@
             position: relative !important;
         }
         
-        /* Show dots indicator */
+        /* Show dots indicator only when collapsed */
         th[data-state="collapsed"]::before,
         td[data-state="collapsed"]::before {
             content: '•••' !important;
