@@ -130,34 +130,10 @@
                                     $weekNumber = 'W' . (($i % 4) + 1);
                                     $weekField = 'week_' . $i;
 
-                                    // Calculate expected cash including both project and user transactions
-                                    $projectCash = DB::table('project_transactions')
-                                        ->where('status', '!=', 'cancelled')
-                                        ->where(function($query) use ($weekStart, $weekEnd) {
-                                            $query->where(function($q) use ($weekStart, $weekEnd) {
-                                                $q->where('status', 'done')
-                                                  ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                            })->orWhere(function($q) use ($weekStart, $weekEnd) {
-                                                $q->where('status', 'pending')
-                                                  ->whereBetween('due_date', [$weekStart, $weekEnd]);
-                                            });
-                                        })
-                                        ->selectRaw('
-                                            SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) -
-                                            SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as net_cash
-                                        ')
-                                        ->value('net_cash') ?? 0;
-
-                                    $userCash = DB::table('user_transactions')
-                                        ->where('status', '!=', 'cancelled')
-                                        ->whereBetween('transaction_date', [$weekStart, $weekEnd])
-                                        ->selectRaw('
-                                            SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) -
-                                            SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as net_cash
-                                        ')
-                                        ->value('net_cash') ?? 0;
-
-                                    $expectedCash = $projectCash + $userCash;
+                                    $expectedCash = \App\Filament\Resources\CashflowResource::calculateExpectedCashForWeek(
+                                        $weekStart,
+                                        $weekEnd,
+                                    );
                                 @endphp
                                 <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortByWeek('{{ $weekField }}')">
@@ -216,20 +192,20 @@
                                     @php
                                         $weekStart = $startDate->copy()->addWeeks($i);
                                         $weekEnd = $weekStart->copy()->endOfWeek();
-                                        
+
                                         // Get done transactions by transaction_date and pending by due_date
                                         $doneTransactions = $project
                                             ->transactions()
                                             ->where('status', 'done')
                                             ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                                             ->get();
-                                            
+
                                         $pendingTransactions = $project
                                             ->transactions()
                                             ->where('status', 'pending')
                                             ->whereBetween('due_date', [$weekStart, $weekEnd])
                                             ->get();
-                                            
+
                                         $transactions = $doneTransactions->merge($pendingTransactions);
                                     @endphp
                                     <td
@@ -309,34 +285,10 @@
                                     $weekEnd = $weekStart->copy()->endOfWeek();
                                     $weekNumber = 'W' . (($i % 4) + 1);
 
-                                    // Calculate expected cash including both project and user transactions
-                                    $projectCash = DB::table('project_transactions')
-                                        ->where('status', '!=', 'cancelled')
-                                        ->where(function($query) use ($weekStart, $weekEnd) {
-                                            $query->where(function($q) use ($weekStart, $weekEnd) {
-                                                $q->where('status', 'done')
-                                                  ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                            })->orWhere(function($q) use ($weekStart, $weekEnd) {
-                                                $q->where('status', 'pending')
-                                                  ->whereBetween('due_date', [$weekStart, $weekEnd]);
-                                            });
-                                        })
-                                        ->selectRaw('
-                                            SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) -
-                                            SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as net_cash
-                                        ')
-                                        ->value('net_cash') ?? 0;
-
-                                    $userCash = DB::table('user_transactions')
-                                        ->where('status', '!=', 'cancelled')
-                                        ->whereBetween('transaction_date', [$weekStart, $weekEnd])
-                                        ->selectRaw('
-                                            SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) -
-                                            SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as net_cash
-                                        ')
-                                        ->value('net_cash') ?? 0;
-
-                                    $expectedCash = $projectCash + $userCash;
+                                    $expectedCash = \App\Filament\Resources\CashflowResource::calculateExpectedCashForWeek(
+                                        $weekStart,
+                                        $weekEnd,
+                                    );
                                 @endphp
                                 <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex flex-col items-center">
@@ -356,26 +308,34 @@
                     <!-- Table Body -->
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @php
-                            $users = \App\Models\User::with(['transactions' => function($query) {
-                                $query->orderBy('transaction_date', 'desc');
-                            }])->orderBy('full_name')->limit(20)->get();
+                            $users = \App\Models\User::with([
+                                'transactions' => function ($query) {
+                                    $query->orderBy('transaction_date', 'desc');
+                                },
+                            ])
+                                ->orderBy('full_name')
+                                ->limit(20)
+                                ->get();
                         @endphp
                         @foreach ($users as $user)
                             <tr class="dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                    <span
+                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                         {{ $user->custom_id ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $user->full_name }}
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ $user->full_name }}
                                     </div>
                                 </td>
                                 @for ($i = 0; $i < $totalWeeks; $i++)
                                     @php
                                         $weekStart = $startDate->copy()->addWeeks($i);
                                         $weekEnd = $weekStart->copy()->endOfWeek();
-                                        $transactions = $user->transactions()
+                                        $transactions = $user
+                                            ->transactions()
                                             ->where('status', '!=', 'cancelled')
                                             ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                                             ->get();

@@ -390,8 +390,8 @@ class CashflowResource extends Resource
         // Start with current balance
         $currentBalance = self::getCurrentCashBalance();
 
-        // Add all transactions that should be completed by the end of this week
-        $weeklyTransactions = DB::table('project_transactions')
+        // Add all project transactions that should be completed by the end of this week
+        $weeklyProjectTransactions = DB::table('project_transactions')
             ->where('status', 'pending')
             ->where('due_date', '<=', $weekEnd)
             ->where('due_date', '>=', now())
@@ -401,9 +401,22 @@ class CashflowResource extends Resource
             ')
             ->first();
 
-        $revenue = $weeklyTransactions->revenue ?? 0;
-        $expenses = $weeklyTransactions->expenses ?? 0;
+        // Add all user transactions that should be completed by the end of this week
+        $weeklyUserTransactions = DB::table('user_transactions')
+            ->where('status', 'pending')
+            ->where('transaction_date', '<=', $weekEnd)
+            ->where('transaction_date', '>=', now())
+            ->selectRaw('
+                SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
+                SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
+            ')
+            ->first();
 
-        return $currentBalance + $revenue - $expenses;
+        $projectRevenue = $weeklyProjectTransactions->revenue ?? 0;
+        $projectExpenses = $weeklyProjectTransactions->expenses ?? 0;
+        $userDeposits = $weeklyUserTransactions->deposits ?? 0;
+        $userWithdrawals = $weeklyUserTransactions->withdrawals ?? 0;
+
+        return $currentBalance + $projectRevenue - $projectExpenses + $userDeposits - $userWithdrawals;
     }
 }
