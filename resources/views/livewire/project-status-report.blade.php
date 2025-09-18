@@ -1400,34 +1400,38 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* --- The Definitive Collapse Styling --- */
-
-        /* 1. Shrink the container cells (both sub-header and content) */
-        [data-state="collapsed"].section-subheader,
-        [data-state="collapsed"].section-content {
-            width: 50px;
-            min-width: 50px;
-            max-width: 50px;
-            padding: 8px 4px;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        /* 2. Hide the inner content of the collapsed cells */
-        [data-state="collapsed"].section-subheader > .sub-header-grid,
-        [data-state="collapsed"].section-content > .section-expanded-content {
+        /* SIMPLE AND DIRECT COLLAPSE SOLUTION */
+        
+        /* Hide ALL content when collapsed */
+        th[data-state="collapsed"] *,
+        td[data-state="collapsed"] * {
             display: none !important;
         }
-
-        /* 3. Show the '...' indicator in the collapsed cells */
-        .section-subheader[data-state="collapsed"]::after,
-        .section-content[data-state="collapsed"]::after {
-            content: '•••';
-            display: block;
-            text-align: center;
-            color: #6b7280;
-            font-size: 0.875rem;
-            line-height: 1.25rem;
+        
+        /* Force collapsed cells to be narrow */
+        th[data-state="collapsed"],
+        td[data-state="collapsed"] {
+            width: 50px !important;
+            min-width: 50px !important;
+            max-width: 50px !important;
+            padding: 8px 4px !important;
+            text-align: center !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }
+        
+        /* Show dots indicator */
+        th[data-state="collapsed"]::before,
+        td[data-state="collapsed"]::before {
+            content: '•••' !important;
+            display: block !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            color: #6b7280 !important;
+            font-size: 0.875rem !important;
+            z-index: 10 !important;
         }
 
         .section-header {
