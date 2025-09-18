@@ -19,7 +19,7 @@
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <button wire:click="clearAllFilters" 
+                    <button wire:click="clearAllFilters"
                         class="px-4 py-2 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
                         Clear All Filters
                     </button>
@@ -47,22 +47,26 @@
                                     <div class="flex items-center justify-between">
                                         <div class="flex flex-col space-y-1 flex-1">
                                             <div class="excel-column-header">
-                                                <button wire:click="sortByColumn('title')" class="sortable-header text-left">
+                                                <button wire:click="sortByColumn('title')"
+                                                    class="sortable-header text-left">
                                                     Title
-                                                    @if($sortBy === 'title')
-                                                        <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                    @if ($sortBy === 'title')
+                                                        <span
+                                                            class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                     @endif
                                                 </button>
-                                                <button wire:click="toggleColumnFilter('title')" class="filter-btn {{ !empty($columnFilters['title']) ? 'active' : '' }}">
+                                                <button wire:click="toggleColumnFilter('title')"
+                                                    class="filter-btn {{ !empty($columnFilters['title']) ? 'active' : '' }}">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                        <path
+                                                            d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                     </svg>
                                                 </button>
-                                                @if($openFilterColumn === 'title')
+                                                @if ($openFilterColumn === 'title')
                                                     <div class="filter-dropdown">
                                                         <div class="filter-content">
-                                                            <input type="text" 
-                                                                wire:model.live.debounce.300ms="columnFilters.title" 
+                                                            <input type="text"
+                                                                wire:model.live.debounce.300ms="columnFilters.title"
                                                                 placeholder="Search titles..."
                                                                 class="w-full px-2 py-1 text-sm border border-gray-300 rounded">
                                                         </div>
@@ -70,22 +74,26 @@
                                                 @endif
                                             </div>
                                             <div class="excel-column-header">
-                                                <button wire:click="sortByColumn('key')" class="sortable-header text-left">
+                                                <button wire:click="sortByColumn('key')"
+                                                    class="sortable-header text-left">
                                                     Key
-                                                    @if($sortBy === 'key')
-                                                        <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                    @if ($sortBy === 'key')
+                                                        <span
+                                                            class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                     @endif
                                                 </button>
-                                                <button wire:click="toggleColumnFilter('key')" class="filter-btn {{ !empty($columnFilters['key']) ? 'active' : '' }}">
+                                                <button wire:click="toggleColumnFilter('key')"
+                                                    class="filter-btn {{ !empty($columnFilters['key']) ? 'active' : '' }}">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                        <path
+                                                            d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                     </svg>
                                                 </button>
-                                                @if($openFilterColumn === 'key')
+                                                @if ($openFilterColumn === 'key')
                                                     <div class="filter-dropdown">
                                                         <div class="filter-content">
-                                                            <input type="text" 
-                                                                wire:model.live.debounce.300ms="columnFilters.key" 
+                                                            <input type="text"
+                                                                wire:model.live.debounce.300ms="columnFilters.key"
                                                                 placeholder="Search keys..."
                                                                 class="w-full px-2 py-1 text-sm border border-gray-300 rounded">
                                                         </div>
@@ -158,28 +166,32 @@
                                 <th></th> <!-- Empty for project column -->
 
                                 <!-- Project Details Sub-headers -->
-                                <th class="section-subheader details-section" data-state="{{ $sectionStates['details'] }}" wire:key="subheader-details">
+                                <th class="section-subheader details-section"
+                                    data-state="{{ $sectionStates['details'] }}" wire:key="subheader-details">
                                     <div class="sub-header-grid details-grid">
                                         <!-- Unit Column -->
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('unit_no')" class="column-sort-btn">
                                                 Unit
-                                                @if($sortBy === 'unit_no')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'unit_no')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('unit_no')" class="filter-btn {{ !empty($columnFilters['unit_no']) ? 'active' : '' }}">
+                                            <button wire:click="toggleColumnFilter('unit_no')"
+                                                class="filter-btn {{ !empty($columnFilters['unit_no']) ? 'active' : '' }}">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'unit_no')
+                                            @if ($openFilterColumn === 'unit_no')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content">
-                                                        @foreach($this->getUniqueValues['unit_no'] as $value)
+                                                        @foreach ($this->getUniqueValues['unit_no'] as $value)
                                                             <label class="filter-option">
-                                                                <input type="checkbox" 
-                                                                    wire:model.live="columnFilters.unit_no" 
+                                                                <input type="checkbox"
+                                                                    wire:model.live="columnFilters.unit_no"
                                                                     value="{{ $value }}"
                                                                     class="filter-checkbox">
                                                                 <span>{{ $value ?: 'N/A' }}</span>
@@ -194,26 +206,26 @@
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('area')" class="column-sort-btn">
                                                 Area
-                                                @if($sortBy === 'area')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'area')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
                                             <button wire:click="toggleColumnFilter('area_range')" class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'area_range')
+                                            @if ($openFilterColumn === 'area_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content range-filter">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.area_range.min" 
-                                                            placeholder="Min"
-                                                            class="range-input">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.area_range.max" 
-                                                            placeholder="Max"
-                                                            class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.area_range.min"
+                                                            placeholder="Min" class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.area_range.max"
+                                                            placeholder="Max" class="range-input">
                                                     </div>
                                                 </div>
                                             @endif
@@ -223,26 +235,27 @@
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('garden_area')" class="column-sort-btn">
                                                 Garden
-                                                @if($sortBy === 'garden_area')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'garden_area')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('garden_area_range')" class="filter-btn">
+                                            <button wire:click="toggleColumnFilter('garden_area_range')"
+                                                class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'garden_area_range')
+                                            @if ($openFilterColumn === 'garden_area_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content range-filter">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.garden_area_range.min" 
-                                                            placeholder="Min"
-                                                            class="range-input">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.garden_area_range.max" 
-                                                            placeholder="Max"
-                                                            class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.garden_area_range.min"
+                                                            placeholder="Min" class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.garden_area_range.max"
+                                                            placeholder="Max" class="range-input">
                                                     </div>
                                                 </div>
                                             @endif
@@ -252,22 +265,24 @@
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('compound')" class="column-sort-btn">
                                                 Compound
-                                                @if($sortBy === 'compound')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'compound')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
                                             <button wire:click="toggleColumnFilter('compound')" class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'compound')
+                                            @if ($openFilterColumn === 'compound')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content">
-                                                        @foreach($this->getUniqueValues['compound'] as $value)
+                                                        @foreach ($this->getUniqueValues['compound'] as $value)
                                                             <label class="filter-option">
-                                                                <input type="checkbox" 
-                                                                    wire:model.live="columnFilters.compound" 
+                                                                <input type="checkbox"
+                                                                    wire:model.live="columnFilters.compound"
                                                                     value="{{ $value }}"
                                                                     class="filter-checkbox">
                                                                 <span>{{ $value ?: 'N/A' }}</span>
@@ -281,29 +296,34 @@
                                 </th>
 
                                 <!-- Contract Details Sub-headers -->
-                                <th class="section-subheader contract-section" data-state="{{ $sectionStates['contract'] }}" wire:key="subheader-contract">
+                                <th class="section-subheader contract-section"
+                                    data-state="{{ $sectionStates['contract'] }}" wire:key="subheader-contract">
                                     <div class="sub-header-grid contract-grid">
                                         <!-- Reserved Date Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortByColumn('reservation_date')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('reservation_date')"
+                                                class="column-sort-btn">
                                                 Reserved
-                                                @if($sortBy === 'reservation_date')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'reservation_date')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('reservation_date_range')" class="filter-btn">
+                                            <button wire:click="toggleColumnFilter('reservation_date_range')"
+                                                class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'reservation_date_range')
+                                            @if ($openFilterColumn === 'reservation_date_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content date-filter">
-                                                        <input type="date" 
-                                                            wire:model.live="columnFilters.reservation_date_range.from" 
+                                                        <input type="date"
+                                                            wire:model.live="columnFilters.reservation_date_range.from"
                                                             class="date-input">
-                                                        <input type="date" 
-                                                            wire:model.live="columnFilters.reservation_date_range.to" 
+                                                        <input type="date"
+                                                            wire:model.live="columnFilters.reservation_date_range.to"
                                                             class="date-input">
                                                     </div>
                                                 </div>
@@ -312,25 +332,29 @@
 
                                         <!-- Contract Date Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortByColumn('contract_date')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('contract_date')"
+                                                class="column-sort-btn">
                                                 Contract Date
-                                                @if($sortBy === 'contract_date')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'contract_date')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('contract_date_range')" class="filter-btn">
+                                            <button wire:click="toggleColumnFilter('contract_date_range')"
+                                                class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'contract_date_range')
+                                            @if ($openFilterColumn === 'contract_date_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content date-filter">
-                                                        <input type="date" 
-                                                            wire:model.live="columnFilters.contract_date_range.from" 
+                                                        <input type="date"
+                                                            wire:model.live="columnFilters.contract_date_range.from"
                                                             class="date-input">
-                                                        <input type="date" 
-                                                            wire:model.live="columnFilters.contract_date_range.to" 
+                                                        <input type="date"
+                                                            wire:model.live="columnFilters.contract_date_range.to"
                                                             class="date-input">
                                                     </div>
                                                 </div>
@@ -339,28 +363,30 @@
 
                                         <!-- Total Value Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortByColumn('total_contract_value')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('total_contract_value')"
+                                                class="column-sort-btn">
                                                 Total Value
-                                                @if($sortBy === 'total_contract_value')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'total_contract_value')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('contract_value_range')" class="filter-btn">
+                                            <button wire:click="toggleColumnFilter('contract_value_range')"
+                                                class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'contract_value_range')
+                                            @if ($openFilterColumn === 'contract_value_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content range-filter">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.contract_value_range.min" 
-                                                            placeholder="Min"
-                                                            class="range-input">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.contract_value_range.max" 
-                                                            placeholder="Max"
-                                                            class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.contract_value_range.min"
+                                                            placeholder="Min" class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.contract_value_range.max"
+                                                            placeholder="Max" class="range-input">
                                                     </div>
                                                 </div>
                                             @endif
@@ -368,28 +394,29 @@
 
                                         <!-- Years Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortByColumn('years_of_installment')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('years_of_installment')"
+                                                class="column-sort-btn">
                                                 Years
-                                                @if($sortBy === 'years_of_installment')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'years_of_installment')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
                                             <button wire:click="toggleColumnFilter('years_range')" class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'years_range')
+                                            @if ($openFilterColumn === 'years_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content range-filter">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.years_range.min" 
-                                                            placeholder="Min"
-                                                            class="range-input">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.years_range.max" 
-                                                            placeholder="Max"
-                                                            class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.years_range.min"
+                                                            placeholder="Min" class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.years_range.max"
+                                                            placeholder="Max" class="range-input">
                                                     </div>
                                                 </div>
                                             @endif
@@ -398,33 +425,36 @@
                                 </th>
 
                                 <!-- Expenses Sub-headers -->
-                                <th class="section-subheader expenses-section" data-state="{{ $sectionStates['expenses'] }}" wire:key="subheader-expenses">
+                                <th class="section-subheader expenses-section"
+                                    data-state="{{ $sectionStates['expenses'] }}" wire:key="subheader-expenses">
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
                                         <div class="excel-column-header">
-                                            <button wire:click="sortByColumn('total_expenses')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('total_expenses')"
+                                                class="column-sort-btn">
                                                 Total
-                                                @if($sortBy === 'total_expenses')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'total_expenses')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('expenses_range')" class="filter-btn {{ (!empty($columnFilters['expenses_range']['min']) || !empty($columnFilters['expenses_range']['max'])) ? 'active' : '' }}">
+                                            <button wire:click="toggleColumnFilter('expenses_range')"
+                                                class="filter-btn {{ !empty($columnFilters['expenses_range']['min']) || !empty($columnFilters['expenses_range']['max']) ? 'active' : '' }}">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'expenses_range')
+                                            @if ($openFilterColumn === 'expenses_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content range-filter">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.expenses_range.min" 
-                                                            placeholder="Min"
-                                                            class="range-input">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.expenses_range.max" 
-                                                            placeholder="Max"
-                                                            class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.expenses_range.min"
+                                                            placeholder="Min" class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.expenses_range.max"
+                                                            placeholder="Max" class="range-input">
                                                     </div>
                                                 </div>
                                             @endif
@@ -432,26 +462,27 @@
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('net_profit')" class="column-sort-btn">
                                                 Net Profit
-                                                @if($sortBy === 'net_profit')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'net_profit')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('net_profit_range')" class="filter-btn">
+                                            <button wire:click="toggleColumnFilter('net_profit_range')"
+                                                class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'net_profit_range')
+                                            @if ($openFilterColumn === 'net_profit_range')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content range-filter">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.net_profit_range.min" 
-                                                            placeholder="Min"
-                                                            class="range-input">
-                                                        <input type="number" 
-                                                            wire:model.live="columnFilters.net_profit_range.max" 
-                                                            placeholder="Max"
-                                                            class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.net_profit_range.min"
+                                                            placeholder="Min" class="range-input">
+                                                        <input type="number"
+                                                            wire:model.live="columnFilters.net_profit_range.max"
+                                                            placeholder="Max" class="range-input">
                                                     </div>
                                                 </div>
                                             @endif
@@ -460,28 +491,31 @@
                                 </th>
 
                                 <!-- Status Sub-headers -->
-                                <th class="section-subheader status-section" data-state="{{ $sectionStates['status'] }}" wire:key="subheader-status">
+                                <th class="section-subheader status-section"
+                                    data-state="{{ $sectionStates['status'] }}" wire:key="subheader-status">
                                     <div class="sub-header-grid status-grid">
                                         <!-- Status Column -->
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('status')" class="column-sort-btn">
                                                 Status
-                                                @if($sortBy === 'status')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'status')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
                                             <button wire:click="toggleColumnFilter('status')" class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'status')
+                                            @if ($openFilterColumn === 'status')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content">
-                                                        @foreach($this->getUniqueValues['status'] as $value)
+                                                        @foreach ($this->getUniqueValues['status'] as $value)
                                                             <label class="filter-option">
-                                                                <input type="checkbox" 
-                                                                    wire:model.live="columnFilters.status" 
+                                                                <input type="checkbox"
+                                                                    wire:model.live="columnFilters.status"
                                                                     value="{{ $value }}"
                                                                     class="filter-checkbox">
                                                                 <span>{{ ucfirst($value) }}</span>
@@ -496,22 +530,24 @@
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('stage')" class="column-sort-btn">
                                                 Stage
-                                                @if($sortBy === 'stage')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                @if ($sortBy === 'stage')
+                                                    <span
+                                                        class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
                                             <button wire:click="toggleColumnFilter('stage')" class="filter-btn">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    <path
+                                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" />
                                                 </svg>
                                             </button>
-                                            @if($openFilterColumn === 'stage')
+                                            @if ($openFilterColumn === 'stage')
                                                 <div class="filter-dropdown">
                                                     <div class="filter-content">
-                                                        @foreach($this->getUniqueValues['stage'] as $value)
+                                                        @foreach ($this->getUniqueValues['stage'] as $value)
                                                             <label class="filter-option">
-                                                                <input type="checkbox" 
-                                                                    wire:model.live="columnFilters.stage" 
+                                                                <input type="checkbox"
+                                                                    wire:model.live="columnFilters.stage"
                                                                     value="{{ $value }}"
                                                                     class="filter-checkbox">
                                                                 <span>{{ ucfirst($value) }}</span>
@@ -529,7 +565,8 @@
                             </tr>
                         </thead>
 
-                        <tbody wire:ignore.self class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody wire:ignore.self
+                            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->projects as $project)
                                 @php
                                     $projectData = $this->projectsData[$project->key] ?? [];
@@ -559,7 +596,9 @@
                                     </td>
 
                                     <!-- Project Details Section -->
-                                    <td class="section-content details-section" data-state="{{ $sectionStates['details'] }}" wire:key="content-details-{{ $project->id }}">
+                                    <td class="section-content details-section"
+                                        data-state="{{ $sectionStates['details'] }}"
+                                        wire:key="content-details-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -593,7 +632,9 @@
                                     </td>
 
                                     <!-- Contract Details Section -->
-                                    <td class="section-content contract-section" data-state="{{ $sectionStates['contract'] }}" wire:key="content-contract-{{ $project->id }}">
+                                    <td class="section-content contract-section"
+                                        data-state="{{ $sectionStates['contract'] }}"
+                                        wire:key="content-contract-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -637,7 +678,9 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section" data-state="{{ $sectionStates['expenses'] }}" wire:key="content-expenses-{{ $project->id }}">
+                                    <td class="section-content expenses-section"
+                                        data-state="{{ $sectionStates['expenses'] }}"
+                                        wire:key="content-expenses-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -669,7 +712,9 @@
                                     </td>
 
                                     <!-- Status Section -->
-                                    <td class="section-content status-section" data-state="{{ $sectionStates['status'] }}" wire:key="content-status-{{ $project->id }}">
+                                    <td class="section-content status-section"
+                                        data-state="{{ $sectionStates['status'] }}"
+                                        wire:key="content-status-{{ $project->id }}">
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
@@ -734,10 +779,13 @@
             overflow-x: auto;
             overflow-y: visible;
             max-width: 100%;
+            width: 100%;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
         }
 
         .project-status-table {
             width: 100%;
+            min-width: 1200px; /* Minimum width to trigger horizontal scroll */
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
@@ -1424,11 +1472,13 @@
             width: 20px;
             height: 20px;
             transition: transform 0.3s ease;
-            transform: rotate(0deg); /* Default: collapsed */
+            transform: rotate(0deg);
+            /* Default: collapsed */
         }
 
         [data-state="expanded"] .toggle-arrow {
-            transform: rotate(180deg); /* Expanded state */
+            transform: rotate(180deg);
+            /* Expanded state */
         }
 
 
@@ -1457,7 +1507,7 @@
         });
 
         // Livewire hook to ensure functionality after DOM updates
-        document.addEventListener('livewire:navigated', function () {
+        document.addEventListener('livewire:navigated', function() {
             console.log('Livewire navigated - reinitializing');
         });
     </script>
