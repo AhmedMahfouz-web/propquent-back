@@ -1068,17 +1068,19 @@
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 8px;
+            align-items: start;
+            width: 100%;
         }
 
         .section-content[data-state="expanded"] .content-row {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            padding: 4px 0;
-            border-bottom: 1px solid #f3f4f6;
+            text-align: center;
+            padding: 8px 4px;
         }
 
         .section-content[data-state="expanded"] .content-label {
