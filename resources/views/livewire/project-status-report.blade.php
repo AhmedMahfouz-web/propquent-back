@@ -18,11 +18,13 @@
                         </select>
                     </div>
                 </div>
-                <div>
+                <div class="flex space-x-2">
                     <button wire:click="clearAllFilters" 
                         class="px-4 py-2 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
                         Clear All Filters
                     </button>
+                    <!-- Hidden button for closing filters via JavaScript -->
+                    <button id="close-filters-btn" wire:click="closeColumnFilter" style="display: none;"></button>
                 </div>
             </div>
         </div>
@@ -1395,12 +1397,10 @@
         document.addEventListener('click', function(event) {
             // Check if click is outside any filter dropdown
             if (!event.target.closest('.excel-column-header')) {
-                // Close all filter dropdowns by calling Livewire method
-                if (window.Livewire) {
-                    const component = window.Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'));
-                    if (component) {
-                        component.call('closeColumnFilter');
-                    }
+                // Trigger a click on a hidden button to close filters
+                const closeButton = document.getElementById('close-filters-btn');
+                if (closeButton) {
+                    closeButton.click();
                 }
             }
         });
