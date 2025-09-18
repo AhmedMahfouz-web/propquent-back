@@ -40,6 +40,8 @@ class ProjectStatusReport extends Component
         'years_range' => ['min' => '', 'max' => ''],
         'contract_date_range' => ['from' => '', 'to' => ''],
         'reservation_date_range' => ['from' => '', 'to' => ''],
+        'expenses_range' => ['min' => '', 'max' => ''],
+        'net_profit_range' => ['min' => '', 'max' => ''],
     ];
 
     // Track which column filters are open
@@ -102,6 +104,12 @@ class ProjectStatusReport extends Component
             $this->sortDirection = 'asc';
         }
         $this->resetPage();
+        
+        // Force refresh for calculated fields
+        if (in_array($field, ['total_expenses', 'total_revenues', 'net_profit'])) {
+            // Clear any cached data to force recalculation
+            unset($this->cachedProjectsData);
+        }
     }
 
     public function toggleColumnFilter($column)
@@ -158,6 +166,8 @@ class ProjectStatusReport extends Component
             'years_range' => ['min' => '', 'max' => ''],
             'contract_date_range' => ['from' => '', 'to' => ''],
             'reservation_date_range' => ['from' => '', 'to' => ''],
+            'expenses_range' => ['min' => '', 'max' => ''],
+            'net_profit_range' => ['min' => '', 'max' => ''],
         ];
         $this->search = '';
         $this->resetPage();
@@ -381,9 +391,25 @@ class ProjectStatusReport extends Component
                 return $this->sortDirection === 'asc' ? $aValue <=> $bValue : $bValue <=> $aValue;
             });
 
-            // Update the projects collection order (this is a bit of a hack for pagination)
+            // For calculated field sorting, we need to handle pagination differently
+            // Get the sorted projects and re-paginate them
             $sortedProjects = collect($projectsWithData)->pluck('project');
-            $projects->setCollection($sortedProjects);
+            
+            // Create a new paginated collection with the sorted projects
+            $currentPage = request()->get('page', 1);
+            $perPage = $this->perPage;
+            $total = $sortedProjects->count();
+            
+            $paginatedProjects = $sortedProjects->forPage($currentPage, $perPage);
+            
+            // Create new paginator instance
+            $projects = new \Illuminate\Pagination\LengthAwarePaginator(
+                $paginatedProjects,
+                $total,
+                $perPage,
+                $currentPage,
+                ['path' => request()->url(), 'pageName' => 'page']
+            );
         } else {
             foreach ($projects as $project) {
                 $projectData = $this->calculateProjectData($project);
@@ -391,7 +417,37 @@ class ProjectStatusReport extends Component
             }
         }
 
-        // No additional financial filters needed since they're handled in the query
+        // Apply financial filters after calculation (for calculated fields)
+        if (!empty($this->columnFilters['expenses_range']['min']) || !empty($this->columnFilters['expenses_range']['max']) ||
+            !empty($this->columnFilters['net_profit_range']['min']) || !empty($this->columnFilters['net_profit_range']['max'])) {
+            
+            $filteredData = [];
+            foreach ($data as $key => $projectData) {
+                $include = true;
+                
+                // Expenses range filter
+                if (!empty($this->columnFilters['expenses_range']['min']) && $projectData['total_expenses'] < $this->columnFilters['expenses_range']['min']) {
+                    $include = false;
+                }
+                if (!empty($this->columnFilters['expenses_range']['max']) && $projectData['total_expenses'] > $this->columnFilters['expenses_range']['max']) {
+                    $include = false;
+                }
+                
+                // Net profit range filter
+                $netProfit = $projectData['total_revenues'] - $projectData['total_expenses'];
+                if (!empty($this->columnFilters['net_profit_range']['min']) && $netProfit < $this->columnFilters['net_profit_range']['min']) {
+                    $include = false;
+                }
+                if (!empty($this->columnFilters['net_profit_range']['max']) && $netProfit > $this->columnFilters['net_profit_range']['max']) {
+                    $include = false;
+                }
+                
+                if ($include) {
+                    $filteredData[$key] = $projectData;
+                }
+            }
+            $data = $filteredData;
+        }
 
         return $data;
     }

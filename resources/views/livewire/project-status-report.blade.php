@@ -134,7 +134,7 @@
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="toggleColumnFilter('unit_no')" class="filter-btn">
+                                            <button wire:click="toggleColumnFilter('unit_no')" class="filter-btn {{ !empty($columnFilters['unit_no']) ? 'active' : '' }}">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                     <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
                                                 </svg>
@@ -375,6 +375,25 @@
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
+                                            <button wire:click="toggleColumnFilter('expenses_range')" class="filter-btn {{ (!empty($columnFilters['expenses_range']['min']) || !empty($columnFilters['expenses_range']['max'])) ? 'active' : '' }}">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'expenses_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content range-filter">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.expenses_range.min" 
+                                                            placeholder="Min"
+                                                            class="range-input">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.expenses_range.max" 
+                                                            placeholder="Max"
+                                                            class="range-input">
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('net_profit')" class="column-sort-btn">
@@ -383,6 +402,25 @@
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
+                                            <button wire:click="toggleColumnFilter('net_profit_range')" class="filter-btn">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                </svg>
+                                            </button>
+                                            @if($openFilterColumn === 'net_profit_range')
+                                                <div class="filter-dropdown">
+                                                    <div class="filter-content range-filter">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.net_profit_range.min" 
+                                                            placeholder="Min"
+                                                            class="range-input">
+                                                        <input type="number" 
+                                                            wire:model.live="columnFilters.net_profit_range.max" 
+                                                            placeholder="Max"
+                                                            class="range-input">
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </th>
@@ -660,6 +698,7 @@
         /* Project Status Table Styles */
         .project-status-table-container {
             overflow-x: auto;
+            overflow-y: visible;
             max-width: 100%;
         }
 
@@ -1196,7 +1235,7 @@
             position: absolute;
             top: 100%;
             left: 0;
-            z-index: 50;
+            z-index: 1000;
             min-width: 200px;
             background: white;
             border: 1px solid #d1d5db;
