@@ -742,7 +742,7 @@
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
-            table-layout: fixed !important;
+            table-layout: auto;
         }
 
         /* Fixed Project Column */
@@ -1401,69 +1401,19 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* CORRECTED COLLAPSE SOLUTION */
+        /* SIMPLE COLLAPSE SOLUTION */
         
-        /* Only hide content when collapsed, show when expanded */
-        th[data-state="collapsed"] .sub-header-grid,
-        td[data-state="collapsed"] .section-expanded-content {
+        /* Hide content when collapsed */
+        [data-state="collapsed"] .sub-header-grid,
+        [data-state="collapsed"] .section-expanded-content {
             display: none !important;
         }
         
-        th[data-state="expanded"] .sub-header-grid,
-        td[data-state="expanded"] .section-expanded-content {
-            display: block !important;
-        }
-        
-        /* Make content display as table instead of grid */
-        .section-expanded-content .expanded-content-wrapper {
-            display: table !important;
-            width: 100% !important;
-            table-layout: fixed !important;
-        }
-        
-        .section-expanded-content .content-row {
-            display: table-cell !important;
-            padding: 8px 4px !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-            border-right: 1px solid #e5e7eb !important;
-        }
-        
-        .section-expanded-content .content-row:last-child {
-            border-right: none !important;
-        }
-        
-        /* Make sub-headers display as table */
-        .sub-header-grid {
-            display: table !important;
-            width: 100% !important;
-            table-layout: fixed !important;
-        }
-        
-        .sub-header-grid > * {
-            display: table-cell !important;
-            padding: 8px 4px !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-            border-right: 1px solid #e5e7eb !important;
-        }
-        
-        .sub-header-grid > *:last-child {
-            border-right: none !important;
-        }
-        
-        /* Force collapsed cells to be narrow - VERY SPECIFIC */
-        table.project-status-table th[data-state="collapsed"].section-header,
-        table.project-status-table th[data-state="collapsed"].section-subheader,
-        table.project-status-table td[data-state="collapsed"].section-content {
-            width: 50px !important;
-            min-width: 50px !important;
-            max-width: 50px !important;
-            padding: 4px !important;
-            text-align: center !important;
-            overflow: hidden !important;
-            position: relative !important;
-            box-sizing: border-box !important;
+        /* Force collapsed cells to be narrow */
+        [data-state="collapsed"] {
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
         }
         
         /* Show dots indicator only when collapsed */
