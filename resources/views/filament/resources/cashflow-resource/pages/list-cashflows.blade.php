@@ -192,11 +192,21 @@
                                     @php
                                         $weekStart = $startDate->copy()->addWeeks($i);
                                         $weekEnd = $weekStart->copy()->endOfWeek();
-                                        $transactions = $project
+                                        
+                                        // Get done transactions by transaction_date and pending by due_date
+                                        $doneTransactions = $project
+                                            ->transactions()
+                                            ->where('status', 'done')
+                                            ->whereBetween('transaction_date', [$weekStart, $weekEnd])
+                                            ->get();
+                                            
+                                        $pendingTransactions = $project
                                             ->transactions()
                                             ->where('status', 'pending')
                                             ->whereBetween('due_date', [$weekStart, $weekEnd])
                                             ->get();
+                                            
+                                        $transactions = $doneTransactions->merge($pendingTransactions);
                                     @endphp
                                     <td
                                         class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
@@ -206,7 +216,7 @@
                                             @foreach ($transactions as $transaction)
                                                 <div class="mb-1 p-1 rounded text-xs cursor-help
                                                     {{ $transaction->financial_type === 'revenue' ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-100' : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-100' }}"
-                                                    title="{{ ucfirst($transaction->financial_type) }} - Due: {{ \Carbon\Carbon::parse($transaction->due_date)->format('M j') }}">
+                                                    title="{{ ucfirst($transaction->financial_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ $transaction->status === 'done' ? \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') : \Carbon\Carbon::parse($transaction->due_date)->format('M j') }}">
                                                     {{ number_format($transaction->amount, 0) }}
                                                 </div>
                                             @endforeach
@@ -312,6 +322,7 @@
                                         $weekStart = $startDate->copy()->addWeeks($i);
                                         $weekEnd = $weekStart->copy()->endOfWeek();
                                         $transactions = $user->transactions()
+                                            ->where('status', '!=', 'cancelled')
                                             ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                                             ->get();
                                     @endphp
@@ -323,7 +334,7 @@
                                             @foreach ($transactions as $transaction)
                                                 <div class="mb-1 p-1 rounded text-xs cursor-help
                                                     {{ $transaction->transaction_type === 'deposit' ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-100' : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-100' }}"
-                                                    title="{{ ucfirst($transaction->transaction_type) }} - Date: {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') }}">
+                                                    title="{{ ucfirst($transaction->transaction_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') }}">
                                                     {{ number_format($transaction->amount, 0) }}
                                                 </div>
                                             @endforeach
