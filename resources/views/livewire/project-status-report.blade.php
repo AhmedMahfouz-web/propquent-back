@@ -1401,31 +1401,29 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* SIMPLE TABLE COLLAPSE */
+        /* MINIMAL COLLAPSE - ONLY AFFECT COLLAPSED SECTIONS */
         
-        /* Collapsed sections: narrow width */
-        th[data-state="collapsed"],
+        /* When collapsed: make narrow and show dots */
+        th[data-state="collapsed"] {
+            width: 60px !important;
+        }
+        
         td[data-state="collapsed"] {
             width: 60px !important;
-            min-width: 60px !important;
-            max-width: 60px !important;
-            text-align: center;
-            position: relative;
         }
         
-        /* Hide content when collapsed */
-        th[data-state="collapsed"] .sub-header-grid,
+        th[data-state="collapsed"] .sub-header-grid {
+            display: none;
+        }
+        
         td[data-state="collapsed"] .section-expanded-content {
-            display: none !important;
+            display: none;
         }
         
-        /* Show dots when collapsed */
         th[data-state="collapsed"]::after,
         td[data-state="collapsed"]::after {
             content: '•••';
-            display: block;
             color: #666;
-            font-size: 14px;
         }
 
         .section-header {
