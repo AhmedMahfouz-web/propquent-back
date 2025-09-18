@@ -93,7 +93,7 @@ class ProjectStatusReport extends Component
         $this->resetPage();
     }
 
-    public function sortBy($field)
+    public function sortByColumn($field)
     {
         if ($this->sortBy === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';

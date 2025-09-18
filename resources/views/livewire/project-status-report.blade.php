@@ -46,13 +46,13 @@
                                 <th class="project-column-header">
                                     <div class="flex items-center justify-between">
                                         <div class="flex flex-col space-y-1">
-                                            <button wire:click="sortBy('title')" class="sortable-header text-left">
+                                            <button wire:click="sortByColumn('title')" class="sortable-header text-left">
                                                 Title
                                                 @if($sortBy === 'title')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                                                 @endif
                                             </button>
-                                            <button wire:click="sortBy('key')" class="sortable-header text-left">
+                                            <button wire:click="sortByColumn('key')" class="sortable-header text-left">
                                                 Key
                                                 @if($sortBy === 'key')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -128,7 +128,7 @@
                                     <div class="sub-header-grid details-grid">
                                         <!-- Unit Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('unit_no')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('unit_no')" class="column-sort-btn">
                                                 Unit
                                                 @if($sortBy === 'unit_no')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -158,7 +158,7 @@
 
                                         <!-- Area Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('area')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('area')" class="column-sort-btn">
                                                 Area
                                                 @if($sortBy === 'area')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -187,7 +187,7 @@
 
                                         <!-- Garden Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('garden_area')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('garden_area')" class="column-sort-btn">
                                                 Garden
                                                 @if($sortBy === 'garden_area')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -216,7 +216,7 @@
 
                                         <!-- Compound Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('compound')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('compound')" class="column-sort-btn">
                                                 Compound
                                                 @if($sortBy === 'compound')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -251,7 +251,7 @@
                                     <div class="sub-header-grid contract-grid">
                                         <!-- Reserved Date Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('reservation_date')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('reservation_date')" class="column-sort-btn">
                                                 Reserved
                                                 @if($sortBy === 'reservation_date')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -278,7 +278,7 @@
 
                                         <!-- Contract Date Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('contract_date')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('contract_date')" class="column-sort-btn">
                                                 Contract Date
                                                 @if($sortBy === 'contract_date')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -305,7 +305,7 @@
 
                                         <!-- Total Value Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('total_contract_value')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('total_contract_value')" class="column-sort-btn">
                                                 Total Value
                                                 @if($sortBy === 'total_contract_value')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -334,7 +334,7 @@
 
                                         <!-- Years Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('years_of_installment')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('years_of_installment')" class="column-sort-btn">
                                                 Years
                                                 @if($sortBy === 'years_of_installment')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -369,7 +369,7 @@
                                         <span>Asset</span>
                                         <span>Operation</span>
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('total_expenses')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('total_expenses')" class="column-sort-btn">
                                                 Total
                                                 @if($sortBy === 'total_expenses')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -377,7 +377,7 @@
                                             </button>
                                         </div>
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('net_profit')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('net_profit')" class="column-sort-btn">
                                                 Net Profit
                                                 @if($sortBy === 'net_profit')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -392,7 +392,7 @@
                                     <div class="sub-header-grid status-grid">
                                         <!-- Status Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('status')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('status')" class="column-sort-btn">
                                                 Status
                                                 @if($sortBy === 'status')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -422,7 +422,7 @@
 
                                         <!-- Stage Column -->
                                         <div class="excel-column-header">
-                                            <button wire:click="sortBy('stage')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('stage')" class="column-sort-btn">
                                                 Stage
                                                 @if($sortBy === 'stage')
                                                     <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
