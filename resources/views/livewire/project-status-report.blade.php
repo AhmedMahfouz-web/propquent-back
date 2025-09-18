@@ -1414,6 +1414,44 @@
             display: block !important;
         }
         
+        /* Make content display as table instead of grid */
+        .section-expanded-content .expanded-content-wrapper {
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+        
+        .section-expanded-content .content-row {
+            display: table-cell !important;
+            padding: 8px 4px !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            border-right: 1px solid #e5e7eb !important;
+        }
+        
+        .section-expanded-content .content-row:last-child {
+            border-right: none !important;
+        }
+        
+        /* Make sub-headers display as table */
+        .sub-header-grid {
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+        
+        .sub-header-grid > * {
+            display: table-cell !important;
+            padding: 8px 4px !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            border-right: 1px solid #e5e7eb !important;
+        }
+        
+        .sub-header-grid > *:last-child {
+            border-right: none !important;
+        }
+        
         /* Force collapsed cells to be narrow */
         th[data-state="collapsed"],
         td[data-state="collapsed"] {
