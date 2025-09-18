@@ -1480,15 +1480,14 @@
             }
         }
 
-        // Initialize all sections as expanded by default
+        // Initialize all sections as expanded by default (only if not already set)
         function initializeSections() {
             const sections = ['details', 'contract', 'expenses', 'status'];
 
             sections.forEach(section => {
                 const header = document.querySelector(`[data-section="${section}"]`);
-                if (header) {
+                if (header && !header.classList.contains('expanded') && !header.classList.contains('collapsed')) {
                     header.classList.add('expanded');
-                    header.classList.remove('collapsed');
                     
                     // Initialize arrow
                     const arrow = header.querySelector('.toggle-arrow');
@@ -1497,32 +1496,38 @@
                     }
                 }
 
-                // Set all section elements (content and sub-headers) as expanded
+                // Set all section elements (content and sub-headers) as expanded only if not already set
                 const elements = document.querySelectorAll(`.${section}-section`);
                 elements.forEach(element => {
-                    element.classList.add('expanded');
-                    element.classList.remove('collapsed');
+                    if (!element.classList.contains('expanded') && !element.classList.contains('collapsed')) {
+                        element.classList.add('expanded');
+                    }
                 });
             });
         }
 
+        // Initialize sections only once
+        let sectionsInitialized = false;
+        
+        function initializeOnce() {
+            if (!sectionsInitialized) {
+                initializeSections();
+                sectionsInitialized = true;
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initializeSections, 100);
+            setTimeout(initializeOnce, 100);
         });
         
-        // Re-initialize after Livewire updates
+        // Re-initialize after Livewire updates (but preserve existing states)
         document.addEventListener('livewire:navigated', function() {
             setTimeout(initializeSections, 100);
         });
 
-        // Also initialize when Livewire finishes loading
-        document.addEventListener('livewire:load', function() {
-            setTimeout(initializeSections, 100);
-        });
-
         // Fallback initialization
-        setTimeout(initializeSections, 500);
+        setTimeout(initializeOnce, 500);
 
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
