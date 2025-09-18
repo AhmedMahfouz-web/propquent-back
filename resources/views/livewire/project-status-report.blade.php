@@ -1406,17 +1406,36 @@
         /* Section Content Visibility */
         .section-subheader.collapsed,
         .section-content.collapsed {
-            display: none;
+            display: none !important;
         }
 
         .section-subheader.expanded,
         .section-content.expanded {
-            display: table-cell;
+            display: table-cell !important;
+        }
+
+        /* More specific selectors for section elements */
+        .details-section.collapsed,
+        .contract-section.collapsed,
+        .expenses-section.collapsed,
+        .status-section.collapsed {
+            display: none !important;
+        }
+
+        .details-section.expanded,
+        .contract-section.expanded,
+        .expenses-section.expanded,
+        .status-section.expanded {
+            display: table-cell !important;
         }
 
         /* Default state - all sections expanded */
         .section-subheader,
-        .section-content {
+        .section-content,
+        .details-section,
+        .contract-section,
+        .expenses-section,
+        .status-section {
             display: table-cell;
         }
 
@@ -1431,12 +1450,9 @@
 
     <script>
         function toggleSection(sectionName) {
-            console.log('Toggling section:', sectionName);
-            
             // Toggle section header state
             const sectionHeader = document.querySelector(`[data-section="${sectionName}"]`);
             if (!sectionHeader) {
-                console.error('Section header not found for:', sectionName);
                 return;
             }
             
@@ -1444,10 +1460,8 @@
 
             // Toggle section content elements and sub-headers
             const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
-            console.log('Found section elements:', sectionElements.length);
 
             const isExpanded = sectionHeader.classList.contains('expanded');
-            console.log('Is expanded:', isExpanded);
 
             if (isExpanded) {
                 // Collapse section
@@ -1463,7 +1477,6 @@
                 if (arrow) {
                     arrow.classList.remove('expanded');
                 }
-                console.log('Section collapsed');
             } else {
                 // Expand section
                 sectionHeader.classList.remove('collapsed');
@@ -1478,13 +1491,11 @@
                 if (arrow) {
                     arrow.classList.add('expanded');
                 }
-                console.log('Section expanded');
             }
         }
 
         // Initialize all sections as expanded by default
         function initializeSections() {
-            console.log('Initializing sections...');
             const sections = ['details', 'contract', 'expenses', 'status'];
 
             sections.forEach(section => {
@@ -1492,20 +1503,16 @@
                 if (header) {
                     header.classList.add('expanded');
                     header.classList.remove('collapsed');
-                    console.log(`Header ${section} initialized as expanded`);
                     
                     // Initialize arrow
                     const arrow = header.querySelector('.toggle-arrow');
                     if (arrow) {
                         arrow.classList.add('expanded');
                     }
-                } else {
-                    console.warn(`Header not found for section: ${section}`);
                 }
 
                 // Set all section elements (content and sub-headers) as expanded
                 const elements = document.querySelectorAll(`.${section}-section`);
-                console.log(`Found ${elements.length} elements for section: ${section}`);
                 elements.forEach(element => {
                     element.classList.add('expanded');
                     element.classList.remove('collapsed');
@@ -1515,27 +1522,21 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM Content Loaded - initializing sections');
-            setTimeout(initializeSections, 100); // Small delay to ensure DOM is ready
+            setTimeout(initializeSections, 100);
         });
         
         // Re-initialize after Livewire updates
         document.addEventListener('livewire:navigated', function() {
-            console.log('Livewire navigated - re-initializing sections');
             setTimeout(initializeSections, 100);
         });
 
         // Also initialize when Livewire finishes loading
         document.addEventListener('livewire:load', function() {
-            console.log('Livewire loaded - initializing sections');
             setTimeout(initializeSections, 100);
         });
 
         // Fallback initialization
-        setTimeout(function() {
-            console.log('Fallback initialization');
-            initializeSections();
-        }, 500);
+        setTimeout(initializeSections, 500);
 
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
