@@ -40,7 +40,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                 <div class="project-status-table-container">
                     <table class="project-status-table">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700" wire:ignore>
                             <tr>
                                 <!-- Fixed Project Column -->
                                 <th class="project-column-header">
@@ -529,7 +529,7 @@
                             </tr>
                         </thead>
 
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody wire:ignore.self class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->projects as $project)
                                 @php
                                     $projectData = $this->projectsData[$project->key] ?? [];
@@ -1436,67 +1436,31 @@
 
     <script>
         function toggleSection(sectionName) {
-            console.log(`--- Toggling section: "${sectionName}" ---`);
-            
             const sectionHeader = document.querySelector(`th[data-section="${sectionName}"]`);
-            if (!sectionHeader) {
-                console.error(`Header for section "${sectionName}" not found.`);
-                return;
-            }
-            
+            if (!sectionHeader) return;
+
             const sectionElements = document.querySelectorAll(`.${sectionName}-section`);
-            console.log(`Found ${sectionElements.length} elements for section "${sectionName}".`);
-
-            // We will use a data-attribute to store the state to avoid class conflicts
             const isExpanded = sectionHeader.dataset.state === 'expanded';
-            console.log(`Current state: ${isExpanded ? 'EXPANDED' : 'COLLAPSED'}`);
+            const newState = isExpanded ? 'collapsed' : 'expanded';
 
-            if (isExpanded) {
-                console.log('Action: Collapsing section...');
-                sectionHeader.dataset.state = 'collapsed';
-                sectionElements.forEach(el => el.dataset.state = 'collapsed');
-            } else {
-                console.log('Action: Expanding section...');
-                sectionHeader.dataset.state = 'expanded';
-                sectionElements.forEach(el => el.dataset.state = 'expanded');
-            }
-            
-            console.log(`New state: ${sectionHeader.dataset.state}`);
-            console.log('--- Toggle complete ---');
-        }
-
-        // Helper function for you to use in the console
-        window.checkSectionState = function(sectionName) {
-            console.log(`--- Checking state for "${sectionName}" ---`);
-            const header = document.querySelector(`th[data-section="${sectionName}"]`);
-            const elements = document.querySelectorAll(`.${sectionName}-section`);
-            if (header) {
-                console.log('Header element:', header);
-                console.log('Header state (data-state):', header.dataset.state);
-            } else {
-                console.error('Header not found!');
-            }
-            if (elements.length > 0) {
-                console.log('Content elements:', elements);
-                console.log('First content element state (data-state):', elements[0].dataset.state);
-            } else {
-                console.error('Content elements not found!');
-            }
-            console.log('--- Check complete ---');
+            sectionHeader.dataset.state = newState;
+            sectionElements.forEach(el => el.dataset.state = newState);
         }
 
         function initializeSections() {
             const sections = ['details', 'contract', 'expenses', 'status'];
             sections.forEach(section => {
-                const header = document.querySelector(`th[data-section="${section}"]`);
-                const elements = document.querySelectorAll(`.${section}-section`);
-                // Set initial state only if it's not already set
+                const header = document.querySelector(`th[data-section="${sectionName}"]`);
+                const elements = document.querySelectorAll(`.${sectionName}-section`);
                 if (header && !header.dataset.state) {
                     header.dataset.state = 'expanded';
                     elements.forEach(el => el.dataset.state = 'expanded');
                 }
             });
         }
+
+        // Initialize on first load
+        document.addEventListener('DOMContentLoaded', initializeSections);
 
         // Close filter dropdowns when clicking outside
         document.addEventListener('click', function(event) {
