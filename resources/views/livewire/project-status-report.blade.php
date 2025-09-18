@@ -1450,8 +1450,8 @@
         function initializeSections() {
             const sections = ['details', 'contract', 'expenses', 'status'];
             sections.forEach(section => {
-                const header = document.querySelector(`th[data-section="${sectionName}"]`);
-                const elements = document.querySelectorAll(`.${sectionName}-section`);
+                const header = document.querySelector(`th[data-section="${section}"]`);
+                const elements = document.querySelectorAll(`.${section}-section`);
                 if (header && !header.dataset.state) {
                     header.dataset.state = 'expanded';
                     elements.forEach(el => el.dataset.state = 'expanded');
