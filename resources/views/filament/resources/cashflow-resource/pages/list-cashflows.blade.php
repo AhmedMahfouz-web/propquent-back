@@ -130,10 +130,34 @@
                                     $weekNumber = 'W' . (($i % 4) + 1);
                                     $weekField = 'week_' . $i;
 
-                                    $expectedCash = \App\Filament\Resources\CashflowResource::calculateExpectedCashForWeek(
-                                        $weekStart,
-                                        $weekEnd,
-                                    );
+                                    // Calculate expected cash including both project and user transactions
+                                    $projectCash = DB::table('project_transactions')
+                                        ->where('status', '!=', 'cancelled')
+                                        ->where(function($query) use ($weekStart, $weekEnd) {
+                                            $query->where(function($q) use ($weekStart, $weekEnd) {
+                                                $q->where('status', 'done')
+                                                  ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
+                                            })->orWhere(function($q) use ($weekStart, $weekEnd) {
+                                                $q->where('status', 'pending')
+                                                  ->whereBetween('due_date', [$weekStart, $weekEnd]);
+                                            });
+                                        })
+                                        ->selectRaw('
+                                            SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) -
+                                            SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as net_cash
+                                        ')
+                                        ->value('net_cash') ?? 0;
+
+                                    $userCash = DB::table('user_transactions')
+                                        ->where('status', '!=', 'cancelled')
+                                        ->whereBetween('transaction_date', [$weekStart, $weekEnd])
+                                        ->selectRaw('
+                                            SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) -
+                                            SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as net_cash
+                                        ')
+                                        ->value('net_cash') ?? 0;
+
+                                    $expectedCash = $projectCash + $userCash;
                                 @endphp
                                 <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortByWeek('{{ $weekField }}')">
@@ -284,14 +308,44 @@
                                     $weekStart = $startDate->copy()->addWeeks($i);
                                     $weekEnd = $weekStart->copy()->endOfWeek();
                                     $weekNumber = 'W' . (($i % 4) + 1);
+
+                                    // Calculate expected cash including both project and user transactions
+                                    $projectCash = DB::table('project_transactions')
+                                        ->where('status', '!=', 'cancelled')
+                                        ->where(function($query) use ($weekStart, $weekEnd) {
+                                            $query->where(function($q) use ($weekStart, $weekEnd) {
+                                                $q->where('status', 'done')
+                                                  ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
+                                            })->orWhere(function($q) use ($weekStart, $weekEnd) {
+                                                $q->where('status', 'pending')
+                                                  ->whereBetween('due_date', [$weekStart, $weekEnd]);
+                                            });
+                                        })
+                                        ->selectRaw('
+                                            SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) -
+                                            SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as net_cash
+                                        ')
+                                        ->value('net_cash') ?? 0;
+
+                                    $userCash = DB::table('user_transactions')
+                                        ->where('status', '!=', 'cancelled')
+                                        ->whereBetween('transaction_date', [$weekStart, $weekEnd])
+                                        ->selectRaw('
+                                            SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) -
+                                            SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as net_cash
+                                        ')
+                                        ->value('net_cash') ?? 0;
+
+                                    $expectedCash = $projectCash + $userCash;
                                 @endphp
                                 <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex flex-col items-center">
                                         <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             {{ $weekNumber }}
                                         </div>
-                                        <div class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
-                                            {{ $weekStart->format('M j') }}
+                                        <div
+                                            class="text-xs px-2 py-1 rounded {{ $expectedCash >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
+                                            {{ number_format($expectedCash, 0) }}
                                         </div>
                                     </div>
                                 </th>
