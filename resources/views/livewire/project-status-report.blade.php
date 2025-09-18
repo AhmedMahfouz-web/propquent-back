@@ -1411,8 +1411,13 @@
         }
 
         .section-subheader[data-state="collapsed"] .sub-header-grid,
-        .section-content[data-state="collapsed"] .section-expanded-content {
-            display: none;
+        /* Final approach: Use visibility and overflow to robustly hide content */
+        td.section-content[data-state="collapsed"] .section-expanded-content {
+            visibility: hidden !important;
+            overflow: hidden !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .section-subheader[data-state="collapsed"]::after,
