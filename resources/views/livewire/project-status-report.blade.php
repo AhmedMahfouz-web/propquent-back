@@ -45,19 +45,53 @@
                                 <!-- Fixed Project Column -->
                                 <th class="project-column-header">
                                     <div class="flex items-center justify-between">
-                                        <div class="flex flex-col space-y-1">
-                                            <button wire:click="sortByColumn('title')" class="sortable-header text-left">
-                                                Title
-                                                @if($sortBy === 'title')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                        <div class="flex flex-col space-y-1 flex-1">
+                                            <div class="excel-column-header">
+                                                <button wire:click="sortByColumn('title')" class="sortable-header text-left">
+                                                    Title
+                                                    @if($sortBy === 'title')
+                                                        <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                    @endif
+                                                </button>
+                                                <button wire:click="toggleColumnFilter('title')" class="filter-btn {{ !empty($columnFilters['title']) ? 'active' : '' }}">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    </svg>
+                                                </button>
+                                                @if($openFilterColumn === 'title')
+                                                    <div class="filter-dropdown">
+                                                        <div class="filter-content">
+                                                            <input type="text" 
+                                                                wire:model.live.debounce.300ms="columnFilters.title" 
+                                                                placeholder="Search titles..."
+                                                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded">
+                                                        </div>
+                                                    </div>
                                                 @endif
-                                            </button>
-                                            <button wire:click="sortByColumn('key')" class="sortable-header text-left">
-                                                Key
-                                                @if($sortBy === 'key')
-                                                    <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                            </div>
+                                            <div class="excel-column-header">
+                                                <button wire:click="sortByColumn('key')" class="sortable-header text-left">
+                                                    Key
+                                                    @if($sortBy === 'key')
+                                                        <span class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
+                                                    @endif
+                                                </button>
+                                                <button wire:click="toggleColumnFilter('key')" class="filter-btn {{ !empty($columnFilters['key']) ? 'active' : '' }}">
+                                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"/>
+                                                    </svg>
+                                                </button>
+                                                @if($openFilterColumn === 'key')
+                                                    <div class="filter-dropdown">
+                                                        <div class="filter-content">
+                                                            <input type="text" 
+                                                                wire:model.live.debounce.300ms="columnFilters.key" 
+                                                                placeholder="Search keys..."
+                                                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded">
+                                                        </div>
+                                                    </div>
                                                 @endif
-                                            </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </th>

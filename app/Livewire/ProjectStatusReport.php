@@ -28,6 +28,8 @@ class ProjectStatusReport extends Component
 
     // Column-specific filters (Excel-style)
     public $columnFilters = [
+        'title' => '',
+        'key' => '',
         'status' => [],
         'stage' => [],
         'type' => [],
@@ -154,6 +156,8 @@ class ProjectStatusReport extends Component
     public function clearAllFilters()
     {
         $this->columnFilters = [
+            'title' => '',
+            'key' => '',
             'status' => [],
             'stage' => [],
             'type' => [],
@@ -205,6 +209,16 @@ class ProjectStatusReport extends Component
 
     private function applyColumnFilters($query)
     {
+        // Title filter
+        if (!empty($this->columnFilters['title'])) {
+            $query->where('title', 'like', '%' . $this->columnFilters['title'] . '%');
+        }
+
+        // Key filter
+        if (!empty($this->columnFilters['key'])) {
+            $query->where('key', 'like', '%' . $this->columnFilters['key'] . '%');
+        }
+
         // Status filter
         if (!empty($this->columnFilters['status'])) {
             $query->whereIn('status', $this->columnFilters['status']);
@@ -396,7 +410,7 @@ class ProjectStatusReport extends Component
             $sortedProjects = collect($projectsWithData)->pluck('project');
             
             // Create a new paginated collection with the sorted projects
-            $currentPage = request()->get('page', 1);
+            $currentPage = $this->getPage();
             $perPage = $this->perPage;
             $total = $sortedProjects->count();
             
@@ -408,8 +422,22 @@ class ProjectStatusReport extends Component
                 $total,
                 $perPage,
                 $currentPage,
-                ['path' => request()->url(), 'pageName' => 'page']
+                [
+                    'path' => request()->url(),
+                    'pageName' => 'page',
+                    'fragment' => null,
+                    'query' => request()->query(),
+                ]
             );
+            
+            // Only keep data for the current page projects
+            $currentPageData = [];
+            foreach ($paginatedProjects as $project) {
+                if (isset($data[$project->key])) {
+                    $currentPageData[$project->key] = $data[$project->key];
+                }
+            }
+            $data = $currentPageData;
         } else {
             foreach ($projects as $project) {
                 $projectData = $this->calculateProjectData($project);
