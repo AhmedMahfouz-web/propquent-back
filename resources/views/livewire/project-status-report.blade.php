@@ -742,7 +742,7 @@
             border-collapse: collapse;
             font-size: 0.75rem;
             line-height: 1rem;
-            table-layout: auto;
+            table-layout: fixed !important;
         }
 
         /* Fixed Project Column */
@@ -1452,16 +1452,18 @@
             border-right: none !important;
         }
         
-        /* Force collapsed cells to be narrow */
-        th[data-state="collapsed"],
-        td[data-state="collapsed"] {
+        /* Force collapsed cells to be narrow - VERY SPECIFIC */
+        table.project-status-table th[data-state="collapsed"].section-header,
+        table.project-status-table th[data-state="collapsed"].section-subheader,
+        table.project-status-table td[data-state="collapsed"].section-content {
             width: 50px !important;
             min-width: 50px !important;
             max-width: 50px !important;
-            padding: 8px 4px !important;
+            padding: 4px !important;
             text-align: center !important;
             overflow: hidden !important;
             position: relative !important;
+            box-sizing: border-box !important;
         }
         
         /* Show dots indicator only when collapsed */
