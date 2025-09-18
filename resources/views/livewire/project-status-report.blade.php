@@ -886,9 +886,8 @@
 
         .section-header[data-state="expanded"] {
             width: auto !important;
-            min-width: fit-content !important;
+            min-width: 200px !important;
             padding: 8px 12px !important;
-            white-space: nowrap;
         }
 
         .dark .section-header {
@@ -982,9 +981,8 @@
 
         .section-subheader[data-state="expanded"] {
             width: auto !important;
-            min-width: fit-content !important;
+            min-width: 200px !important;
             padding: 8px 12px !important;
-            white-space: nowrap;
         }
 
         .dark .section-subheader {
@@ -1001,8 +999,7 @@
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.025em;
-            width: fit-content;
-            min-width: fit-content;
+            width: 100%;
         }
 
         .section-subheader[data-state="collapsed"] .sub-header-grid {
@@ -1026,8 +1023,7 @@
         .contract-grid,
         .expenses-grid,
         .status-grid {
-            grid-template-columns: repeat(4, fit-content);
-            gap: 16px;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
         }
 
         .section-subheader[data-state="expanded"] .sub-header-grid {
@@ -1067,27 +1063,22 @@
 
         .section-content[data-state="expanded"] {
             width: auto !important;
-            min-width: fit-content !important;
+            min-width: 200px !important;
             padding: 16px 12px !important;
-            white-space: nowrap;
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
-            display: grid;
-            grid-template-columns: repeat(4, fit-content);
-            gap: 16px;
-            align-items: start;
-            width: fit-content;
-            min-width: fit-content;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .section-content[data-state="expanded"] .content-row {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            text-align: center;
-            border-bottom: none;
-            padding: 8px 4px;
+            padding: 4px 0;
+            border-bottom: 1px solid #f3f4f6;
         }
 
         .section-content[data-state="expanded"] .content-label {
