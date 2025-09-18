@@ -1403,40 +1403,26 @@
             transform: rotate(0deg);
         }
 
-        /* Section Content Visibility */
-        .section-subheader.collapsed,
-        .section-content.collapsed {
-            display: none !important;
+        /* Section Content Visibility - Use existing collapse system */
+        .section-subheader.collapsed {
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+            padding: 8px 4px;
+            text-align: center;
         }
 
-        .section-subheader.expanded,
-        .section-content.expanded {
-            display: table-cell !important;
+        .section-subheader.collapsed .sub-header-grid {
+            display: none;
         }
 
-        /* More specific selectors for section elements */
-        .details-section.collapsed,
-        .contract-section.collapsed,
-        .expenses-section.collapsed,
-        .status-section.collapsed {
-            display: none !important;
-        }
-
-        .details-section.expanded,
-        .contract-section.expanded,
-        .expenses-section.expanded,
-        .status-section.expanded {
-            display: table-cell !important;
-        }
-
-        /* Default state - all sections expanded */
-        .section-subheader,
-        .section-content,
-        .details-section,
-        .contract-section,
-        .expenses-section,
-        .status-section {
-            display: table-cell;
+        .section-subheader.collapsed::after {
+            content: '•••';
+            display: block;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
         }
 
         .section-header {
