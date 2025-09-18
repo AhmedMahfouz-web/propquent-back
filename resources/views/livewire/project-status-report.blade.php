@@ -614,7 +614,7 @@
                                                 </div>
                                                 <div class="content-row">
                                                     <span class="content-value">
-                                                        @if ($projectData['entry_date'])
+                                                        @if (isset($projectData['entry_date']) && $projectData['entry_date'])
                                                             {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
                                                         @else
                                                             <span class="text-gray-400">N/A</span>
@@ -623,7 +623,7 @@
                                                 </div>
                                                 <div class="content-row">
                                                     <span class="content-value">
-                                                        @if ($projectData['exit_date'])
+                                                        @if (isset($projectData['exit_date']) && $projectData['exit_date'])
                                                             {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
                                                         @else
                                                             <span class="text-gray-400">-</span>

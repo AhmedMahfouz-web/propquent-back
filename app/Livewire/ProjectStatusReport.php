@@ -391,31 +391,7 @@ class ProjectStatusReport extends Component
             }
         }
 
-        // Apply financial filters after calculation
-        if ($this->minExpenses || $this->maxExpenses || $this->minRevenues || $this->maxRevenues) {
-            $filteredData = [];
-            foreach ($data as $key => $projectData) {
-                $include = true;
-                
-                if ($this->minExpenses && $projectData['total_expenses'] < $this->minExpenses) {
-                    $include = false;
-                }
-                if ($this->maxExpenses && $projectData['total_expenses'] > $this->maxExpenses) {
-                    $include = false;
-                }
-                if ($this->minRevenues && $projectData['total_revenues'] < $this->minRevenues) {
-                    $include = false;
-                }
-                if ($this->maxRevenues && $projectData['total_revenues'] > $this->maxRevenues) {
-                    $include = false;
-                }
-                
-                if ($include) {
-                    $filteredData[$key] = $projectData;
-                }
-            }
-            $data = $filteredData;
-        }
+        // No additional financial filters needed since they're handled in the query
 
         return $data;
     }
@@ -487,6 +463,10 @@ class ProjectStatusReport extends Component
                 $data['exit_date'] = $transactions->max('transaction_date');
             }
         }
+
+        // Ensure all required keys exist
+        $data['entry_date'] = $data['entry_date'] ?? null;
+        $data['exit_date'] = $data['exit_date'] ?? null;
 
         // Get asset evaluation and correction
         $data['asset_evaluation'] = $this->calculateAssetEvaluation($project);
