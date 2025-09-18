@@ -1401,40 +1401,31 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* SUPER SIMPLE COLLAPSE */
+        /* SIMPLE TABLE COLLAPSE */
         
-        /* When collapsed: narrow width and hide content */
+        /* Collapsed sections: narrow width */
         th[data-state="collapsed"],
         td[data-state="collapsed"] {
-            width: 50px;
-            max-width: 50px;
-            overflow: hidden;
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
             text-align: center;
             position: relative;
         }
         
-        /* Show content when expanded */
-        th[data-state="expanded"] .sub-header-grid,
-        td[data-state="expanded"] .section-expanded-content {
-            display: block !important;
-        }
-        
-        /* Hide content ONLY when collapsed */
+        /* Hide content when collapsed */
         th[data-state="collapsed"] .sub-header-grid,
-        th[data-state="collapsed"] .header-content > *:not(.toggle-arrow),
         td[data-state="collapsed"] .section-expanded-content {
-            display: none;
+            display: none !important;
         }
         
-        /* Show dots ONLY when collapsed */
+        /* Show dots when collapsed */
         th[data-state="collapsed"]::after,
         td[data-state="collapsed"]::after {
             content: '•••';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            display: block;
             color: #666;
+            font-size: 14px;
         }
 
         .section-header {
