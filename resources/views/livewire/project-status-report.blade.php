@@ -1401,33 +1401,31 @@
             transform: rotate(180deg); /* Expanded state */
         }
 
-        /* SIMPLE COLLAPSE SOLUTION */
+        /* SUPER SIMPLE COLLAPSE */
         
-        /* Hide content when collapsed */
-        [data-state="collapsed"] .sub-header-grid,
-        [data-state="collapsed"] .section-expanded-content {
-            display: none !important;
+        /* When collapsed: narrow width and hide content */
+        th[data-state="collapsed"],
+        td[data-state="collapsed"] {
+            width: 50px;
+            max-width: 50px;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
         }
         
-        /* Force collapsed cells to be narrow */
-        [data-state="collapsed"] {
-            width: 60px !important;
-            min-width: 60px !important;
-            max-width: 60px !important;
+        th[data-state="collapsed"] *,
+        td[data-state="collapsed"] * {
+            display: none;
         }
         
-        /* Show dots indicator only when collapsed */
-        th[data-state="collapsed"]::before,
-        td[data-state="collapsed"]::before {
-            content: '•••' !important;
-            display: block !important;
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            color: #6b7280 !important;
-            font-size: 0.875rem !important;
-            z-index: 10 !important;
+        th[data-state="collapsed"]::after,
+        td[data-state="collapsed"]::after {
+            content: '•••';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
         }
 
         .section-header {
