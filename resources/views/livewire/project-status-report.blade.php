@@ -146,6 +146,20 @@
                                     </div>
                                 </th>
 
+                                <!-- Revenue Section Header -->
+                                <th class="section-header revenue-header" data-state="{{ $sectionStates['revenue'] }}"
+                                    wire:click.prevent="toggleSectionState('revenue')">
+                                    <div class="header-content">
+                                        <span class="section-title-full">Revenue</span>
+                                        <span class="section-title-short">Rev</span>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </th>
+
                                 <!-- Status Section Header -->
                                 <th class="section-header status-header" data-state="{{ $sectionStates['status'] }}"
                                     wire:click.prevent="toggleSectionState('status')">
@@ -428,8 +442,9 @@
                                 <th class="section-subheader expenses-section"
                                     data-state="{{ $sectionStates['expenses'] }}" wire:key="subheader-expenses">
                                     <div class="sub-header-grid expenses-grid">
-                                        <span>Asset</span>
+                                        <span>Asset Evaluation</span>
                                         <span>Operation</span>
+                                        <span>Serving</span>
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('total_expenses')"
                                                 class="column-sort-btn">
@@ -459,6 +474,16 @@
                                                 </div>
                                             @endif
                                         </div>
+                                    </div>
+                                </th>
+
+                                <!-- Revenue Sub-headers -->
+                                <th class="section-subheader revenue-section"
+                                    data-state="{{ $sectionStates['revenue'] }}" wire:key="subheader-revenue">
+                                    <div class="sub-header-grid revenue-grid">
+                                        <span>Contract Value</span>
+                                        <span>Corrections</span>
+                                        <span>Serving</span>
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('net_profit')" class="column-sort-btn">
                                                 Net Profit
@@ -697,8 +722,42 @@
                                                 </div>
                                                 <div class="content-row">
                                                     <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                        ${{ number_format($projectData['serving_expenses'] ?? 0, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
                                                         class="content-value text-red-600 dark:text-red-400 font-bold">
                                                         ${{ number_format($totalExpenses, 0) }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Revenue Section -->
+                                    <td class="section-content revenue-section"
+                                        data-state="{{ $sectionStates['revenue'] }}"
+                                        wire:key="content-revenue-{{ $project->id }}">
+                                        <div class="section-expanded-content">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                        ${{ number_format($project->total_contract_value ?? 0, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-blue-600 dark:text-blue-400 font-medium">
+                                                        ${{ number_format($projectData['corrections'] ?? 0, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                        ${{ number_format($projectData['serving_revenue'] ?? 0, 0) }}
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
@@ -1026,6 +1085,7 @@
         .details-grid,
         .contract-grid,
         .expenses-grid,
+        .revenue-grid,
         .status-grid {
             grid-template-columns: 1fr 1fr 1fr 1fr;
             min-width: 400px;
@@ -1069,7 +1129,7 @@
         .section-content[data-state="expanded"] {
             width: auto !important;
             min-width: 200px !important;
-            padding: 16px 12px 0 !important;
+            padding: 16px 12px 4px !important;
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
