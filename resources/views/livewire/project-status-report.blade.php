@@ -922,7 +922,7 @@
                                     </td>
 
                                     <!-- Notes Section -->
-                                    <td class="section-content notes-section"
+                                    <td class="section-content notes-section" style="padding: 8px"
                                         data-state="{{ $sectionStates['notes'] }}"
                                         wire:key="content-notes-{{ $project->id }}">
                                         <div class="section-expanded-content">
