@@ -830,7 +830,7 @@
         }
 
         .project-column {
-            padding: 16px;
+            padding: 16px 16px 0;
             vertical-align: top;
         }
 
@@ -891,7 +891,7 @@
         .section-header[data-state="expanded"] {
             width: auto !important;
             min-width: 200px !important;
-            padding: 8px 12px !important;
+            padding: 8px 12px 0 !important;
         }
 
         .dark .section-header {
