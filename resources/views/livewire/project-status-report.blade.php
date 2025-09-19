@@ -928,23 +928,16 @@
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <div class="relative">
-                                                        <textarea 
-                                                            id="notes-{{ $project->id }}"
-                                                            data-project-id="{{ $project->id }}"
-                                                            placeholder="Add notes for this project..." 
-                                                            style="width: auto; height: 50px"
-                                                            class="project-notes-textarea w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
-                                                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                                                                   focus:border-blue-500 focus:ring-1 focus:ring-blue-500
-                                                                   resize-none min-h-[60px] max-h-[120px]"
-                                                            rows="3">{{ $project->notes }}</textarea>
-                                                        <div id="save-indicator-{{ $project->id }}" 
-                                                             class="absolute top-1 right-1 text-xs text-gray-400 hidden">
-                                                            <span class="saving hidden">💾 Saving...</span>
-                                                            <span class="saved hidden text-green-600">✓ Saved</span>
-                                                        </div>
-                                                    </div>
+                                                    <textarea 
+                                                        wire:model.lazy="project_notes.{{ $project->id }}"
+                                                        wire:key="notes-{{ $project->id }}"
+                                                        placeholder="Add notes for this project..." 
+                                                        style="width: auto; height: 50px"
+                                                        class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
+                                                               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                                               focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                                                               resize-none min-h-[60px] max-h-[120px]"
+                                                        rows="3"></textarea>
                                                 </div>
                                             </div>
                                         </div>
@@ -1760,109 +1753,23 @@
             console.log('Livewire navigated - reinitializing');
         });
 
-        // Auto-save notes functionality
-        let saveTimeouts = {};
-        let lastSavedValues = {};
-
-        function initializeNotesAutoSave() {
-            const textareas = document.querySelectorAll('.project-notes-textarea');
-            
-            textareas.forEach(textarea => {
-                const projectId = textarea.dataset.projectId;
-                lastSavedValues[projectId] = textarea.value;
-                
-                // Add event listeners for auto-save
-                textarea.addEventListener('input', function() {
-                    const currentValue = this.value;
-                    const indicator = document.getElementById(`save-indicator-${projectId}`);
-                    
-                    // Clear existing timeout
-                    if (saveTimeouts[projectId]) {
-                        clearTimeout(saveTimeouts[projectId]);
-                    }
-                    
-                    // Show saving indicator if value changed
-                    if (currentValue !== lastSavedValues[projectId]) {
-                        showSaveIndicator(projectId, 'typing');
-                        
-                        // Set new timeout for auto-save (2 seconds after user stops typing)
-                        saveTimeouts[projectId] = setTimeout(() => {
-                            saveNote(projectId, currentValue);
-                        }, 2000);
-                    }
-                });
-                
-                // Save on blur as backup
-                textarea.addEventListener('blur', function() {
-                    const currentValue = this.value;
-                    if (currentValue !== lastSavedValues[projectId]) {
-                        // Clear timeout and save immediately
-                        if (saveTimeouts[projectId]) {
-                            clearTimeout(saveTimeouts[projectId]);
-                        }
-                        saveNote(projectId, currentValue);
-                    }
-                });
-            });
-        }
-
-        function saveNote(projectId, value) {
-            showSaveIndicator(projectId, 'saving');
-            
-            // Call Livewire method to save
-            Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'))
-                .call('updateProjectNote', projectId, value)
-                .then(() => {
-                    lastSavedValues[projectId] = value;
-                    showSaveIndicator(projectId, 'saved');
-                })
-                .catch(() => {
-                    showSaveIndicator(projectId, 'error');
-                });
-        }
-
-        function showSaveIndicator(projectId, state) {
-            const indicator = document.getElementById(`save-indicator-${projectId}`);
-            const savingSpan = indicator.querySelector('.saving');
-            const savedSpan = indicator.querySelector('.saved');
-            
-            // Hide all indicators first
-            indicator.classList.add('hidden');
-            savingSpan.classList.add('hidden');
-            savedSpan.classList.add('hidden');
-            
-            if (state === 'saving') {
-                indicator.classList.remove('hidden');
-                savingSpan.classList.remove('hidden');
-            } else if (state === 'saved') {
-                indicator.classList.remove('hidden');
-                savedSpan.classList.remove('hidden');
-                // Hide after 2 seconds
-                setTimeout(() => {
-                    indicator.classList.add('hidden');
-                }, 2000);
-            }
-            // For 'typing' state, we just hide everything (already done above)
-        }
-
         // Handle note update notifications
         document.addEventListener('livewire:init', () => {
-            // Initialize auto-save on page load
-            initializeNotesAutoSave();
-            
             Livewire.on('note-updated', (event) => {
-                // Update the save indicator
-                if (event.projectId) {
-                    showSaveIndicator(event.projectId, 'saved');
-                }
+                // Show success notification
+                const notification = document.createElement('div');
+                notification.className =
+                    'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+                notification.textContent = event.message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.remove();
+                }, 2000);
             });
 
             Livewire.on('note-error', (event) => {
-                // Show error in indicator and notification
-                if (event.projectId) {
-                    showSaveIndicator(event.projectId, 'error');
-                }
-                
+                // Show error notification
                 const notification = document.createElement('div');
                 notification.className =
                     'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
@@ -1873,13 +1780,6 @@
                     notification.remove();
                 }, 5000);
             });
-        });
-
-        // Reinitialize after Livewire updates
-        document.addEventListener('livewire:navigated', function() {
-            setTimeout(() => {
-                initializeNotesAutoSave();
-            }, 100);
         });
     </script>
 </div>

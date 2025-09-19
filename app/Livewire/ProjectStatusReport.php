@@ -80,6 +80,16 @@ class ProjectStatusReport extends Component
     public function loadData()
     {
         $this->readyToLoad = true;
+        $this->loadProjectNotes();
+    }
+
+    private function loadProjectNotes()
+    {
+        // Load current notes for all projects to initialize the array
+        $projects = Project::select('id', 'notes')->get();
+        foreach ($projects as $project) {
+            $this->project_notes[$project->id] = $project->notes ?? '';
+        }
     }
 
     public function updatedSearch()
@@ -216,8 +226,10 @@ class ProjectStatusReport extends Component
     public function updatedProjectNotes($value, $key)
     {
         // This method is called when project_notes array is updated
-        // We'll handle the auto-save with debouncing in JavaScript
-        // This is just to ensure the property is updated
+        // Save the note to the database
+        if ($key && $value !== null) {
+            $this->updateProjectNote($key, $value);
+        }
     }
 
     public function updatedColumnFilters()
