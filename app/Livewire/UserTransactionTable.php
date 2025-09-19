@@ -16,6 +16,27 @@ class UserTransactionTable extends Component
     public $transactionTypes = [];
     public $transactionMethods = [];
     public $statuses = [];
+    
+    // Sorting properties
+    public $sortField = 'transaction_date';
+    public $sortDirection = 'desc';
+    public $isLoading = false;
+    
+    // Filter properties
+    public $filters = [
+        'user' => '',
+        'transaction_type' => '',
+        'amount_min' => '',
+        'amount_max' => '',
+        'method' => '',
+        'reference_no' => '',
+        'status' => '',
+        'transaction_date_from' => '',
+        'transaction_date_to' => '',
+        'actual_date_from' => '',
+        'actual_date_to' => '',
+        'note' => '',
+    ];
 
     public function mount()
     {
@@ -24,8 +45,21 @@ class UserTransactionTable extends Component
 
     public function loadData()
     {
-        $this->transactions = UserTransaction::with('user')
-            ->get()
+        $query = UserTransaction::with('user');
+        
+        // Apply filters
+        $this->applyFilters($query);
+        
+        // Apply sorting
+        if ($this->sortField === 'user') {
+            $query->join('users', 'user_transactions.user_id', '=', 'users.id')
+                  ->orderBy('users.full_name', $this->sortDirection)
+                  ->select('user_transactions.*');
+        } else {
+            $query->orderBy($this->sortField, $this->sortDirection);
+        }
+        
+        $this->transactions = $query->get()
             ->map(function ($transaction) {
                 return [
                     'id' => $transaction->id,
@@ -226,6 +260,105 @@ class UserTransactionTable extends Component
                 ->success()
                 ->send();
         }
+    }
+
+    private function applyFilters($query)
+    {
+        // User filter
+        if (!empty($this->filters['user'])) {
+            $query->whereHas('user', function ($q) {
+                $q->where('full_name', 'like', '%' . $this->filters['user'] . '%')
+                  ->orWhere('custom_id', 'like', '%' . $this->filters['user'] . '%');
+            });
+        }
+        
+        // Transaction type filter
+        if (!empty($this->filters['transaction_type'])) {
+            $query->where('transaction_type', $this->filters['transaction_type']);
+        }
+        
+        // Amount range filter
+        if (!empty($this->filters['amount_min'])) {
+            $query->where('amount', '>=', $this->filters['amount_min']);
+        }
+        if (!empty($this->filters['amount_max'])) {
+            $query->where('amount', '<=', $this->filters['amount_max']);
+        }
+        
+        // Method filter
+        if (!empty($this->filters['method'])) {
+            $query->where('method', $this->filters['method']);
+        }
+        
+        // Reference filter
+        if (!empty($this->filters['reference_no'])) {
+            $query->where('reference_no', 'like', '%' . $this->filters['reference_no'] . '%');
+        }
+        
+        // Status filter
+        if (!empty($this->filters['status'])) {
+            $query->where('status', $this->filters['status']);
+        }
+        
+        // Transaction date range filter
+        if (!empty($this->filters['transaction_date_from'])) {
+            $query->where('transaction_date', '>=', $this->filters['transaction_date_from']);
+        }
+        if (!empty($this->filters['transaction_date_to'])) {
+            $query->where('transaction_date', '<=', $this->filters['transaction_date_to']);
+        }
+        
+        // Actual date range filter
+        if (!empty($this->filters['actual_date_from'])) {
+            $query->where('actual_date', '>=', $this->filters['actual_date_from']);
+        }
+        if (!empty($this->filters['actual_date_to'])) {
+            $query->where('actual_date', '<=', $this->filters['actual_date_to']);
+        }
+        
+        // Note filter
+        if (!empty($this->filters['note'])) {
+            $query->where('note', 'like', '%' . $this->filters['note'] . '%');
+        }
+    }
+    
+    public function updatedFilters()
+    {
+        $this->loadData();
+    }
+    
+    public function resetFilters()
+    {
+        $this->filters = [
+            'user' => '',
+            'transaction_type' => '',
+            'amount_min' => '',
+            'amount_max' => '',
+            'method' => '',
+            'reference_no' => '',
+            'status' => '',
+            'transaction_date_from' => '',
+            'transaction_date_to' => '',
+            'actual_date_from' => '',
+            'actual_date_to' => '',
+            'note' => '',
+        ];
+        $this->loadData();
+    }
+    
+    public function sortBy($field)
+    {
+        $this->isLoading = true;
+        
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+        
+        $this->loadData();
+        $this->isLoading = false;
     }
 
     public function render()

@@ -11,6 +11,13 @@
                     </h1>
                 </div>
                 <div class="flex items-center gap-x-4">
+                    <button wire:click="resetFilters"
+                        class="fi-btn fi-btn-size-md fi-color-gray fi-btn-color-gray inline-flex items-center justify-center gap-1 font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-outlined ring-1 bg-white text-gray-950 hover:bg-gray-50 focus-visible:ring-gray-600 ring-gray-300 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:ring-white/20 dark:focus-visible:ring-gray-500 px-3 py-2 text-sm">
+                        <svg class="fi-btn-icon h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span class="fi-btn-label">Reset Filters</span>
+                    </button>
                     <button wire:click="addNewRow"
                         class="fi-btn fi-btn-size-md fi-color-primary fi-btn-color-primary inline-flex items-center justify-center gap-1 font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-outlined ring-1 bg-white text-gray-950 hover:bg-gray-50 focus-visible:ring-primary-600 ring-gray-300 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:ring-white/20 dark:focus-visible:ring-primary-500 px-3 py-2 text-sm">
                         <svg class="fi-btn-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,68 +73,149 @@
                 id="user-transaction-table" style="min-width: 1400px;">
                 <thead class="fi-ta-header divide-y divide-gray-200 dark:divide-white/5">
                     <tr class="fi-ta-header-row">
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 200px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 200px;" wire:click="sortBy('user')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">User</span>
+                                @if($sortField === 'user')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 120px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 120px;" wire:click="sortBy('transaction_type')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Type</span>
+                                @if($sortField === 'transaction_type')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 120px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 120px;" wire:click="sortBy('amount')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Amount</span>
+                                @if($sortField === 'amount')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 120px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 120px;" wire:click="sortBy('method')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Method</span>
+                                @if($sortField === 'method')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 150px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 150px;" wire:click="sortBy('reference_no')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Reference</span>
+                                @if($sortField === 'reference_no')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 120px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 120px;" wire:click="sortBy('status')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Status</span>
+                                @if($sortField === 'status')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 150px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 150px;" wire:click="sortBy('transaction_date')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Date</span>
+                                @if($sortField === 'transaction_date')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 150px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 150px;" wire:click="sortBy('actual_date')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Actual
                                     Date</span>
+                                @if($sortField === 'actual_date')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
-                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6"
-                            style="min-width: 200px;">
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 200px;" wire:click="sortBy('note')">
                             <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Notes</span>
+                                @if($sortField === 'note')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
                             </span>
                         </th>
                         <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
@@ -135,6 +223,85 @@
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Actions</span>
                             </span>
+                        </th>
+                    </tr>
+                    <!-- Filter Row -->
+                    <tr class="fi-ta-header-row bg-gray-50 dark:bg-gray-800">
+                        <!-- User Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 200px;">
+                            <input type="text" wire:model.live.debounce.300ms="filters.user" placeholder="Search user..."
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                        </th>
+                        <!-- Transaction Type Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <select wire:model.live="filters.transaction_type"
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <option value="">All Types</option>
+                                @foreach ($transactionTypes as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Amount Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="number" wire:model.live.debounce.300ms="filters.amount_min" placeholder="Min"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <input type="number" wire:model.live.debounce.300ms="filters.amount_max" placeholder="Max"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                            </div>
+                        </th>
+                        <!-- Method Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <select wire:model.live="filters.method"
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <option value="">All Methods</option>
+                                @foreach ($transactionMethods as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Reference Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <input type="text" wire:model.live.debounce.300ms="filters.reference_no" placeholder="Search reference..."
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                        </th>
+                        <!-- Status Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
+                            <select wire:model.live="filters.status"
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <option value="">All Status</option>
+                                @foreach ($statuses as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
+                        <!-- Transaction Date Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="date" wire:model.live="filters.transaction_date_from"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <input type="date" wire:model.live="filters.transaction_date_to"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                            </div>
+                        </th>
+                        <!-- Actual Date Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <div class="flex flex-col gap-1">
+                                <input type="date" wire:model.live="filters.actual_date_from"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <input type="date" wire:model.live="filters.actual_date_to"
+                                    class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                            </div>
+                        </th>
+                        <!-- Notes Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 200px;">
+                            <input type="text" wire:model.live.debounce.300ms="filters.note" placeholder="Search notes..."
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                        </th>
+                        <!-- Actions Column (no filter) -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6">
+                            <!-- Empty for actions column -->
                         </th>
                     </tr>
                 </thead>
