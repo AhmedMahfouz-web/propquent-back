@@ -202,13 +202,22 @@ class ProjectStatusReport extends Component
             $project->update(['notes' => $notes]);
             
             $this->dispatch('note-updated', [
-                'message' => 'Note updated successfully for project: ' . $project->title
+                'message' => 'Note saved automatically',
+                'projectId' => $projectId
             ]);
         } catch (\Exception $e) {
             $this->dispatch('note-error', [
-                'message' => 'Failed to update note: ' . $e->getMessage()
+                'message' => 'Failed to save note: ' . $e->getMessage(),
+                'projectId' => $projectId
             ]);
         }
+    }
+
+    public function updatedProjectNotes($value, $key)
+    {
+        // This method is called when project_notes array is updated
+        // We'll handle the auto-save with debouncing in JavaScript
+        // This is just to ensure the property is updated
     }
 
     public function updatedColumnFilters()
