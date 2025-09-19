@@ -31,7 +31,11 @@ class ProjectStatusReport extends Component
         'revenue' => 'expanded',
         'equity' => 'expanded',
         'status' => 'expanded',
+        'notes' => 'expanded',
     ];
+
+    // Track project notes for inline editing
+    public $project_notes = [];
 
     // Sorting properties
     public $sortBy = 'created_at';
@@ -121,13 +125,13 @@ class ProjectStatusReport extends Component
 
     public function toggleColumnFilter($column)
     {
-        \Log::info('toggleColumnFilter called', ['column' => $column, 'current' => $this->openFilterColumn]);
+        Log::info('toggleColumnFilter called', ['column' => $column, 'current' => $this->openFilterColumn]);
         $this->openFilterColumn = $this->openFilterColumn === $column ? null : $column;
     }
 
     public function toggleSectionState($sectionName)
     {
-        \Log::info('toggleSectionState called', ['section' => $sectionName, 'current_state' => $this->sectionStates[$sectionName] ?? 'not_found']);
+        Log::info('toggleSectionState called', ['section' => $sectionName, 'current_state' => $this->sectionStates[$sectionName] ?? 'not_found']);
         if (isset($this->sectionStates[$sectionName])) {
             $this->sectionStates[$sectionName] = $this->sectionStates[$sectionName] === 'expanded' ? 'collapsed' : 'expanded';
         }
@@ -189,6 +193,22 @@ class ProjectStatusReport extends Component
         ];
         $this->search = '';
         $this->resetPage();
+    }
+
+    public function updateProjectNote($projectId, $notes)
+    {
+        try {
+            $project = Project::findOrFail($projectId);
+            $project->update(['notes' => $notes]);
+            
+            $this->dispatch('note-updated', [
+                'message' => 'Note updated successfully for project: ' . $project->title
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('note-error', [
+                'message' => 'Failed to update note: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function updatedColumnFilters()

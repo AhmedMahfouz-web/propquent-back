@@ -187,6 +187,20 @@
                                         </svg>
                                     </div>
                                 </th>
+
+                                <!-- Notes Section Header -->
+                                <th class="section-header notes-header" data-state="{{ $sectionStates['notes'] }}"
+                                    wire:click.prevent="toggleSectionState('notes')">
+                                    <div class="header-content">
+                                        <span class="section-title-full">Notes</span>
+                                        <span class="section-title-short">Notes</span>
+                                        <svg class="toggle-arrow" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </th>
                             </tr>
 
                             <!-- Excel-style Sub-headers with filters -->
@@ -639,6 +653,14 @@
                                         <span>End Date</span>
                                     </div>
                                 </th>
+
+                                <!-- Notes Sub-headers -->
+                                <th class="section-subheader notes-section"
+                                    data-state="{{ $sectionStates['notes'] }}" wire:key="subheader-notes">
+                                    <div class="sub-header-grid notes-grid">
+                                        <span>Project Notes</span>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
 
@@ -897,10 +919,31 @@
                                             </div>
                                         </div>
                                     </td>
+
+                                    <!-- Notes Section -->
+                                    <td class="section-content notes-section"
+                                        data-state="{{ $sectionStates['notes'] }}"
+                                        wire:key="content-notes-{{ $project->id }}">
+                                        <div class="section-expanded-content">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <textarea 
+                                                        wire:model.lazy="project_notes.{{ $project->id }}"
+                                                        wire:blur="updateProjectNote('{{ $project->id }}', $event.target.value)"
+                                                        placeholder="Add notes for this project..."
+                                                        class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md 
+                                                               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                                               focus:border-blue-500 focus:ring-1 focus:ring-blue-500 
+                                                               resize-none min-h-[60px] max-h-[120px]"
+                                                        rows="3">{{ $project->notes }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5"
+                                    <td colspan="7"
                                         class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                         No projects found matching your criteria.
                                     </td>
@@ -1641,6 +1684,51 @@
         .section-header[data-state="expanded"] {
             background-color: rgba(59, 130, 246, 0.05);
         }
+
+        /* Notes Section Styles */
+        .notes-section {
+            min-width: 250px;
+            max-width: 300px;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        /* Notes section collapsed state */
+        .notes-section[data-state="collapsed"] {
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+        }
+
+        .notes-section[data-state="collapsed"] .section-expanded-content {
+            display: none;
+        }
+
+        .notes-section[data-state="collapsed"]::after {
+            content: "•••";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-weight: bold;
+            color: #6b7280;
+        }
+
+        /* Notes textarea styling */
+        .notes-section textarea {
+            transition: border-color 0.2s ease;
+        }
+
+        .notes-section textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
     </style>
 
     <script>
@@ -1661,6 +1749,33 @@
         // Livewire hook to ensure functionality after DOM updates
         document.addEventListener('livewire:navigated', function() {
             console.log('Livewire navigated - reinitializing');
+        });
+
+        // Handle note update notifications
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('note-updated', (event) => {
+                // Show success notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+                notification.textContent = event.message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            });
+
+            Livewire.on('note-error', (event) => {
+                // Show error notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+                notification.textContent = event.message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+            });
         });
     </script>
 </div>

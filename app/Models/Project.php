@@ -128,6 +128,7 @@ class Project extends Model implements HasMedia
         'contract_date',
         'years_of_installment',
         'total_contract_value',
+        'notes',
     ];
 
     protected $rules = [
