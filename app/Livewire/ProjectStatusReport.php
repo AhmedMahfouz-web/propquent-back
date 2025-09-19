@@ -29,6 +29,7 @@ class ProjectStatusReport extends Component
         'contract' => 'expanded',
         'expenses' => 'expanded',
         'revenue' => 'expanded',
+        'equity' => 'expanded',
         'status' => 'expanded',
     ];
 
