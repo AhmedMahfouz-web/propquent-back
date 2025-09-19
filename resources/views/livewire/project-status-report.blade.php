@@ -1069,7 +1069,7 @@
         .section-content[data-state="expanded"] {
             width: auto !important;
             min-width: 200px !important;
-            padding: 16px 12px !important;
+            padding: 16px 12px 0 !important;
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
