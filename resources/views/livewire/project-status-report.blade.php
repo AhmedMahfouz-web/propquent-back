@@ -815,7 +815,7 @@
         }
 
         .project-column-header {
-            padding: 12px 16px;
+            padding: 12px 16px 0;
             text-align: left;
             font-weight: 600;
             text-transform: uppercase;
