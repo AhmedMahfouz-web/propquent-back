@@ -193,7 +193,7 @@
                                     wire:click.prevent="toggleSectionState('notes')">
                                     <div class="header-content">
                                         <span class="section-title-full">Notes</span>
-                                        <span class="section-title-short">Notes</span>
+                                        <span class="section-title-short">N</span>
                                         <svg class="toggle-arrow" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -513,7 +513,8 @@
                                         <span>Operation</span>
                                         <span>Serving</span>
                                         <div class="excel-column-header">
-                                            <button wire:click="sortByColumn('total_revenue')" class="column-sort-btn">
+                                            <button wire:click="sortByColumn('total_revenue')"
+                                                class="column-sort-btn">
                                                 Total
                                                 @if ($sortBy === 'net_profit')
                                                     <span
@@ -853,7 +854,7 @@
                                                 <div class="content-row">
                                                     <span
                                                         class="content-value text-purple-600 dark:text-purple-400 font-medium">
-                                                        ${{ number_format(($assetExpenses - ($projectData['asset_revenue'] ?? 0)), 0) }}
+                                                        ${{ number_format($assetExpenses - ($projectData['asset_revenue'] ?? 0), 0) }}
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
@@ -927,13 +928,12 @@
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <textarea 
-                                                        wire:model.lazy="project_notes.{{ $project->id }}"
+                                                    <textarea wire:model.lazy="project_notes.{{ $project->id }}"
                                                         wire:blur="updateProjectNote('{{ $project->id }}', $event.target.value)"
-                                                        placeholder="Add notes for this project..."
-                                                        class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md 
+                                                        placeholder="Add notes for this project..." style="width: auto; height: 50px"
+                                                        class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
                                                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                                                               focus:border-blue-500 focus:ring-1 focus:ring-blue-500 
+                                                               focus:border-blue-500 focus:ring-1 focus:ring-blue-500
                                                                resize-none min-h-[60px] max-h-[120px]"
                                                         rows="3">{{ $project->notes }}</textarea>
                                                 </div>
@@ -1756,10 +1756,11 @@
             Livewire.on('note-updated', (event) => {
                 // Show success notification
                 const notification = document.createElement('div');
-                notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+                notification.className =
+                    'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
                 notification.textContent = event.message;
                 document.body.appendChild(notification);
-                
+
                 setTimeout(() => {
                     notification.remove();
                 }, 3000);
@@ -1768,10 +1769,11 @@
             Livewire.on('note-error', (event) => {
                 // Show error notification
                 const notification = document.createElement('div');
-                notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+                notification.className =
+                    'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
                 notification.textContent = event.message;
                 document.body.appendChild(notification);
-                
+
                 setTimeout(() => {
                     notification.remove();
                 }, 5000);
