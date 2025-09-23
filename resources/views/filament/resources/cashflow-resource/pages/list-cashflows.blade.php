@@ -252,7 +252,7 @@
                                             User Name
                                         </div>
                                     </th>
-                                    <th></th>
+                                    <th rowspan="2"></th>
                                     @php
                                         $startDate = now()->startOfWeek();
                                         $monthsToShow = $this->monthsFilter ?? 3;
