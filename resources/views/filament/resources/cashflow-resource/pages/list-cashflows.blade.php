@@ -26,16 +26,18 @@
             </form>
         </div>
 
-        <!-- Custom Cashflow Table -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <!-- Table Header -->
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Project Cashflow Projection</h3>
-            </div>
+        <!-- Synchronized Tables Container -->
+        <div class="flex gap-6">
+            <!-- Project Cashflow Table -->
+            <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <!-- Table Header -->
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Project Cashflow Projection</h3>
+                </div>
 
-            <!-- Month Headers -->
-            <div class="overflow-x-auto">
+                <!-- Table Container with Fixed Height -->
+                <div class="h-96 overflow-y-auto" id="project-table-container">
+                    <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <!-- Month Header Row -->
                     <thead class="bg-gray-50 dark:bg-gray-700">
@@ -167,24 +169,26 @@
 
                     <!-- Table Body -->
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach ($this->getFilteredProjects() as $project)
-                            <tr class="dark:hover:bg-gray-700">
+                        @foreach ($projects->take(10) as $project)
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $project->key }}
-                                    </div>
+                                    <span
+                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                        {{ $project->key }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $project->title }}
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ $project->title }}
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $project->developer->name ?? 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                     <span
                                         class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                        {{ $project->status === 'active'
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                                            : ($project->status === 'pending'
-                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200') }}">
+                                        {{ $project->status === 'on-going' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
                                         {{ ucfirst($project->status) }}
                                     </span>
                                 </td>
@@ -226,17 +230,22 @@
                             </tr>
                         @endforeach
                     </tbody>
-                    <!-- User Transactions Table -->
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
-                        <!-- Table Header -->
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Transaction Projection
-                            </h3>
-                        </div>
+                </table>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Month Headers -->
-                        <div class="overflow-x-auto">
+            <!-- User Transactions Table -->
+            <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <!-- Table Header -->
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Transaction Projection</h3>
+                </div>
+
+                <!-- Table Container with Fixed Height -->
+                <div class="h-96 overflow-y-auto" id="user-table-container">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
@@ -314,7 +323,7 @@
                                         ->limit(20)
                                         ->get();
                                 @endphp
-                                @foreach ($users as $user)
+                                @foreach ($users->take(10) as $user)
                                     <tr class="dark:hover:bg-gray-700">
                                         <td
                                             class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
@@ -358,8 +367,38 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                </table>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Synchronized Scroll Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectContainer = document.getElementById('project-table-container');
+            const userContainer = document.getElementById('user-table-container');
+            
+            let isScrolling = false;
+            
+            // Sync scroll for project table
+            projectContainer.addEventListener('scroll', function() {
+                if (!isScrolling) {
+                    isScrolling = true;
+                    userContainer.scrollTop = this.scrollTop;
+                    setTimeout(() => { isScrolling = false; }, 10);
+                }
+            });
+            
+            // Sync scroll for user table
+            userContainer.addEventListener('scroll', function() {
+                if (!isScrolling) {
+                    isScrolling = true;
+                    projectContainer.scrollTop = this.scrollTop;
+                    setTimeout(() => { isScrolling = false; }, 10);
+                }
+            });
+        });
+    </script>
 </x-filament-panels::page>
