@@ -169,7 +169,10 @@
 
                     <!-- Table Body -->
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach ($projects->take(10) as $project)
+                        @php
+                            $projects = $this->getFilteredProjects();
+                        @endphp
+                        @foreach ($projects as $project)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                     <span
@@ -320,10 +323,9 @@
                                         },
                                     ])
                                         ->orderBy('full_name')
-                                        ->limit(20)
                                         ->get();
                                 @endphp
-                                @foreach ($users->take(10) as $user)
+                                @foreach ($users as $user)
                                     <tr class="dark:hover:bg-gray-700">
                                         <td
                                             class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
