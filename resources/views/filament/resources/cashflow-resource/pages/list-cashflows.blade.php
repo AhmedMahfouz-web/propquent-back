@@ -26,17 +26,17 @@
             </form>
         </div>
 
-        <!-- Synchronized Tables Container -->
-        <div class="flex gap-6">
+        <!-- Stacked Tables Container -->
+        <div class="space-y-6">
             <!-- Project Cashflow Table -->
-            <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <!-- Table Header -->
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Project Cashflow Projection</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Project Cashflow</h3>
                 </div>
 
-                <!-- Table Container with Fixed Height -->
-                <div class="h-96 overflow-y-auto" id="project-table-container">
+                <!-- Table Container with Fixed Height and Scrolling -->
+                <div class="h-96 overflow-y-auto overflow-x-auto" id="project-table-container">
                     <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <!-- Month Header Row -->
@@ -238,15 +238,15 @@
                 </div>
             </div>
 
-            <!-- User Transactions Table -->
-            <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <!-- User Transaction Table -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <!-- Table Header -->
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Transaction Projection</h3>
+                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">User Transactions</h3>
                 </div>
 
-                <!-- Table Container with Fixed Height -->
-                <div class="h-96 overflow-y-auto" id="user-table-container">
+                <!-- Table Container with Fixed Height and Scrolling -->
+                <div class="h-96 overflow-y-auto overflow-x-auto" id="user-table-container">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <!-- Month Header Row -->
@@ -376,29 +376,33 @@
         </div>
     </div>
 
-    <!-- Synchronized Scroll Script -->
+    <!-- Synchronized Horizontal Scroll Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const projectContainer = document.getElementById('project-table-container');
             const userContainer = document.getElementById('user-table-container');
             
-            let isScrolling = false;
+            let isScrollingX = false;
             
-            // Sync scroll for project table
+            // Sync horizontal scroll only (X-axis) from project table to user table
             projectContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                    userContainer.scrollTop = this.scrollTop;
-                    setTimeout(() => { isScrolling = false; }, 10);
+                if (!isScrollingX) {
+                    isScrollingX = true;
+                    userContainer.scrollLeft = this.scrollLeft; // Only sync horizontal scroll
+                    setTimeout(() => {
+                        isScrollingX = false;
+                    }, 10);
                 }
             });
             
-            // Sync scroll for user table
+            // Sync horizontal scroll only (X-axis) from user table to project table
             userContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                    projectContainer.scrollTop = this.scrollTop;
-                    setTimeout(() => { isScrolling = false; }, 10);
+                if (!isScrollingX) {
+                    isScrollingX = true;
+                    projectContainer.scrollLeft = this.scrollLeft; // Only sync horizontal scroll
+                    setTimeout(() => {
+                        isScrollingX = false;
+                    }, 10);
                 }
             });
         });
