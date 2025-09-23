@@ -240,6 +240,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+
                     </div>
                 </div>
 
@@ -253,8 +254,8 @@
 
                     <!-- Table Container with Fixed Height and Y-only Scrolling -->
                     <div class="h-96 overflow-y-auto" id="user-table-container">
-                        <!-- Month Header Row -->
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <!-- Month Header Row -->
+                            <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
                                 <th rowspan="2"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
@@ -292,7 +293,7 @@
                             </tr>
                             <!-- Week Header Row -->
                             <tr class="bg-gray-100 dark:bg-gray-600">
-                                @for ($i = 0; $i <thead $totalWeeks; $i++)
+                                @for ($i = 0; $i < $totalWeeks; $i++)
                                     @php
                                         $weekStart = $startDate->copy()->addWeeks($i);
                                         $weekEnd = $weekStart->copy()->endOfWeek();
