@@ -30,6 +30,14 @@ class ProjectTransaction extends Model
     }
 
     /**
+     * Get available what types from configuration
+     */
+    public static function getAvailableWhatTypes(): array
+    {
+        return SystemConfiguration::getOptions('transaction_what');
+    }
+
+    /**
      * Get available transaction statuses from configuration
      */
     public static function getAvailableStatuses(): array
@@ -63,6 +71,14 @@ class ProjectTransaction extends Model
     }
 
     /**
+     * Check if a what type is valid
+     */
+    public static function isValidWhatType(string $what): bool
+    {
+        return array_key_exists($what, self::getAvailableWhatTypes());
+    }
+
+    /**
      * Check if a status is valid
      */
     public static function isValidStatus(string $status): bool
@@ -84,6 +100,7 @@ class ProjectTransaction extends Model
         'project_key',
         'financial_type',
         'serving',
+        'what',
         'amount',
         'transaction_category',
         'due_date',
@@ -104,6 +121,7 @@ class ProjectTransaction extends Model
             'project_key' => 'required|exists:projects,key',
             'financial_type' => 'required|in:' . implode(',', array_keys(self::getAvailableFinancialTypes())),
             'serving' => 'nullable|in:' . implode(',', array_keys(self::getAvailableServingTypes())),
+            'what' => 'nullable|in:' . implode(',', array_keys(self::getAvailableWhatTypes())),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
             'due_date' => 'nullable|date',

@@ -70,7 +70,7 @@
         <div class="fi-ta-content relative divide-y divide-gray-200 overflow-x-auto dark:divide-white/10 dark:border-t-white/10"
             style="min-height: 400px;">
             <table class="fi-ta-table w-full table-auto divide-y divide-gray-200 text-start dark:divide-white/5"
-                id="transaction-table" style="min-width: 1400px;">
+                id="transaction-table" style="min-width: 1550px;">
                 <thead class="fi-ta-header divide-y divide-gray-200 dark:divide-white/5">
                     <tr class="fi-ta-header-row">
                         <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
@@ -112,6 +112,22 @@
                                 <span
                                     class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">Serving</span>
                                 @if($sortField === 'serving')
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @if($sortDirection === 'asc')
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        @else
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        @endif
+                                    </svg>
+                                @endif
+                            </span>
+                        </th>
+                        <th class="fi-ta-header-cell px-3 py-3.5 sm:first-of-type:ps-6 sm:last-of-type:pe-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 {{ $isLoading ? 'opacity-50' : '' }}"
+                            style="min-width: 150px;" wire:click="sortBy('what')">
+                            <span class="group flex w-full items-center gap-x-1 whitespace-nowrap justify-start">
+                                <span
+                                    class="fi-ta-header-cell-label text-sm font-semibold text-gray-950 dark:text-white">What</span>
+                                @if($sortField === 'what')
                                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         @if($sortDirection === 'asc')
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
@@ -286,6 +302,16 @@
                                 @endforeach
                             </select>
                         </th>
+                        <!-- What Filter -->
+                        <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 150px;">
+                            <select wire:model.live="filters.what"
+                                class="w-full text-xs border-gray-300 dark:border-gray-500 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+                                <option value="">All What</option>
+                                @foreach ($whatTypes as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </th>
                         <!-- Amount Filter -->
                         <th class="fi-ta-header-cell px-3 py-2 sm:first-of-type:ps-6 sm:last-of-type:pe-6" style="min-width: 120px;">
                             <div class="flex flex-col gap-1">
@@ -412,18 +438,33 @@
                                 </select>
                             </td>
                             <td
+                                class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3">
+                                <select
+                                    wire:change="updateDraftRow('{{ $rowId }}', 'what', $event.target.value)"
+                                    data-row="{{ $rowId }}" data-col="3"
+                                    class="fi-select-input block w-full border-none bg-transparent py-1.5 pe-8 ps-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
+                                    <option value="">What...</option>
+                                    @foreach ($whatTypes as $key => $label)
+                                        <option value="{{ $key }}"
+                                            {{ $row['what'] == $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td
                                 class="fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3 {{ in_array('amount', $validationErrors) ? 'ring-2 ring-danger-600 dark:ring-danger-500' : '' }}">
                                 <input type="number" step="0.01"
                                     wire:blur="updateDraftRow('{{ $rowId }}', 'amount', $event.target.value)"
                                     value="{{ $row['amount'] }}" placeholder="0.00" data-row="{{ $rowId }}"
-                                    data-col="3"
+                                    data-col="4"
                                     class="fi-input block w-full border-none bg-transparent py-1.5 ps-3 pe-3 text-base text-gray-950 transition duration-75 placeholder:text-gray-400 focus:ring-0 disabled:text-gray-500 disabled:[-webkit-text-fill-color:theme(colors.gray.500)] disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.400)] dark:text-white dark:placeholder:text-gray-500 dark:disabled:text-gray-400 dark:disabled:[-webkit-text-fill-color:theme(colors.gray.400)] dark:disabled:placeholder:[-webkit-text-fill-color:theme(colors.gray.500)] sm:text-sm sm:leading-6 text-right">
                             </td>
                             <td
                                 class="border border-gray-300 dark:border-gray-600 p-0 bg-yellow-50 dark:bg-yellow-900/30">
                                 <select
                                     wire:change="updateDraftRow('{{ $rowId }}', 'method', $event.target.value)"
-                                    data-row="{{ $rowId }}" data-col="4"
+                                    data-row="{{ $rowId }}" data-col="5"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Method...</option>
                                     @foreach ($transactionMethods as $key => $label)
@@ -541,16 +582,30 @@
                                 </select>
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
+                                <select
+                                    wire:change="updateExistingRow({{ $transaction['id'] }}, 'what', $event.target.value)"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="3"
+                                    class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
+                                    <option value="">What...</option>
+                                    @foreach ($whatTypes as $key => $label)
+                                        <option value="{{ $key }}"
+                                            {{ $transaction['what'] == $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="number" step="0.01"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'amount', $event.target.value)"
                                     value="{{ $transaction['amount'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="3"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="4"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 text-right focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'method', $event.target.value)"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="4"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="5"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     <option value="">Method...</option>
                                     @foreach ($transactionMethods as $key => $label)
@@ -565,13 +620,13 @@
                                 <input type="text"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'reference_no', $event.target.value)"
                                     value="{{ $transaction['reference_no'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="5"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="6"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <select
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'status', $event.target.value)"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="6"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="7"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200 dark:[&>option]:bg-gray-800 dark:[&>option]:text-white">
                                     @foreach ($statuses as $key => $label)
                                         <option value="{{ $key }}"
@@ -585,28 +640,28 @@
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'transaction_date', $event.target.value)"
                                     value="{{ $transaction['transaction_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="7"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="8"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'due_date', $event.target.value)"
                                     value="{{ $transaction['due_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="8"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="9"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" placeholder="YYYY-MM-DD"
                                     wire:change="updateExistingRow({{ $transaction['id'] }}, 'actual_date', $event.target.value)"
                                     value="{{ $transaction['actual_date'] }}"
-                                    data-row="existing-{{ $transaction['id'] }}" data-col="9"
+                                    data-row="existing-{{ $transaction['id'] }}" data-col="10"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td class="border border-gray-300 dark:border-gray-600 p-0 bg-white dark:bg-gray-900">
                                 <input type="text"
                                     wire:blur="updateExistingRow({{ $transaction['id'] }}, 'note', $event.target.value)"
                                     value="{{ $transaction['note'] }}" data-row="existing-{{ $transaction['id'] }}"
-                                    data-col="10"
+                                    data-col="11"
                                     class="w-full h-full border-0 bg-transparent dark:text-white text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-colors duration-200">
                             </td>
                             <td
@@ -639,7 +694,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let currentCell = null;
-            const totalCols = 11; // 0-10 columns (excluding actions column)
+            const totalCols = 12; // 0-11 columns (excluding actions column)
 
             // Add keyboard navigation
             document.addEventListener('keydown', function(e) {

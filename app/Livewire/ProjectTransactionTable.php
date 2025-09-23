@@ -15,6 +15,7 @@ class ProjectTransactionTable extends Component
     public $projects = [];
     public $financialTypes = [];
     public $servingTypes = [];
+    public $whatTypes = [];
     public $transactionMethods = [];
     public $statuses = [];
     
@@ -28,6 +29,7 @@ class ProjectTransactionTable extends Component
         'project' => '',
         'financial_type' => '',
         'serving' => '',
+        'what' => '',
         'amount_min' => '',
         'amount_max' => '',
         'method' => '',
@@ -83,6 +85,7 @@ class ProjectTransactionTable extends Component
 
         $this->financialTypes = ProjectTransaction::getAvailableFinancialTypes();
         $this->servingTypes = ProjectTransaction::getAvailableServingTypes();
+        $this->whatTypes = ProjectTransaction::getAvailableWhatTypes();
         $this->transactionMethods = ProjectTransaction::getAvailableTransactionMethods();
         $this->statuses = ProjectTransaction::getAvailableStatuses();
     }
@@ -95,6 +98,7 @@ class ProjectTransactionTable extends Component
             'project_key' => '',
             'financial_type' => '',
             'serving' => '',
+            'what' => '',
             'amount' => '',
             'method' => '',
             'reference_no' => '',
@@ -173,6 +177,7 @@ class ProjectTransactionTable extends Component
             'transaction_date' => 'required|date',
             'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
             'serving' => 'nullable|in:' . implode(',', array_keys($this->servingTypes)),
+            'what' => 'nullable|in:' . implode(',', array_keys($this->whatTypes)),
             'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
             'reference_no' => 'nullable|string|max:255',
             'due_date' => 'nullable|date',
@@ -293,6 +298,11 @@ class ProjectTransactionTable extends Component
             $query->where('serving', $this->filters['serving']);
         }
         
+        // What filter
+        if (!empty($this->filters['what'])) {
+            $query->where('what', $this->filters['what']);
+        }
+        
         // Amount range filter
         if (!empty($this->filters['amount_min'])) {
             $query->where('amount', '>=', $this->filters['amount_min']);
@@ -357,6 +367,7 @@ class ProjectTransactionTable extends Component
             'project' => '',
             'financial_type' => '',
             'serving' => '',
+            'what' => '',
             'amount_min' => '',
             'amount_max' => '',
             'method' => '',

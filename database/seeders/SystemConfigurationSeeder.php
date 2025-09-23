@@ -47,6 +47,18 @@ class SystemConfigurationSeeder extends Seeder
             // Project Transaction Serving
             ['category' => 'transaction_serving', 'key' => 'asset', 'value' => 'Asset', 'label' => 'Asset'],
             ['category' => 'transaction_serving', 'key' => 'operation', 'value' => 'Operation', 'label' => 'Operation'],
+
+            // Project Transaction What (Purpose/Category)
+            ['category' => 'transaction_what', 'key' => 'unit_installment', 'value' => 'Unit Installment', 'label' => 'Unit Installment'],
+            ['category' => 'transaction_what', 'key' => 'over_price', 'value' => 'Over Price', 'label' => 'Over Price'],
+            ['category' => 'transaction_what', 'key' => 'club_owner', 'value' => 'Club-Owner', 'label' => 'Club-Owner'],
+            ['category' => 'transaction_what', 'key' => 'club_unit', 'value' => 'Club-Unit', 'label' => 'Club-Unit'],
+            ['category' => 'transaction_what', 'key' => 'commission', 'value' => 'Commission', 'label' => 'Commission'],
+            ['category' => 'transaction_what', 'key' => 'advertising', 'value' => 'Advertising', 'label' => 'Advertising'],
+            ['category' => 'transaction_what', 'key' => 'propquant', 'value' => 'PropQuant', 'label' => 'PropQuant'],
+            ['category' => 'transaction_what', 'key' => 'maintenance', 'value' => 'Maintenance', 'label' => 'Maintenance'],
+            ['category' => 'transaction_what', 'key' => 'rent', 'value' => 'Rent', 'label' => 'Rent'],
+            ['category' => 'transaction_what', 'key' => 'other', 'value' => 'Other', 'label' => 'Other'],
         ];
 
         foreach ($configurations as $config) {

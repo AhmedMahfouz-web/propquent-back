@@ -56,6 +56,12 @@ class ProjectTransactionResource extends Resource
                             ->options(fn() => ProjectTransaction::getAvailableServingTypes())
                             ->nullable(),
 
+                        Forms\Components\Select::make('what')
+                            ->label('What (Purpose)')
+                            ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
+                            ->searchable()
+                            ->nullable(),
+
                         Forms\Components\TextInput::make('transaction_category')
                             ->label('Transaction Category')
                             ->maxLength(255)
@@ -161,6 +167,14 @@ class ProjectTransactionResource extends Resource
                     ->selectablePlaceholder(false)
                     ->sortable(),
 
+                Tables\Columns\SelectColumn::make('what')
+                    ->label('What')
+                    ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
+                    ->placeholder('Select purpose...')
+                    ->selectablePlaceholder(false)
+                    ->sortable()
+                    ->width(150),
+
                 Tables\Columns\TextInputColumn::make('amount')
                     ->extraInputAttributes([
                         'type' => 'number',
@@ -265,6 +279,10 @@ class ProjectTransactionResource extends Resource
 
                 Tables\Filters\SelectFilter::make('serving')
                     ->options(fn() => ProjectTransaction::getAvailableServingTypes()),
+
+                Tables\Filters\SelectFilter::make('what')
+                    ->label('What (Purpose)')
+                    ->options(fn() => ProjectTransaction::getAvailableWhatTypes()),
 
                 Tables\Filters\SelectFilter::make('status')
                     ->options(fn() => ProjectTransaction::getAvailableStatuses()),
