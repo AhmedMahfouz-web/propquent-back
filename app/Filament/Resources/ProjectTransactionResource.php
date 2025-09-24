@@ -387,10 +387,10 @@ class ProjectTransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProjectTransactions::route('/'),
-            'create' => Pages\CreateProjectTransaction::route('/create'),
-            'view' => Pages\ViewProjectTransaction::route('/{record}'),
-            'edit' => Pages\EditProjectTransaction::route('/{record}/edit'),
+            'index' => Pages\ListProjectTransactions::class,
+            'create' => Pages\CreateProjectTransaction::class,
+            'view' => Pages\ViewProjectTransaction::class,
+            'edit' => Pages\EditProjectTransaction::class,
         ];
     }
 }
