@@ -135,26 +135,22 @@ class TransactionsRelationManager extends RelationManager
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->options([
-                        'payment' => 'Payment',
-                        'refund' => 'Refund',
-                        'fee' => 'Fee',
-                        'deposit' => 'Deposit',
-                    ]),
+                    ->options([Project::getProjectType()]),
 
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
-                        'completed' => 'Completed',
-                        'cancelled' => 'Cancelled',
-                        'failed' => 'Failed',
+                        Project::getProjectStatus()
                     ]),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\Action::make('create')
+                    ->label('New Transaction')
+                    ->icon('heroicon-o-plus')
+                    ->url(fn() => route('filament.admin.resources.project-transactions', [
+                        'project_id' => $this->ownerRecord->id
+                    ])),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([

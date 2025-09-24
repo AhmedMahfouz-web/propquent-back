@@ -44,7 +44,14 @@ class ProjectTransactionResource extends Resource
                             })
                             ->searchable()
                             ->required()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->default(function () {
+                                if (request()->has('project_id')) {
+                                    $project = \App\Models\Project::find(request('project_id'));
+                                    return $project?->key;
+                                }
+                                return null;
+                            }),
 
                         Forms\Components\Select::make('financial_type')
                             ->label('Financial Type')
