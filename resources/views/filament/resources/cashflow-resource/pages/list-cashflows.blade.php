@@ -38,7 +38,7 @@
 
                     <!-- Table Container with Fixed Height and Scrolling -->
                     <div class="h-96 overflow-y-auto overflow-x-auto" id="project-table-container">
-                        <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px;">
+                        <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px; table-layout: fixed;">
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
@@ -252,7 +252,7 @@
 
                     <!-- Table Container with Fixed Height and Scrolling -->
                     <div class="h-96 overflow-y-auto overflow-x-auto" id="user-table-container">
-                        <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px;">
+                        <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px; table-layout: fixed;">
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
