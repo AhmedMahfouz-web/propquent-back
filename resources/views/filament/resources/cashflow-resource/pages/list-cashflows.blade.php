@@ -139,7 +139,7 @@
                                         );
                                     @endphp
                                     <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                                        style="width: 120px;" wire:click="sortByWeek('{{ $weekField }}')">
+                                        style="width: 160px;" wire:click="sortByWeek('{{ $weekField }}')">
                                         <div class="flex flex-col items-center">
                                             <div
                                                 class="flex items-center text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -221,7 +221,7 @@
 
                                             $transactions = $doneTransactions->merge($pendingTransactions);
                                         @endphp
-                                        <td style="width: 120px;"
+                                        <td style="width: 160px;"
                                             class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
@@ -306,7 +306,7 @@
                                         );
                                     @endphp
                                     <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600"
-                                        style="width: 120px;">
+                                        style="width: 160px;">
                                         <div class="flex flex-col items-center">
                                             <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 {{ $weekNumber }}
@@ -358,7 +358,7 @@
                                                 ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                                                 ->get();
                                         @endphp
-                                        <td style="width: 120px;"
+                                        <td style="width: 160px;"
                                             class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
