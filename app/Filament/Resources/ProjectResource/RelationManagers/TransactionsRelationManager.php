@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
+use App\Models\ProjectTransaction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -135,11 +136,11 @@ class TransactionsRelationManager extends RelationManager
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->options([Project::getProjectType()]),
+                    ->options([ProjectTransaction::getProjectType()]),
 
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        Project::getProjectStatus()
+                        ProjectTransaction::getProjectStatus()
                     ]),
             ])
             ->actions([
