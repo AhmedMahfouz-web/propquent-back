@@ -142,12 +142,6 @@ class TransactionsRelationManager extends RelationManager
                         Project::getProjectStatus()
                     ]),
             ])
-            ->headerActions([
-                Tables\Actions\Action::make('create')
-                    ->label('New Transaction')
-                    ->icon('heroicon-o-plus')
-                    ->url(fn() => route('filament.admin.resources.project-transactions')),
-            ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),
             ])
