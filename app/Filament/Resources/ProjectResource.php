@@ -30,7 +30,8 @@ class ProjectResource extends Resource
                             ->label('Project Key')
                             ->placeholder('e.g., PROP-001, VILLA-DUBAI-01')
                             ->helperText('Optional human-readable identifier (1-50 characters, alphanumeric)')
-                            ->rules(['unique:projects,key', 'regex:/^[a-zA-Z0-9]{1,50}$/'])
+                            ->unique(Project::class, 'key', ignoreRecord: true)
+                            ->regex('/^[a-zA-Z0-9]{1,50}$/')
                             ->validationMessages([
                                 'unique' => 'This project key is already in use.',
                                 'regex' => 'Project key must be 1-50 characters long and contain only letters, numbers.',
