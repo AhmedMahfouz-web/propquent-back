@@ -40,7 +40,7 @@
 
                     <!-- Table Container with Fixed Height and Y-only Scrolling -->
                     <div class="h-96 overflow-y-auto" id="project-table-container">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px;">
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
@@ -254,7 +254,7 @@
 
                     <!-- Table Container with Fixed Height and Y-only Scrolling -->
                     <div class="h-96 overflow-y-auto" id="user-table-container">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <table class="w-full divide-y divide-gray-200 dark:divide-gray-700" style="min-width: 1200px;">
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
