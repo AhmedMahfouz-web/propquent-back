@@ -42,7 +42,7 @@
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th rowspan="2"
+                                    <th rowspan="2" style="width: 120px;"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                         wire:click="sortBy('key')" wire:loading.class="opacity-50">
                                         <div class="flex items-center">
@@ -62,7 +62,7 @@
                                             @endif
                                         </div>
                                     </th>
-                                    <th rowspan="2"
+                                    <th rowspan="2" style="width: 250px;"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                         wire:click="sortBy('title')" wire:loading.class="opacity-50">
                                         <div class="flex items-center">
@@ -82,7 +82,7 @@
                                             @endif
                                         </div>
                                     </th>
-                                    <th rowspan="2"
+                                    <th rowspan="2" style="width: 120px;"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                         wire:click="sortBy('status')" wire:loading.class="opacity-50">
                                         <div class="flex items-center">
@@ -137,7 +137,7 @@
                                                 $weekEnd,
                                             );
                                         @endphp
-                                        <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                                        <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" style="width: 80px;"
                                             wire:click="sortByWeek('{{ $weekField }}')">
                                             <div class="flex flex-col items-center">
                                                 <div
@@ -256,19 +256,19 @@
                             <!-- Month Header Row -->
                             <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th rowspan="2"
+                                <th rowspan="2" style="width: 120px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex items-center">
                                         User ID
                                     </div>
                                 </th>
-                                <th rowspan="2"
+                                <th rowspan="2" style="width: 250px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex items-center">
                                         User Name
                                     </div>
                                 </th>
-                                <th rowspan="2"></th>
+                                <th rowspan="2" style="width: 120px;"></th>
                                 @php
                                     $startDate = now()->startOfWeek();
                                     $monthsToShow = $this->monthsFilter ?? 3;
@@ -303,7 +303,7 @@
                                             $weekEnd,
                                         );
                                     @endphp
-                                    <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600">
+                                    <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600" style="width: 80px;">
                                         <div class="flex flex-col items-center">
                                             <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 {{ $weekNumber }}
