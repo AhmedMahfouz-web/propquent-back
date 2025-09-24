@@ -176,14 +176,14 @@
                                 @endphp
                                 @foreach ($projects as $project)
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <td
+                                        <td style="width: 120px;"
                                             class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                             <span
                                                 class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                                 {{ $project->key }}
                                             </span>
                                         </td>
-                                        <td
+                                        <td style="width: 250px;"
                                             class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">
                                                 {{ $project->title }}
@@ -192,7 +192,7 @@
                                                 {{ $project->developer->name ?? 'N/A' }}
                                             </div>
                                         </td>
-                                        <td
+                                        <td style="width: 120px;"
                                             class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                             <span
                                                 class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
@@ -220,7 +220,7 @@
 
                                                 $transactions = $doneTransactions->merge($pendingTransactions);
                                             @endphp
-                                            <td
+                                            <td style="width: 80px;"
                                                 class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                                 @if ($transactions->isEmpty())
                                                     <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
@@ -331,20 +331,20 @@
                             @endphp
                             @foreach ($users as $user)
                                 <tr class="dark:hover:bg-gray-700">
-                                    <td
+                                    <td style="width: 120px;"
                                         class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $user->custom_id ?? 'N/A' }}
                                         </span>
                                     </td>
-                                    <td
+                                    <td style="width: 250px;"
                                         class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $user->full_name }}
                                         </div>
                                     </td>
-                                    <td></td>
+                                    <td style="width: 120px;"></td>
                                     @for ($i = 0; $i < $totalWeeks; $i++)
                                         @php
                                             $weekStart = $startDate->copy()->addWeeks($i);
@@ -355,7 +355,7 @@
                                                 ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                                                 ->get();
                                         @endphp
-                                        <td
+                                        <td style="width: 80px;"
                                             class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
