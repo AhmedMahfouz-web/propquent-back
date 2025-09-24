@@ -32,7 +32,7 @@ class CompoundResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->label('Compound Name'),
-                    
+
                 Forms\Components\Select::make('developer_id')
                     ->relationship('developer', 'name')
                     ->required()
@@ -50,18 +50,18 @@ class CompoundResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->label('Compound Name'),
-                    
+
                 Tables\Columns\TextColumn::make('developer.name')
                     ->searchable()
                     ->sortable()
                     ->label('Developer'),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Created At'),
-                    
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()

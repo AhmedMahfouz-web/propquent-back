@@ -32,16 +32,16 @@ class DeveloperResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\TextInput::make('email')
                             ->email()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true),
-                        
+
                         Forms\Components\TextInput::make('phone')
                             ->tel()
                             ->maxLength(255),
-                        
+
                         Forms\Components\TextInput::make('website')
                             ->url()
                             ->maxLength(255)
@@ -56,7 +56,7 @@ class DeveloperResource extends Resource
                             ->maxLength(65535)
                             ->rows(3)
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\RichEditor::make('description')
                             ->maxLength(65535)
                             ->columnSpanFull()
@@ -82,34 +82,34 @@ class DeveloperResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-m-envelope')
                     ->copyable(),
-                
+
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable()
                     ->icon('heroicon-m-phone')
                     ->copyable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('website')
                     ->searchable()
                     ->icon('heroicon-m-globe-alt')
-                    ->url(fn ($record) => $record->website)
+                    ->url(fn($record) => $record->website)
                     ->openUrlInNewTab()
                     ->toggleable()
                     ->limit(30),
-                
+
                 Tables\Columns\TextColumn::make('projects_count')
                     ->counts('projects')
                     ->label('Projects')
                     ->sortable()
                     ->badge()
                     ->color('success'),
-                
+
                 Tables\Columns\TextColumn::make('address')
                     ->searchable()
                     ->limit(50)
@@ -121,12 +121,12 @@ class DeveloperResource extends Resource
                         return $state;
                     })
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -134,17 +134,17 @@ class DeveloperResource extends Resource
             ])
             ->filters([
                 Tables\Filters\Filter::make('has_projects')
-                    ->query(fn (Builder $query): Builder => $query->has('projects'))
+                    ->query(fn(Builder $query): Builder => $query->has('projects'))
                     ->label('Has Projects'),
-                
+
                 Tables\Filters\Filter::make('has_email')
-                    ->query(fn (Builder $query): Builder => $query->whereNotNull('email'))
+                    ->query(fn(Builder $query): Builder => $query->whereNotNull('email'))
                     ->label('Has Email'),
-                
+
                 Tables\Filters\Filter::make('has_website')
-                    ->query(fn (Builder $query): Builder => $query->whereNotNull('website'))
+                    ->query(fn(Builder $query): Builder => $query->whereNotNull('website'))
                     ->label('Has Website'),
-                
+
                 Tables\Filters\Filter::make('projects_count')
                     ->form([
                         Forms\Components\TextInput::make('min_projects')
@@ -158,11 +158,11 @@ class DeveloperResource extends Resource
                         return $query
                             ->when(
                                 $data['min_projects'],
-                                fn (Builder $query, $count): Builder => $query->has('projects', '>=', $count),
+                                fn(Builder $query, $count): Builder => $query->has('projects', '>=', $count),
                             )
                             ->when(
                                 $data['max_projects'],
-                                fn (Builder $query, $count): Builder => $query->has('projects', '<=', $count),
+                                fn(Builder $query, $count): Builder => $query->has('projects', '<=', $count),
                             );
                     }),
             ])

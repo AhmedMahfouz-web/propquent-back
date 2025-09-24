@@ -33,17 +33,17 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('full_name')
                             ->required()
                             ->maxLength(255),
-                        
+
                         Forms\Components\TextInput::make('email')
                             ->email()
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
-                        
+
                         Forms\Components\TextInput::make('phone_number')
                             ->tel()
                             ->maxLength(255),
-                        
+
                         Forms\Components\TextInput::make('country')
                             ->maxLength(255),
                     ])
@@ -54,11 +54,11 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('password_hash')
                             ->label('Password')
                             ->password()
-                            ->required(fn (string $context): bool => $context === 'create')
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn(string $context): bool => $context === 'create')
+                            ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                            ->dehydrated(fn($state) => filled($state))
                             ->maxLength(255),
-                        
+
                         Forms\Components\Select::make('auth_provider')
                             ->options([
                                 'local' => 'Local',
@@ -67,17 +67,17 @@ class UserResource extends Resource
                                 'twitter' => 'Twitter',
                             ])
                             ->nullable(),
-                        
+
                         Forms\Components\TextInput::make('provider_user_id')
                             ->maxLength(255)
                             ->nullable(),
-                        
+
                         Forms\Components\Toggle::make('email_verified')
                             ->default(false),
-                        
+
                         Forms\Components\Toggle::make('is_active')
                             ->default(true),
-                        
+
                         Forms\Components\DateTimePicker::make('last_login_at')
                             ->nullable(),
                     ])
@@ -90,10 +90,10 @@ class UserResource extends Resource
                             ->image()
                             ->directory('profile-pictures')
                             ->nullable(),
-                        
+
                         Forms\Components\ColorPicker::make('theme_color')
                             ->nullable(),
-                        
+
                         Forms\Components\ColorPicker::make('custom_theme_color')
                             ->nullable(),
                     ])
@@ -108,24 +108,24 @@ class UserResource extends Resource
                 Tables\Columns\ImageColumn::make('profile_picture_url')
                     ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(fn (): string => 'https://ui-avatars.com/api/?name=User&color=7F9CF5&background=EBF4FF'),
-                
+                    ->defaultImageUrl(fn(): string => 'https://ui-avatars.com/api/?name=User&color=7F9CF5&background=EBF4FF'),
+
                 Tables\Columns\TextColumn::make('full_name')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('email')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('phone_number')
                     ->searchable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('country')
                     ->searchable()
                     ->toggleable(),
-                
+
                 Tables\Columns\BadgeColumn::make('auth_provider')
                     ->colors([
                         'primary' => 'local',
@@ -134,35 +134,35 @@ class UserResource extends Resource
                         'warning' => 'twitter',
                     ])
                     ->toggleable(),
-                
+
                 Tables\Columns\IconColumn::make('email_verified')
                     ->boolean()
                     ->sortable(),
-                
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('transactions_count')
                     ->counts('transactions')
                     ->label('Transactions')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('referrals_count')
                     ->counts('referrals')
                     ->label('Referrals')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('last_login_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -176,25 +176,25 @@ class UserResource extends Resource
                         'facebook' => 'Facebook',
                         'twitter' => 'Twitter',
                     ]),
-                
+
                 Tables\Filters\TernaryFilter::make('email_verified')
                     ->label('Email Verified')
                     ->boolean()
                     ->trueLabel('Verified only')
                     ->falseLabel('Unverified only')
                     ->native(false),
-                
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active Status')
                     ->boolean()
                     ->trueLabel('Active only')
                     ->falseLabel('Inactive only')
                     ->native(false),
-                
+
                 Tables\Filters\Filter::make('has_transactions')
-                    ->query(fn (Builder $query): Builder => $query->has('transactions'))
+                    ->query(fn(Builder $query): Builder => $query->has('transactions'))
                     ->label('Has Transactions'),
-                
+
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
