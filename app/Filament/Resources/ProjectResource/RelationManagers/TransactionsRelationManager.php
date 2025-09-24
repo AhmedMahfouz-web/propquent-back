@@ -135,13 +135,17 @@ class TransactionsRelationManager extends RelationManager
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('type')
-                    ->options([ProjectTransaction::getProjectType()]),
+                Tables\Filters\SelectFilter::make('financial_type')
+                    ->options(ProjectTransaction::getAvailableFinancialTypes()),
 
                 Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        ProjectTransaction::getProjectStatus()
-                    ]),
+                    ->options(ProjectTransaction::getAvailableStatuses()),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('create')
+                    ->label('New Transaction')
+                    ->icon('heroicon-o-plus')
+                    ->url(fn() => route('filament.admin.resources.project-transactions.index')),
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),
