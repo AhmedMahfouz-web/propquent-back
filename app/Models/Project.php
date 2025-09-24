@@ -107,6 +107,8 @@ class Project extends Model implements HasMedia
         'title',
         'developer_id',
         'location',
+        'latitude',
+        'longitude',
         'map_location',
         'type',
         'unit_no',

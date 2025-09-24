@@ -62,6 +62,22 @@ class ProjectResource extends Resource
                             ->suffix('https://')
                             ->maxLength(255),
 
+                        Forms\Components\TextInput::make('latitude')
+                            ->label('Latitude')
+                            ->numeric()
+                            ->step(0.0000001)
+                            ->placeholder('e.g., 25.2048')
+                            ->helperText('Decimal degrees format (e.g., 25.2048)')
+                            ->rules(['nullable', 'numeric', 'between:-90,90']),
+
+                        Forms\Components\TextInput::make('longitude')
+                            ->label('Longitude')
+                            ->numeric()
+                            ->step(0.0000001)
+                            ->placeholder('e.g., 55.2708')
+                            ->helperText('Decimal degrees format (e.g., 55.2708)')
+                            ->rules(['nullable', 'numeric', 'between:-180,180']),
+
                         Forms\Components\Select::make('type')
                             ->options(fn() => Project::getAvailablePropertyTypes())
                             ->searchable(),
@@ -182,6 +198,16 @@ class ProjectResource extends Resource
                 Tables\Columns\TextColumn::make('location')
                     ->searchable()
                     ->toggleable(),
+
+                Tables\Columns\TextColumn::make('latitude')
+                    ->label('Lat')
+                    ->numeric(decimalPlaces: 6)
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('longitude')
+                    ->label('Lng')
+                    ->numeric(decimalPlaces: 6)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors([
