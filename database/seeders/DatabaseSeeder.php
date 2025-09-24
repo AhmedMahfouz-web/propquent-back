@@ -16,23 +16,23 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Admin User
-        Admin::factory()->create([
-            'name' => 'Super Admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('123456'),
-            'role' => 'super_admin',
-            'is_active' => true,
-            'last_login_at' => now(),
-        ]);
-
-
-        // $this->call([
-        //     DeveloperSeeder::class,
-        //     SystemConfigurationSeeder::class,
-        //     UserSeeder::class,
-        //     ProjectSeeder::class,
-        //     ProjectTransactionSeeder::class, // Temporarily disabled
-        //     UserTransactionSeeder::class,
+        // Admin::factory()->create([
+        //     'name' => 'Super Admin',
+        //     'email' => 'admin@gmail.com',
+        //     'password' => Hash::make('123456'),
+        //     'role' => 'super_admin',
+        //     'is_active' => true,
+        //     'last_login_at' => now(),
         // ]);
+
+
+        $this->call([
+            //     DeveloperSeeder::class,
+            SystemConfigurationSeeder::class,
+            //     UserSeeder::class,
+            //     ProjectSeeder::class,
+            //     ProjectTransactionSeeder::class, // Temporarily disabled
+            //     UserTransactionSeeder::class,
+        ]);
     }
 }
