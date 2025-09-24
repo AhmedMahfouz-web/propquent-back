@@ -8,6 +8,6 @@ use Filament\Resources\Pages\Page;
 class ListProjectTransactions extends Page
 {
     protected static string $resource = ProjectTransactionResource::class;
-
+    
     protected static string $view = 'filament.resources.project-transaction-resource.pages.list-project-transactions';
 }

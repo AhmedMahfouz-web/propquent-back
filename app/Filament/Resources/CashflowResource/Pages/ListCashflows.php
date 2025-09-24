@@ -14,8 +14,6 @@ class ListCashflows extends ListRecords
 {
     protected static string $resource = CashflowResource::class;
     
-    protected static string $view = 'filament.resources.cashflow-resource.pages.list-cashflows';
-    
     public $monthsFilter = 3;
     public $statusFilter = '';
     public $sortField = 'status';
