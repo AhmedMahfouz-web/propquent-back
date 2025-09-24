@@ -26,18 +26,19 @@
             </form>
         </div>
 
-        <!-- Stacked Tables Container -->
-        <div class="space-y-6">
-            <!-- Project Cashflow Table -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <!-- Table Header -->
-                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Project Cashflow</h3>
-                </div>
+        <!-- Shared Horizontal Scroll Container -->
+        <div class="overflow-x-auto" id="shared-scroll-container">
+            <div class="space-y-6">
+                <!-- Project Cashflow Table -->
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <!-- Table Header -->
+                    <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Project Cashflow</h3>
+                    </div>
 
-                <!-- Table Container with Fixed Height and Scrolling -->
-                <div class="h-96 overflow-y-auto overflow-x-auto" id="project-table-container">
+                    <!-- Table Container with Fixed Height and Scrolling -->
+                    <div class="h-96 overflow-y-auto" id="project-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
                         style="min-width: 1600px;">
                         <!-- Month Header Row -->
@@ -252,7 +253,7 @@
                 </div>
 
                 <!-- Table Container with Fixed Height and Scrolling -->
-                <div class="h-96 overflow-y-auto overflow-x-auto" id="user-table-container">
+                <div class="h-96 overflow-y-auto" id="user-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
                         style="min-width: 1600px;">
                         <!-- Month Header Row -->
@@ -379,38 +380,8 @@
                     </table>
                 </div>
             </div>
+            </div>
         </div>
     </div>
 
-    <!-- Synchronized Horizontal Scroll Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const projectContainer = document.getElementById('project-table-container');
-            const userContainer = document.getElementById('user-table-container');
-
-            let isScrolling = false;
-
-            // Sync horizontal scroll from project table to user table
-            projectContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                    userContainer.scrollLeft = this.scrollLeft;
-                    setTimeout(() => {
-                        isScrolling = false;
-                    }, 10);
-                }
-            });
-
-            // Sync horizontal scroll from user table to project table
-            userContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                    projectContainer.scrollLeft = this.scrollLeft;
-                    setTimeout(() => {
-                        isScrolling = false;
-                    }, 10);
-                }
-            });
-        });
-    </script>
 </x-filament-panels::page>
