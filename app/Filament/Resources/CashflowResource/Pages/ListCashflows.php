@@ -4,15 +4,17 @@ namespace App\Filament\Resources\CashflowResource\Pages;
 
 use App\Filament\Resources\CashflowResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\Page;
 use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 
-class ListCashflows extends ListRecords
+class ListCashflows extends Page
 {
     protected static string $resource = CashflowResource::class;
+    
+    protected static string $view = 'filament.resources.cashflow-resource.pages.list-cashflows';
     
     public $monthsFilter = 3;
     public $statusFilter = '';
@@ -23,7 +25,7 @@ class ListCashflows extends ListRecords
 
     public function mount(): void
     {
-        parent::mount();
+        // Custom mount logic if needed
     }
 
     public function loadData()
