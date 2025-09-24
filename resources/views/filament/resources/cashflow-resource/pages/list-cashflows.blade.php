@@ -39,11 +39,11 @@
                 <!-- Table Container with Fixed Height and Scrolling -->
                 <div class="h-96 overflow-y-auto overflow-x-auto" id="project-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
-                        style="min-width: 1600px;">
+                        style="min-width: 1600px; table-layout: fixed;">
                         <!-- Month Header Row -->
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th rowspan="2" style="width: 200px; box-sizing: border-box;"
+                                <th rowspan="2" style="width: 7.8125%;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortBy('key')" wire:loading.class="opacity-50">
                                     <div class="flex items-center">
@@ -63,7 +63,7 @@
                                         @endif
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 300px; box-sizing: border-box;"
+                                <th rowspan="2" style="width: 11.71875%;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortBy('title')" wire:loading.class="opacity-50">
                                     <div class="flex items-center">
@@ -83,7 +83,7 @@
                                         @endif
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 140px; box-sizing: border-box;"
+                                <th rowspan="2" style="width: 5.46875%;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortBy('status')" wire:loading.class="opacity-50">
                                     <div class="flex items-center">
@@ -139,7 +139,7 @@
                                         );
                                     @endphp
                                     <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                                        style="width: 160px; box-sizing: border-box;" wire:click="sortByWeek('{{ $weekField }}')">
+                                        style="width: 6.25%;" wire:click="sortByWeek('{{ $weekField }}')">
                                         <div class="flex flex-col items-center">
                                             <div
                                                 class="flex items-center text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -177,14 +177,14 @@
                             @endphp
                             @foreach ($projects as $project)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td style="width: 200px; box-sizing: border-box;"
+                                    <td style="width: 7.8125%;"
                                         class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $project->key }}
                                         </span>
                                     </td>
-                                    <td style="width: 300px; box-sizing: border-box;"
+                                    <td style="width: 11.71875%;"
                                         class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $project->title }}
@@ -193,7 +193,7 @@
                                             {{ $project->developer->name ?? 'N/A' }}
                                         </div>
                                     </td>
-                                    <td style="width: 140px; box-sizing: border-box;"
+                                    <td style="width: 5.46875%;"
                                         class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
@@ -221,7 +221,7 @@
 
                                             $transactions = $doneTransactions->merge($pendingTransactions);
                                         @endphp
-                                        <td style="width: 160px; box-sizing: border-box;"
+                                        <td style="width: 6.25%;"
                                             class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
@@ -254,23 +254,23 @@
                 <!-- Table Container with Fixed Height and Scrolling -->
                 <div class="h-96 overflow-y-auto overflow-x-auto" id="user-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
-                        style="min-width: 1600px;">
+                        style="min-width: 1600px; table-layout: fixed;">
                         <!-- Month Header Row -->
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th rowspan="2" style="width: 200px; box-sizing: border-box;"
+                                <th rowspan="2" style="width: 7.8125%;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex items-center">
                                         User ID
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 300px; box-sizing: border-box;"
+                                <th rowspan="2" style="width: 11.71875%;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex items-center">
                                         User Name
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 140px; box-sizing: border-box;">&nbsp;</th>
+                                <th rowspan="2" style="width: 5.46875%;">&nbsp;</th>
                                 @php
                                     $startDate = now()->startOfWeek();
                                     $monthsToShow = $this->monthsFilter ?? 3;
@@ -306,7 +306,7 @@
                                         );
                                     @endphp
                                     <th class="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600"
-                                        style="width: 160px; box-sizing: border-box;">
+                                        style="width: 6.25%;">
                                         <div class="flex flex-col items-center">
                                             <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 {{ $weekNumber }}
@@ -334,20 +334,20 @@
                             @endphp
                             @foreach ($users as $user)
                                 <tr class="dark:hover:bg-gray-700">
-                                    <td style="width: 200px; box-sizing: border-box;"
+                                    <td style="width: 7.8125%;"
                                         class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $user->custom_id ?? 'N/A' }}
                                         </span>
                                     </td>
-                                    <td style="width: 300px; box-sizing: border-box;"
+                                    <td style="width: 11.71875%;"
                                         class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $user->full_name }}
                                         </div>
                                     </td>
-                                    <td style="width: 140px; box-sizing: border-box;">&nbsp;</td>
+                                    <td style="width: 5.46875%;">&nbsp;</td>
                                     @for ($i = 0; $i < $totalWeeks; $i++)
                                         @php
                                             $weekStart = $startDate->copy()->addWeeks($i);
@@ -358,7 +358,7 @@
                                                 ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                                                 ->get();
                                         @endphp
-                                        <td style="width: 160px; box-sizing: border-box;"
+                                        <td style="width: 6.25%;"
                                             class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
