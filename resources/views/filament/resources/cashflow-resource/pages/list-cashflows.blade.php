@@ -43,7 +43,7 @@
                         <!-- Month Header Row -->
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th rowspan="2" style="width: 120px;"
+                                <th rowspan="2" style="width: 200px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortBy('key')" wire:loading.class="opacity-50">
                                     <div class="flex items-center">
@@ -63,7 +63,7 @@
                                         @endif
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 250px;"
+                                <th rowspan="2" style="width: 300px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortBy('title')" wire:loading.class="opacity-50">
                                     <div class="flex items-center">
@@ -83,7 +83,7 @@
                                         @endif
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 120px;"
+                                <th rowspan="2" style="width: 140px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                                     wire:click="sortBy('status')" wire:loading.class="opacity-50">
                                     <div class="flex items-center">
@@ -177,15 +177,15 @@
                             @endphp
                             @foreach ($projects as $project)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td style="width: 120px;"
-                                        class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
+                                    <td style="width: 200px;"
+                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $project->key }}
                                         </span>
                                     </td>
-                                    <td style="width: 250px;"
-                                        class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
+                                    <td style="width: 300px;"
+                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $project->title }}
                                         </div>
@@ -193,7 +193,7 @@
                                             {{ $project->developer->name ?? 'N/A' }}
                                         </div>
                                     </td>
-                                    <td style="width: 120px;"
+                                    <td style="width: 140px;"
                                         class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
@@ -258,19 +258,19 @@
                         <!-- Month Header Row -->
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th rowspan="2" style="width: 120px;"
+                                <th rowspan="2" style="width: 200px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex items-center">
                                         User ID
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 250px;"
+                                <th rowspan="2" style="width: 300px;"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-300 dark:border-gray-600">
                                     <div class="flex items-center">
                                         User Name
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 120px;"></th>
+                                <th rowspan="2" style="width: 140px;"></th>
                                 @php
                                     $startDate = now()->startOfWeek();
                                     $monthsToShow = $this->monthsFilter ?? 3;
@@ -334,20 +334,20 @@
                             @endphp
                             @foreach ($users as $user)
                                 <tr class="dark:hover:bg-gray-700">
-                                    <td style="width: 120px;"
-                                        class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
+                                    <td style="width: 200px;"
+                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $user->custom_id ?? 'N/A' }}
                                         </span>
                                     </td>
-                                    <td style="width: 250px;"
-                                        class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
+                                    <td style="width: 300px;"
+                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $user->full_name }}
                                         </div>
                                     </td>
-                                    <td style="width: 120px;"></td>
+                                    <td style="width: 140px;"></td>
                                     @for ($i = 0; $i < $totalWeeks; $i++)
                                         @php
                                             $weekStart = $startDate->copy()->addWeeks($i);
