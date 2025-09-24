@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,11 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register configuration cache event listeners
-        \Event::listen(
-            \App\Events\ConfigurationChanged::class,
-            \App\Listeners\InvalidateConfigurationCache::class
-        );
+        // Temporarily disabled to debug console issue
+        // Event::listen(
+        //     \App\Events\ConfigurationChanged::class,
+        //     \App\Listeners\InvalidateConfigurationCache::class
+        // );
 
         // Model observers removed - caching disabled for performance
     }

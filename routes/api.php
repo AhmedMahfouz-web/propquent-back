@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('api.auth.login');
     Route::post('/register', [AuthController::class, 'register'])->name('api.auth.register');
-    
+
     // Protected auth routes
     Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
@@ -34,25 +34,25 @@ Route::prefix('auth')->group(function () {
 
 // Protected API Routes
 Route::middleware(['jwt.auth'])->group(function () {
-    
+
     // User Management Routes
     Route::apiResource('users', UserController::class);
-    
+
     // Project Management Routes
     Route::apiResource('projects', ProjectController::class);
-    
+
     // Project Transactions Routes
     Route::prefix('projects/{project}')->group(function () {
         Route::get('/transactions', [ProjectController::class, 'transactions'])->name('api.projects.transactions');
         Route::post('/transactions', [ProjectController::class, 'storeTransaction'])->name('api.projects.transactions.store');
     });
-    
+
     // User Transactions Routes
     Route::prefix('users/{user}')->group(function () {
         Route::get('/transactions', [UserController::class, 'transactions'])->name('api.users.transactions');
         Route::post('/transactions', [UserController::class, 'storeTransaction'])->name('api.users.transactions.store');
     });
-    
+
     // System Information Routes
     Route::prefix('system')->group(function () {
         Route::get('/info', function () {
@@ -79,11 +79,11 @@ Route::prefix('admin')->middleware(['auth:admins'])->group(function () {
 });
 
 // Health Check Route (Public)
-Route::get('/health', function () {
-    return response()->json([
-        'success' => true,
-        'message' => 'API is healthy',
-        'timestamp' => now()->toISOString(),
-        'version' => '1.0.0'
-    ]);
-})->name('api.health');
+// Route::get('/health', function () {
+//     return response()->json([
+//         'success' => true,
+//         'message' => 'API is healthy',
+//         'timestamp' => now()->toISOString(),
+//         'version' => '1.0.0'
+//     ]);
+// })->name('api.health');
