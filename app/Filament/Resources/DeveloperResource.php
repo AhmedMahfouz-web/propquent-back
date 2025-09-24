@@ -189,10 +189,10 @@ class DeveloperResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDevelopers::route('/'),
-            'create' => Pages\CreateDeveloper::route('/create'),
-            'view' => Pages\ViewDeveloper::route('/{record}'),
-            'edit' => Pages\EditDeveloper::route('/{record}/edit'),
+            'index' => Pages\ListDevelopers::class,
+            'create' => Pages\CreateDeveloper::class,
+            'view' => Pages\ViewDeveloper::class,
+            'edit' => Pages\EditDeveloper::class,
         ];
     }
 }

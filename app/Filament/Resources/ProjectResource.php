@@ -294,10 +294,10 @@ class ProjectResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProjects::route('/'),
-            'create' => Pages\CreateProject::route('/create'),
-            'view' => Pages\ViewProject::route('/{record}'),
-            'edit' => Pages\EditProject::route('/{record}/edit'),
+            'index' => Pages\ListProjects::class,
+            'create' => Pages\CreateProject::class,
+            'view' => Pages\ViewProject::class,
+            'edit' => Pages\EditProject::class,
         ];
     }
 }
