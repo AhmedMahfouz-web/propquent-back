@@ -24,7 +24,7 @@ class TransactionsRelationManager extends RelationManager
                         'deposit' => 'Deposit',
                     ])
                     ->required(),
-                
+
                 Forms\Components\Select::make('serving')
                     ->options([
                         'buyer' => 'Buyer',
@@ -33,28 +33,28 @@ class TransactionsRelationManager extends RelationManager
                         'developer' => 'Developer',
                     ])
                     ->nullable(),
-                
+
                 Forms\Components\Select::make('what_id')
                     ->relationship('transactionWhat', 'name')
                     ->searchable()
                     ->preload()
                     ->required()
                     ->label('Transaction Category'),
-                
+
                 Forms\Components\TextInput::make('amount')
                     ->numeric()
                     ->prefix('$')
                     ->required(),
-                
+
                 Forms\Components\DatePicker::make('due_date')
                     ->nullable(),
-                
+
                 Forms\Components\DatePicker::make('actual_date')
                     ->nullable(),
-                
+
                 Forms\Components\DatePicker::make('transaction_date')
                     ->required(),
-                
+
                 Forms\Components\Select::make('method')
                     ->options([
                         'cash' => 'Cash',
@@ -63,11 +63,11 @@ class TransactionsRelationManager extends RelationManager
                         'card' => 'Card',
                     ])
                     ->nullable(),
-                
+
                 Forms\Components\TextInput::make('reference_no')
                     ->maxLength(255)
                     ->nullable(),
-                
+
                 Forms\Components\Select::make('status')
                     ->options([
                         'pending' => 'Pending',
@@ -77,7 +77,7 @@ class TransactionsRelationManager extends RelationManager
                     ])
                     ->default('pending')
                     ->required(),
-                
+
                 Forms\Components\Textarea::make('note')
                     ->maxLength(65535)
                     ->nullable(),
@@ -89,51 +89,49 @@ class TransactionsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('type')
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('financial_type')
+                    ->label('Type')
                     ->badge()
                     ->colors([
-                        'primary' => 'payment',
-                        'warning' => 'refund',
-                        'danger' => 'fee',
-                        'success' => 'deposit',
+                        'primary' => 'revenue',
+                        'warning' => 'expense'
                     ]),
-                
+
                 Tables\Columns\TextColumn::make('serving')
                     ->badge(),
-                
+
                 Tables\Columns\TextColumn::make('transactionWhat.name')
-                    ->label('Category')
+                    ->label('What')
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('amount')
                     ->money('USD')
                     ->sortable(),
-                
-                Tables\Columns\TextColumn::make('due_date')
-                    ->date()
-                    ->sortable(),
-                
-                Tables\Columns\TextColumn::make('actual_date')
-                    ->date()
-                    ->sortable(),
-                
-                Tables\Columns\TextColumn::make('transaction_date')
-                    ->date()
-                    ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('method')
                     ->badge(),
-                
+
                 Tables\Columns\TextColumn::make('reference_no')
                     ->searchable(),
-                
+
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'warning' => 'pending',
                         'success' => 'completed',
                         'danger' => 'cancelled',
-                        'secondary' => 'failed',
                     ]),
+
+                Tables\Columns\TextColumn::make('due_date')
+                    ->date()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('actual_date')
+                    ->date()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('transaction_date')
+                    ->date()
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
@@ -143,7 +141,7 @@ class TransactionsRelationManager extends RelationManager
                         'fee' => 'Fee',
                         'deposit' => 'Deposit',
                     ]),
-                
+
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending',
