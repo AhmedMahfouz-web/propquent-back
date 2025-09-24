@@ -270,7 +270,7 @@
                                         User Name
                                     </div>
                                 </th>
-                                <th rowspan="2" style="width: 140px; box-sizing: border-box;"></th>
+                                <th rowspan="2" style="width: 140px; box-sizing: border-box;">&nbsp;</th>
                                 @php
                                     $startDate = now()->startOfWeek();
                                     $monthsToShow = $this->monthsFilter ?? 3;
@@ -347,7 +347,7 @@
                                             {{ $user->full_name }}
                                         </div>
                                     </td>
-                                    <td style="width: 140px; box-sizing: border-box;"></td>
+                                    <td style="width: 140px; box-sizing: border-box;">&nbsp;</td>
                                     @for ($i = 0; $i < $totalWeeks; $i++)
                                         @php
                                             $weekStart = $startDate->copy()->addWeeks($i);
