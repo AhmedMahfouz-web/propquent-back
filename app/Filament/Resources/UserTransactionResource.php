@@ -294,10 +294,10 @@ class UserTransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUserTransactions::class,
-            'create' => Pages\CreateUserTransaction::class,
-            'view' => Pages\ViewUserTransaction::class,
-            'edit' => Pages\EditUserTransaction::class,
+            'index' => Pages\ListUserTransactions::route('/'),
+            'create' => Pages\CreateUserTransaction::route('/create'),
+            'view' => Pages\ViewUserTransaction::route('/{record}'),
+            'edit' => Pages\EditUserTransaction::route('/{record}/edit'),
         ];
     }
 }

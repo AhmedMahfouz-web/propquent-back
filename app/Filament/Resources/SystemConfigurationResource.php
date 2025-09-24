@@ -246,9 +246,9 @@ class SystemConfigurationResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSystemConfigurations::class,
-            'create' => Pages\CreateSystemConfiguration::class,
-            'edit' => Pages\EditSystemConfiguration::class,
+            'index' => Pages\ListSystemConfigurations::route('/'),
+            'create' => Pages\CreateSystemConfiguration::route('/create'),
+            'edit' => Pages\EditSystemConfiguration::route('/{record}/edit'),
         ];
     }
 }
