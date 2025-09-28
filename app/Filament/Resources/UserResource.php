@@ -104,12 +104,18 @@ class UserResource extends Resource
                         '0' => 'Inactive',
                     ])
                     ->default('1'),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
@@ -130,5 +136,14 @@ class UserResource extends Resource
             'edit' => \App\Filament\Resources\UserResource\Pages\EditUser::route('/{record}/edit'),
             'financials' => \App\Filament\Resources\UserResource\Pages\UserFinancials::route('/{record}/financials'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        // Include trashed records so they can be listed, filtered, restored, or force-deleted.
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

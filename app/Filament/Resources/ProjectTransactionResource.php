@@ -25,7 +25,7 @@ class ProjectTransactionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('what');
+        return parent::getEloquentQuery();
     }
 
     public static function form(Form $form): Form
@@ -34,10 +34,9 @@ class ProjectTransactionResource extends Resource
             ->schema([
                 Forms\Components\Select::make('project_key')
                     ->label('Project')
-                    ->options(function () {
-                        return Project::all()->pluck('title', 'key')->toArray();
-                    })
                     ->searchable()
+                    ->getSearchResultsUsing(fn(string $search): array => Project::where('title', 'like', "%{$search}%")->limit(50)->pluck('title', 'key')->toArray())
+                    ->getOptionLabelUsing(fn($value): ?string => Project::where('key', $value)->first()?->title)
                     ->required()
                     ->placeholder('Select a project'),
                 Forms\Components\Select::make('type')
@@ -52,8 +51,8 @@ class ProjectTransactionResource extends Resource
                         'Operation' => 'Operation',
                     ])
                     ->required(),
-                Forms\Components\Select::make('what_id')
-                    ->relationship('what', 'id')
+                Forms\Components\TextInput::make('what_id')
+                    ->numeric()
                     ->required(),
                 Forms\Components\TextInput::make('amount')
                     ->required()

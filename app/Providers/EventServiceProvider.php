@@ -12,15 +12,6 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        'eloquent.created: *' => [
-            'App\Listeners\LogModelChanges',
-        ],
-        'eloquent.updated: *' => [
-            'App\Listeners\LogModelChanges',
-        ],
-        'eloquent.deleted: *' => [
-            'App\Listeners\LogModelChanges',
-        ],
     ];
 
     /**

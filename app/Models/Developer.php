@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Traits\LogsActivity;
 
 class Developer extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -29,4 +28,3 @@ class Developer extends Model
         return $this->hasMany(Project::class);
     }
 }
-

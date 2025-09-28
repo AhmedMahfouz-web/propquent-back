@@ -8,32 +8,54 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class Project extends Model implements HasMedia
+class Project extends Model // implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, HasUuids;
-    
+    use HasFactory; // InteractsWithMedia;
+
+    /**
+     * The primary key for the model.
+     */
+    protected $primaryKey = 'id';
+
+    /**
+     * The "type" of the primary key ID.
+     */
+    protected $keyType = 'string';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     */
+    public $incrementing = false;
+
     /**
      * The "booted" method of the model.
      */
     protected static function booted(): void
     {
-        static::addGlobalScope('latest_first', function ($builder) {
-            $builder->orderBy('created_at', 'desc');
+        // Temporarily disabled global scope to test for infinite loops
+        // static::addGlobalScope('latest_first', function ($builder) {
+        //     $builder->orderBy('created_at', 'desc');
+        // });
+
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) \Illuminate\Support\Str::uuid();
+            }
         });
     }
 
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('main_image')->singleFile();
-        $this->addMediaCollection('images');
-    }
+    // Temporarily disabled media library to test for infinite loops
+    // public function registerMediaCollections(): void
+    // {
+    //     $this->addMediaCollection('main_image')->singleFile();
+    //     $this->addMediaCollection('images');
+    // }
 
-    public function images()
-    {
-        return $this->media()->where('collection_name', 'images');
-    }
+    // public function images()
+    // {
+    //     return $this->media()->where('collection_name', 'images');
+    // }
 
     /**
      * The attributes that are mass assignable.
@@ -87,4 +109,3 @@ class Project extends Model implements HasMedia
         return $this->hasMany(ProjectTransaction::class, 'project_key', 'key');
     }
 }
-

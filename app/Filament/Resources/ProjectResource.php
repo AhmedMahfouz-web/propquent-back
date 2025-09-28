@@ -28,7 +28,7 @@ class ProjectResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['developer', 'media']);
+        return parent::getEloquentQuery();
     }
 
     public static function form(Form $form): Form
@@ -100,15 +100,16 @@ class ProjectResource extends Resource
                 Forms\Components\TextInput::make('investment_type')
                     ->required()
                     ->maxLength(255),
-                SpatieMediaLibraryFileUpload::make('main_image')
-                    ->label('Main Image')
-                    ->collection('main_image'),
+                // Temporarily disabled media library components to test for infinite loops
+                // SpatieMediaLibraryFileUpload::make('main_image')
+                //     ->label('Main Image')
+                //     ->collection('main_image'),
 
-                SpatieMediaLibraryFileUpload::make('images')
-                    ->label('Images')
-                    ->collection('images')
-                    ->multiple()
-                    ->reorderable(),
+                // SpatieMediaLibraryFileUpload::make('images')
+                //     ->label('Images')
+                //     ->collection('images')
+                //     ->multiple()
+                //     ->reorderable(),
                 Forms\Components\FileUpload::make('document')
                     ->label('Document')
                     ->disk('public')

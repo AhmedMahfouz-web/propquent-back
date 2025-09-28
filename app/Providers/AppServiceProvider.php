@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Http\Livewire\ThemeSwitcherPanel;
-use App\Filament\Livewire\ThemeSwitcher;
+
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,7 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Livewire::component('theme-switcher-panel', ThemeSwitcherPanel::class);
-        Livewire::component('theme-switcher', ThemeSwitcher::class);
+        // Increase PHP execution time limit to prevent timeouts during heavy operations
+        ini_set('max_execution_time', 300); // 5 minutes
+
+        // Temporarily disabled theme switcher components to test for infinite loops
+        // Livewire::component('theme-switcher-panel', ThemeSwitcherPanel::class);
+        // Livewire::component('theme-switcher', ThemeSwitcher::class);
     }
 }

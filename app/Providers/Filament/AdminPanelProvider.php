@@ -21,7 +21,6 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\Support\Facades\Blade;
 use App\Filament\Resources\DeveloperResource;
-use App\Filament\Resources\LogResource;
 use App\Filament\Widgets\LatestProjectTransactions;
 use App\Filament\Widgets\LatestUserTransactions;
 use App\Filament\Widgets\StatsOverview;
@@ -71,18 +70,19 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
             ])
 
-            ->widgets([
-                StatsOverview::class,
-                LatestProjectTransactions::class,
-                LatestUserTransactions::class,
-            ])
+            // Temporarily disabled widgets to test for infinite loops
+            // ->widgets([
+            //     StatsOverview::class,
+            //     LatestProjectTransactions::class,
+            //     LatestUserTransactions::class,
+            // ])
             ->resources([
                 DeveloperResource::class,
-                LogResource::class,
             ])
-            ->assets([
-                Css::make('custom', asset('css/custom.css')),
-            ])
+            // Temporarily disabled custom CSS to test for infinite loops
+            // ->assets([
+            //     Css::make('custom', asset('css/custom.css')),
+            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -96,10 +96,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->renderHook(
-                'panels::global-search.after',
-                fn () => Blade::render('<livewire:theme-switcher />')
-            );
+            ]);
+        // Temporarily disabled theme switcher render hook to test for infinite loops
+        // ->renderHook(
+        //     'panels::global-search.after',
+        //     fn () => Blade::render('<livewire:theme-switcher />')
+        // );
     }
 }
