@@ -109,13 +109,42 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\RestoreAction::make(),
-                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make()
+                    ->before(function (User $record, Tables\Actions\ForceDeleteAction $action) {
+                        $transactionCount = $record->transactions()->count();
+                        if ($transactionCount > 0) {
+                            $action->halt();
+                            \Filament\Notifications\Notification::make()
+                                ->title('Cannot Delete User')
+                                ->body("This user can't be deleted because it has {$transactionCount} transaction(s).")
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\RestoreBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->before(function ($records, Tables\Actions\ForceDeleteBulkAction $action) {
+                            $usersWithTransactions = [];
+                            foreach ($records as $record) {
+                                $transactionCount = $record->transactions()->count();
+                                if ($transactionCount > 0) {
+                                    $usersWithTransactions[] = "{$record->full_name} ({$transactionCount} transactions)";
+                                }
+                            }
+                            
+                            if (!empty($usersWithTransactions)) {
+                                $action->halt();
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Cannot Delete Users')
+                                    ->body('The following users cannot be deleted because they have transactions: ' . implode(', ', $usersWithTransactions))
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
