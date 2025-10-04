@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\ThemeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProjectController;
@@ -22,24 +23,30 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('api.auth.login');
     Route::post('/register', [AuthController::class, 'register'])->name('api.auth.register');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('api.auth.forgot-password');
+    Route::post('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('api.auth.reset-password');
 
     // Protected auth routes
     Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
-        Route::post('/refresh', [AuthController::class, 'refresh'])->name('api.auth.refresh');
-        Route::get('/me', [AuthController::class, 'me'])->name('api.auth.me');
-        Route::post('/change-password', [AuthController::class, 'changePassword'])->name('api.auth.change-password');
     });
 });
 
 // Protected API Routes
 Route::middleware(['jwt.auth'])->group(function () {
 
+    // Home Dashboard Route
+    Route::get('/home/dashboard', [HomeController::class, 'dashboard'])->name('api.home.dashboard');
+    
+    // User Profile Route
+    Route::get('/profile', [UserController::class, 'profile'])->name('api.profile');
+
     // User Management Routes
     Route::apiResource('users', UserController::class);
 
     // Project Management Routes
     Route::apiResource('projects', ProjectController::class);
+    Route::get('/projects-list', [ProjectController::class, 'projectsList'])->name('api.projects.list');
 
     // Project Transactions Routes
     Route::prefix('projects/{project}')->group(function () {

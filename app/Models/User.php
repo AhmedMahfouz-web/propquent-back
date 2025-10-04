@@ -67,6 +67,8 @@ class User extends Authenticatable implements JWTSubject
         'theme_color',
         'custom_theme_color',
         'custom_id',
+        'password_reset_token',
+        'password_reset_expires_at',
     ];
 
     /**
@@ -77,6 +79,7 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password_hash',
         'remember_token',
+        'password_reset_token',
     ];
 
     /**
@@ -90,6 +93,7 @@ class User extends Authenticatable implements JWTSubject
             'email_verified' => 'boolean',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
+            'password_reset_expires_at' => 'datetime',
         ];
     }
 
@@ -111,11 +115,12 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * Get the profit distributions for the user.
+     * Note: ProfitDistribution model may not exist yet
      */
-    public function profitDistributions(): HasMany
-    {
-        return $this->hasMany(ProfitDistribution::class);
-    }
+    // public function profitDistributions(): HasMany
+    // {
+    //     return $this->hasMany(ProfitDistribution::class);
+    // }
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
@@ -139,11 +144,46 @@ class User extends Authenticatable implements JWTSubject
 
     /**
      * Get the password for the user.
+     * Support both password and password_hash fields
      *
      * @return string
      */
     public function getAuthPassword()
     {
         return $this->password_hash;
+    }
+
+    /**
+     * Generate password reset token
+     */
+    public function generatePasswordResetToken(): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->update([
+            'password_reset_token' => $token,
+            'password_reset_expires_at' => now()->addHours(1), // Token expires in 1 hour
+        ]);
+        return $token;
+    }
+
+    /**
+     * Check if password reset token is valid
+     */
+    public function isValidPasswordResetToken(string $token): bool
+    {
+        return $this->password_reset_token === $token 
+            && $this->password_reset_expires_at 
+            && $this->password_reset_expires_at->isFuture();
+    }
+
+    /**
+     * Clear password reset token
+     */
+    public function clearPasswordResetToken(): void
+    {
+        $this->update([
+            'password_reset_token' => null,
+            'password_reset_expires_at' => null,
+        ]);
     }
 }
