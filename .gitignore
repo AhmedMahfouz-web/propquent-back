@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+EMAIL_SETUP_GUIDE.md
+ENV_CONFIGURATION.txt
+QUICK_START_EMAIL.md
+test-register.sh
