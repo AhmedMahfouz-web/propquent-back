@@ -159,7 +159,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 Password Reset Request</h1>
+            <h1>Password Reset Request</h1>
         </div>
 
         <div class="content">
