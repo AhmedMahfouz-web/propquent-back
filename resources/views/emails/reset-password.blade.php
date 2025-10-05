@@ -9,19 +9,18 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f8fafc;
+            background-color: #f5f5f5;
             line-height: 1.6;
         }
         .email-container {
             max-width: 600px;
             margin: 40px auto;
             background-color: #ffffff;
-            border-radius: 12px;
+            border: 1px solid #e0e0e0;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
         .header {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background-color: #000000;
             padding: 40px 30px;
             text-align: center;
             color: white;
@@ -34,7 +33,7 @@
         .header p {
             margin: 0;
             font-size: 16px;
-            opacity: 0.9;
+            color: #cccccc;
         }
         .content {
             padding: 40px 30px;
@@ -42,12 +41,12 @@
         .greeting {
             font-size: 20px;
             font-weight: 600;
-            color: #1f2937;
+            color: #000000;
             margin-bottom: 20px;
         }
         .message {
             font-size: 16px;
-            color: #4b5563;
+            color: #333333;
             margin-bottom: 35px;
             line-height: 1.7;
         }
@@ -58,119 +57,121 @@
         .reset-button {
             display: inline-block;
             padding: 16px 32px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background-color: #000000;
             color: #ffffff;
             text-decoration: none;
-            border-radius: 8px;
             font-weight: 600;
             font-size: 16px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            transition: all 0.2s ease;
+            border: 2px solid #000000;
         }
         .reset-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            background-color: #ffffff;
+            color: #000000;
         }
         .token-section {
-            background-color: #f9fafb;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
             padding: 25px;
             margin: 30px 0;
         }
         .token-label {
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: #000000;
             margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .token-value {
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            color: #1f2937;
+            color: #000000;
             background-color: #ffffff;
             padding: 12px 16px;
-            border-radius: 6px;
-            border: 1px solid #d1d5db;
+            border: 1px solid #cccccc;
             word-break: break-all;
         }
         .expiry-notice {
             text-align: center;
             font-size: 14px;
-            color: #dc2626;
+            color: #000000;
             font-weight: 600;
             margin: 25px 0;
             padding: 12px;
-            background-color: #fef2f2;
-            border-radius: 8px;
-            border-left: 4px solid #dc2626;
+            background-color: #f0f0f0;
+            border-left: 4px solid #000000;
         }
         .security-notice {
-            background-color: #fffbeb;
-            border: 1px solid #fbbf24;
-            border-radius: 8px;
+            background-color: #f8f8f8;
+            border: 1px solid #cccccc;
             padding: 20px;
             margin: 30px 0;
         }
         .security-title {
             font-size: 16px;
             font-weight: 600;
-            color: #92400e;
+            color: #000000;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .security-text {
             font-size: 14px;
-            color: #92400e;
+            color: #333333;
             margin: 0;
         }
         .alternative-link {
             text-align: center;
             font-size: 14px;
-            color: #6b7280;
+            color: #666666;
             margin-top: 30px;
         }
         .alternative-link a {
-            color: #3b82f6;
-            text-decoration: none;
+            color: #000000;
+            text-decoration: underline;
             word-break: break-all;
             font-family: 'Courier New', monospace;
             font-size: 12px;
         }
         .footer {
-            background-color: #f9fafb;
+            background-color: #f8f8f8;
             padding: 30px;
             text-align: center;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #e0e0e0;
         }
         .footer-brand {
             font-size: 20px;
             font-weight: 700;
-            color: #1f2937;
+            color: #000000;
             margin-bottom: 8px;
         }
         .footer-tagline {
             font-size: 14px;
-            color: #6b7280;
+            color: #666666;
             margin-bottom: 20px;
         }
         .footer-links {
             margin-bottom: 20px;
         }
         .footer-links a {
-            color: #3b82f6;
-            text-decoration: none;
+            color: #000000;
+            text-decoration: underline;
             font-weight: 500;
             margin: 0 15px;
             font-size: 14px;
         }
         .footer-copyright {
             font-size: 12px;
-            color: #9ca3af;
+            color: #999999;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
         }
         @media only screen and (max-width: 600px) {
             .email-container {
                 margin: 20px;
-                border-radius: 8px;
             }
             .content {
                 padding: 30px 20px;
@@ -189,7 +190,7 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <h1>🔐 Password Reset</h1>
+            <h1>Password Reset</h1>
             <p>Secure your ProperQuant account</p>
         </div>
 
@@ -205,24 +206,28 @@
             <!-- CTA Button -->
             <div class="button-container">
                 <a href="{{ $resetUrl }}" class="reset-button">
-                    🔑 Reset My Password
+                    Reset My Password
                 </a>
             </div>
 
+            <div class="divider"></div>
+
             <!-- Token Section -->
             <div class="token-section">
-                <div class="token-label">🎫 Reset Token</div>
+                <div class="token-label">Reset Token</div>
                 <div class="token-value">{{ $resetToken }}</div>
             </div>
 
             <!-- Expiry Notice -->
             <div class="expiry-notice">
-                ⏰ This link expires at {{ $expiresAt->format('M d, Y h:i A') }}
+                This link expires at {{ $expiresAt->format('M d, Y h:i A') }}
             </div>
+
+            <div class="divider"></div>
 
             <!-- Security Notice -->
             <div class="security-notice">
-                <div class="security-title">⚠️ Security Notice</div>
+                <div class="security-title">Security Notice</div>
                 <p class="security-text">
                     If you didn't request this password reset, please ignore this email. 
                     Your password will remain unchanged and your account stays secure.
@@ -243,8 +248,8 @@
             <div class="footer-tagline">Real Estate Investment Management Platform</div>
             
             <div class="footer-links">
-                <a href="https://properquant.net">🌐 Website</a>
-                <a href="mailto:support@properquant.net">📧 Support</a>
+                <a href="https://properquant.net">Website</a>
+                <a href="mailto:support@properquant.net">Support</a>
             </div>
             
             <div class="footer-copyright">
