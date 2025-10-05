@@ -171,8 +171,8 @@ class User extends Authenticatable implements JWTSubject
      */
     public function isValidPasswordResetToken(string $token): bool
     {
-        return $this->password_reset_token === $token 
-            && $this->password_reset_expires_at 
+        return $this->password_reset_token === $token
+            && $this->password_reset_expires_at
             && $this->password_reset_expires_at->isFuture();
     }
 

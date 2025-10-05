@@ -7,11 +7,13 @@ use App\Http\Requests\Api\RegisterRequest;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\ForgotPasswordRequest;
 use App\Http\Requests\Api\ResetPasswordRequest;
+use App\Mail\ResetPasswordMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -131,7 +133,7 @@ class AuthController extends Controller implements HasMiddleware
     }
 
     /**
-     * Forgot password - send reset token
+     * Forgot password - send reset token via email
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
@@ -147,21 +149,41 @@ class AuthController extends Controller implements HasMiddleware
 
             $token = $user->generatePasswordResetToken();
 
-            // Here you would typically send an email with the reset token
-            // For now, we'll return it in the response (remove this in production)
-            Log::info('Password reset requested', [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
+            // Generate reset URL
+            $resetUrl = config('app.frontend_url', 'https://properquant.net') . '/reset-password/' . $token;
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Password reset token generated',
-                'data' => [
-                    'reset_token' => $token, // Remove this in production
-                    'expires_at' => $user->password_reset_expires_at
-                ]
-            ]);
+            // Send password reset email
+            try {
+                Mail::to($user->email)->send(new ResetPasswordMail($user, $token, $resetUrl));
+                
+                Log::info('Password reset email sent successfully', [
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Password reset instructions have been sent to your email',
+                    'data' => [
+                        'email' => $user->email,
+                        'expires_at' => $user->password_reset_expires_at
+                    ]
+                ]);
+
+            } catch (\Exception $mailException) {
+                Log::error('Failed to send password reset email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $mailException->getMessage()
+                ]);
+
+                // Still return success to user for security reasons
+                // but log the error for admin review
+                return response()->json([
+                    'success' => true,
+                    'message' => 'If your email exists in our system, you will receive password reset instructions',
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error('Forgot password failed', [

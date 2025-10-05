@@ -1,0 +1,58 @@
+================================================
+PROPERQUANT EMAIL CONFIGURATION
+================================================
+
+Add these lines to your .env file:
+
+# Application Settings
+APP_NAME=ProperQuant
+APP_URL=https://properquant.net
+FRONTEND_URL=https://properquant.net
+
+# Mail Configuration for Hostinger
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.hostinger.com
+MAIL_PORT=465
+MAIL_USERNAME=support@properquant.net
+MAIL_PASSWORD="KEd+K*mt4I;"
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS="support@properquant.net"
+MAIL_FROM_NAME="ProperQuant Support"
+
+================================================
+AFTER UPDATING .ENV, RUN THESE COMMANDS:
+================================================
+
+php artisan config:clear
+php artisan cache:clear
+php artisan config:cache
+
+================================================
+TEST EMAIL CONFIGURATION:
+================================================
+
+php artisan email:test your-email@example.com
+
+================================================
+API ENDPOINT FOR PASSWORD RESET:
+================================================
+
+POST /api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+
+================================================
+NOTES:
+================================================
+
+1. The password contains special characters, so it's wrapped in quotes
+2. Port 465 uses SSL encryption
+3. Alternative: Use port 587 with TLS if 465 is blocked
+4. Email will be sent from: support@properquant.net
+5. Reset link format: https://properquant.net/reset-password/{token}
+6. Token expires after 1 hour
+
+================================================
