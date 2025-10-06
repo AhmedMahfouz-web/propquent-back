@@ -148,10 +148,12 @@ class UserFinancialReport extends Page implements HasForms
 
     public function getAvailableMonthsProperty(): array
     {
-        $projectMonths = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        $projectMonths = ProjectTransaction::where('status', 'done')
+            ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
             ->distinct();
 
-        $userMonths = UserTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        $userMonths = UserTransaction::where('status', 'done')
+            ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
             ->distinct();
 
         $months = $projectMonths->union($userMonths)
@@ -276,12 +278,13 @@ class UserFinancialReport extends Page implements HasForms
 
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
-                DB::raw("DATE_FORMAT(pt.transaction_date, '%Y-%m-01') as month_date"),
+                DB::raw("DATE_FORMAT(COALESCE(pt.actual_date, pt.transaction_date), '%Y-%m-01') as month_date"),
                 'pt.financial_type as type',
                 'pt.serving as serving_name',
                 DB::raw('SUM(pt.amount) as total_amount'),
             )
-            ->whereBetween('pt.transaction_date', [
+            ->where('pt.status', 'done')
+            ->whereBetween(DB::raw('COALESCE(pt.actual_date, pt.transaction_date)'), [
                 end($monthsToShow),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ])
@@ -343,7 +346,7 @@ class UserFinancialReport extends Page implements HasForms
         // Get user transactions - simplified approach matching company report
         $userTransactionsData = UserTransaction::query()
             ->select(
-                DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
+                DB::raw("DATE_FORMAT(COALESCE(actual_date, transaction_date), '%Y-%m-01') as month_date"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals"),
             )
@@ -419,12 +422,12 @@ class UserFinancialReport extends Page implements HasForms
         
         $userTransactions = UserTransaction::query()
             ->select(
-                DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
+                DB::raw("DATE_FORMAT(COALESCE(actual_date, transaction_date), '%Y-%m-01') as month_date"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as total_deposits"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
             )
             ->where('status', UserTransaction::STATUS_DONE)
-            ->whereBetween('transaction_date', [
+            ->whereBetween(DB::raw('COALESCE(actual_date, transaction_date)'), [
                 end($monthsToShow),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ])

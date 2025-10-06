@@ -136,7 +136,8 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function getAvailableMonthsProperty(): array
     {
-        $months = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        $months = ProjectTransaction::where('status', 'done')
+            ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
             ->distinct()
             ->orderBy('month_date', 'asc')
             ->pluck('month_date')
@@ -204,7 +205,15 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
         foreach ($project->transactions as $transaction) {
-            $month = date('Y-m-01', strtotime($transaction->transaction_date));
+            // Only include transactions that are marked as "done"
+            if ($transaction->status !== 'done') {
+                continue;
+            }
+            
+            // Use actual_date if available, otherwise fall back to transaction_date
+            $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+            $month = date('Y-m-01', strtotime($dateToUse));
+            
             if (isset($data['months'][$month]) && $transaction->financial_type && $transaction->serving) {
                 $key = $transaction->financial_type . '_' . $transaction->serving;
                 if (!isset($data['months'][$month][$key])) {
@@ -243,9 +252,14 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['months'][$month] = $summary['totals'];
         }
         $projectKeys = (clone $projectsQuery)->pluck('key');
-        $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)->get();
+        $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)
+            ->where('status', 'done')
+            ->get();
         foreach ($transactions as $transaction) {
-            $month = date('Y-m-01', strtotime($transaction->transaction_date));
+            // Use actual_date if available, otherwise fall back to transaction_date
+            $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+            $month = date('Y-m-01', strtotime($dateToUse));
+            
             if (isset($summary['months'][$month]) && $transaction->financial_type && $transaction->serving) {
                 $key = $transaction->financial_type . '_' . $transaction->serving;
                 if (!isset($summary['months'][$month][$key])) {
