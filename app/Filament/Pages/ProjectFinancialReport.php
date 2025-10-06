@@ -205,8 +205,8 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         foreach ($project->transactions as $transaction) {
             $month = date('Y-m-01', strtotime($transaction->transaction_date));
-            if (isset($data['months'][$month])) {
-                $key = $transaction->type . '_' . $transaction->category;
+            if (isset($data['months'][$month]) && $transaction->financial_type && $transaction->serving) {
+                $key = $transaction->financial_type . '_' . $transaction->serving;
                 if (!isset($data['months'][$month][$key])) {
                     $data['months'][$month][$key] = 0;
                 }
@@ -246,8 +246,8 @@ class ProjectFinancialReport extends Page implements HasForms
         $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)->get();
         foreach ($transactions as $transaction) {
             $month = date('Y-m-01', strtotime($transaction->transaction_date));
-            if (isset($summary['months'][$month])) {
-                $key = $transaction->type . '_' . $transaction->category;
+            if (isset($summary['months'][$month]) && $transaction->financial_type && $transaction->serving) {
+                $key = $transaction->financial_type . '_' . $transaction->serving;
                 if (!isset($summary['months'][$month][$key])) {
                     $summary['months'][$month][$key] = 0;
                 }
