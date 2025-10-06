@@ -239,13 +239,13 @@
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
                                                 @foreach ($transactions as $transaction)
-                                                    <div class="mb-1 p-1 rounded text-xs cursor-help
-                                                    {{ $transaction->financial_type === 'revenue' ? 'bg-green-100 border border-green-300 text-green-900 dark:bg-green-800 dark:border-green-600 dark:text-green-100 shadow-sm' : 'bg-red-100 border border-red-300 text-red-900 dark:bg-red-800 dark:border-red-600 dark:text-red-100 shadow-sm' }}"
+                                                    <div class="mb-1 p-1 rounded text-xs cursor-help"
+                                                        style="{{ $transaction->financial_type === 'revenue' ? 'background-color: #dcfce7; border: 1px solid #86efac; color: #166534; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' : 'background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' }}"
                                                         title="{{ ucfirst($transaction->financial_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ $transaction->status === 'done' ? \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') : \Carbon\Carbon::parse($transaction->due_date)->format('M j') }}">
-                                                        <div class="text-xs font-medium mb-1">
+                                                        <div style="font-size: 10px; font-weight: 500; margin-bottom: 2px;">
                                                             {{ $transaction->financial_type === 'revenue' ? 'REV' : 'EXP' }}
                                                         </div>
-                                                        <div class="text-xs">
+                                                        <div style="font-size: 11px;">
                                                             {{ number_format($transaction->amount, 0) }}
                                                         </div>
                                                     </div>
@@ -381,13 +381,13 @@
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
                                                 @foreach ($transactions as $transaction)
-                                                    <div class="mb-1 p-1 rounded text-xs cursor-help
-                                                    {{ $transaction->transaction_type === 'deposit' ? 'bg-green-100 border border-green-300 text-green-900 dark:bg-green-800 dark:border-green-600 dark:text-green-100 shadow-sm' : 'bg-red-100 border border-red-300 text-red-900 dark:bg-red-800 dark:border-red-600 dark:text-red-100 shadow-sm' }}"
+                                                    <div class="mb-1 p-1 rounded text-xs cursor-help"
+                                                        style="{{ $transaction->transaction_type === 'deposit' ? 'background-color: #dcfce7; border: 1px solid #86efac; color: #166534; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' : 'background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' }}"
                                                         title="{{ ucfirst($transaction->transaction_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') }}">
-                                                        <div class="text-xs font-medium mb-1">
+                                                        <div style="font-size: 10px; font-weight: 500; margin-bottom: 2px;">
                                                             {{ $transaction->transaction_type === 'deposit' ? 'DEP' : 'WTH' }}
                                                         </div>
-                                                        <div class="text-xs">
+                                                        <div style="font-size: 11px;">
                                                             {{ number_format($transaction->amount, 0) }}
                                                         </div>
                                                     </div>
