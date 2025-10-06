@@ -38,7 +38,7 @@ class UserTransactionResource extends Resource
 
                         Forms\Components\Select::make('transaction_type')
                             ->label('Type')
-                            ->options(fn() => UserTransaction::getAvailableTransactionTypes())
+                            ->options(fn() => UserTransaction::getAvailableTransactionTypes() ?: [])
                             ->required(),
 
                         Forms\Components\TextInput::make('amount')
@@ -53,7 +53,7 @@ class UserTransactionResource extends Resource
                 Forms\Components\Section::make('Payment Information')
                     ->schema([
                         Forms\Components\Select::make('method')
-                            ->options(fn() => UserTransaction::getAvailableMethods())
+                            ->options(fn() => UserTransaction::getAvailableMethods() ?: [])
                             ->nullable()
                             ->searchable(),
 
@@ -63,7 +63,7 @@ class UserTransactionResource extends Resource
                             ->nullable(),
 
                         Forms\Components\Select::make('status')
-                            ->options(fn() => UserTransaction::getAvailableStatuses())
+                            ->options(fn() => UserTransaction::getAvailableStatuses() ?: [])
                             ->required(),
                     ])
                     ->columns(3),
@@ -136,7 +136,7 @@ class UserTransactionResource extends Resource
                     ->width(120),
 
                 Tables\Columns\SelectColumn::make('method')
-                    ->options(fn() => UserTransaction::getAvailableMethods())
+                    ->options(fn() => UserTransaction::getAvailableMethods() ?: [])
                     ->placeholder('Select method...')
                     ->selectablePlaceholder(false)
                     ->sortable()
@@ -150,7 +150,7 @@ class UserTransactionResource extends Resource
                     ->width(150),
 
                 Tables\Columns\SelectColumn::make('status')
-                    ->options(fn() => UserTransaction::getAvailableStatuses())
+                    ->options(fn() => UserTransaction::getAvailableStatuses() ?: [])
                     ->rules(['required'])
                     ->selectablePlaceholder(false)
                     ->sortable()
@@ -215,13 +215,13 @@ class UserTransactionResource extends Resource
                     ->preload(),
 
                 Tables\Filters\SelectFilter::make('type')
-                    ->options(fn() => UserTransaction::getAvailableTransactionTypes()),
+                    ->options(fn() => UserTransaction::getAvailableTransactionTypes() ?: []),
 
                 Tables\Filters\SelectFilter::make('status')
-                    ->options(fn() => UserTransaction::getAvailableStatuses()),
+                    ->options(fn() => UserTransaction::getAvailableStatuses() ?: []),
 
                 Tables\Filters\SelectFilter::make('method')
-                    ->options(fn() => UserTransaction::getAvailableMethods()),
+                    ->options(fn() => UserTransaction::getAvailableMethods() ?: []),
 
                 Tables\Filters\Filter::make('amount_range')
                     ->form([

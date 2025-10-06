@@ -41,6 +41,7 @@ class UserTransactionTable extends Component
     public function mount()
     {
         $this->loadData();
+        $this->loadOptions();
     }
 
     public function loadData()
@@ -77,6 +78,10 @@ class UserTransactionTable extends Component
             })
             ->toArray();
 
+    }
+
+    public function loadOptions()
+    {
         $this->users = User::all()
             ->mapWithKeys(function ($user) {
                 return [$user->id => $user->full_name . ' (' . $user->custom_id . ')'];
@@ -108,6 +113,11 @@ class UserTransactionTable extends Component
     public function updateDraftRow($rowId, $field, $value)
     {
         if (isset($this->draftRows[$rowId])) {
+            // Convert empty date strings to null
+            if (in_array($field, ['transaction_date', 'actual_date']) && empty($value)) {
+                $value = null;
+            }
+
             $this->draftRows[$rowId][$field] = $value;
 
             // Check if all required fields are filled and attempt to save
@@ -117,10 +127,15 @@ class UserTransactionTable extends Component
 
     public function updateExistingRow($transactionId, $field, $value)
     {
-        $transaction = UserTransaction::find($transactionId);
-        if ($transaction) {
-            try {
-                // Validate the field
+        try {
+            $transaction = UserTransaction::find($transactionId);
+            if ($transaction) {
+                // Convert empty date strings to null
+                if (in_array($field, ['transaction_date', 'actual_date']) && empty($value)) {
+                    $value = null;
+                }
+
+                // Validate the single field update
                 $validator = Validator::make([$field => $value], [
                     $field => $this->getFieldValidationRule($field)
                 ]);
@@ -142,13 +157,13 @@ class UserTransactionTable extends Component
                     ->body('Changes saved automatically')
                     ->success()
                     ->send();
-            } catch (\Exception $e) {
-                Notification::make()
-                    ->title('Error')
-                    ->body('Failed to save: ' . $e->getMessage())
-                    ->danger()
-                    ->send();
             }
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error')
+                ->body('Failed to save: ' . $e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
@@ -156,13 +171,13 @@ class UserTransactionTable extends Component
     {
         $rules = [
             'user_id' => 'required|exists:users,id',
-            'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes)),
+            'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes ?: [])),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
-            'actual_date' => 'required|date',
-            'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
+            'actual_date' => 'nullable|date',
+            'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods ?: [])),
             'reference_no' => 'nullable|string|max:255',
-            'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
+            'status' => 'required|in:' . implode(',', array_keys($this->statuses ?: [])),
             'note' => 'nullable|string|max:65535',
         ];
 
@@ -172,7 +187,7 @@ class UserTransactionTable extends Component
     private function getValidationErrors($row)
     {
         $errors = [];
-        $requiredFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date', 'actual_date'];
+        $requiredFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date'];
 
         foreach ($requiredFields as $field) {
             if (empty($row[$field])) {
@@ -187,8 +202,8 @@ class UserTransactionTable extends Component
     {
         $row = $this->draftRows[$rowId];
 
-        // Check if core fields are filled (user, type, method, amount, status, date, actual_date)
-        $coreFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date', 'actual_date'];
+        // Check if core fields are filled (user, type, amount, status, date)
+        $coreFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date'];
         $hasCoreFields = true;
 
         foreach ($coreFields as $field) {
@@ -199,18 +214,15 @@ class UserTransactionTable extends Component
         }
 
         if ($hasCoreFields) {
-            // Validate the data
-            $validator = Validator::make($row, [
-                'user_id' => 'required|exists:users,id',
-                'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes)),
-                'amount' => 'required|numeric|min:0.01',
-                'transaction_date' => 'required|date',
-                'actual_date' => 'required|date',
-                'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods)),
-                'reference_no' => 'nullable|string|max:255',
-                'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
-                'note' => 'nullable|string|max:65535',
-            ]);
+            // Convert empty date strings to null
+            foreach (['transaction_date', 'actual_date'] as $dateField) {
+                if (isset($row[$dateField]) && empty($row[$dateField])) {
+                    $row[$dateField] = null;
+                }
+            }
+
+            // Validate the data using the model's validation rules
+            $validator = Validator::make($row, UserTransaction::getValidationRules());
 
             if (!$validator->fails()) {
                 try {

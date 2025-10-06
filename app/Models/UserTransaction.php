@@ -134,7 +134,20 @@ class UserTransaction extends Model
      */
     public static function getAvailableStatuses(): array
     {
-        return SystemConfiguration::getOptions('transaction_statuses');
+        try {
+            $statuses = SystemConfiguration::getOptions('transaction_statuses');
+            return $statuses ?: [
+                'pending' => 'Pending',
+                'completed' => 'Completed',
+                'cancelled' => 'Cancelled',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'pending' => 'Pending',
+                'completed' => 'Completed',
+                'cancelled' => 'Cancelled',
+            ];
+        }
     }
 
     public static function isValidStatus(string $status): bool
@@ -147,7 +160,22 @@ class UserTransaction extends Model
      */
     public static function getAvailableMethods(): array
     {
-        return SystemConfiguration::getOptions('transaction_methods');
+        try {
+            $methods = SystemConfiguration::getOptions('transaction_methods');
+            return $methods ?: [
+                'cash' => 'Cash',
+                'bank_transfer' => 'Bank Transfer',
+                'cheque' => 'Cheque',
+                'card' => 'Card',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'cash' => 'Cash',
+                'bank_transfer' => 'Bank Transfer',
+                'cheque' => 'Cheque',
+                'card' => 'Card',
+            ];
+        }
     }
 
     /**
@@ -155,15 +183,19 @@ class UserTransaction extends Model
      */
     public static function getValidationRules(): array
     {
+        $transactionTypes = self::getAvailableTransactionTypes();
+        $methods = self::getAvailableMethods();
+        $statuses = self::getAvailableStatuses();
+
         return [
             'user_id' => 'required|exists:users,id',
-            'transaction_type' => 'required|in:' . implode(',', array_keys(self::getAvailableTransactionTypes())),
+            'transaction_type' => 'required|in:' . implode(',', array_keys($transactionTypes ?: [])),
             'amount' => 'required|numeric|min:0.01',
             'transaction_date' => 'required|date',
             'actual_date' => 'nullable|date',
-            'method' => 'nullable|in:' . implode(',', array_keys(self::getAvailableMethods())),
+            'method' => 'nullable' . (!empty($methods) ? '|in:' . implode(',', array_keys($methods)) : ''),
             'reference_no' => 'nullable|string|max:255',
-            'status' => 'required|in:' . implode(',', array_keys(self::getAvailableStatuses())),
+            'status' => 'required' . (!empty($statuses) ? '|in:' . implode(',', array_keys($statuses)) : ''),
             'note' => 'nullable|string|max:65535',
         ];
     }
