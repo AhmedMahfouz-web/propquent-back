@@ -12,10 +12,34 @@
 
         $allMonths = $projectMonths->union($userMonths)->orderBy('month_date', 'desc')->pluck('month_date');
 
-        // 2. Get the selected month from the request, or default to the latest one.
-        $selectedMonth = request('start_month', $allMonths->first());
+        // 2. Get the selected months from the request, or default to show all months.
+        $selectedStartMonth = request('start_month', $allMonths->last()); // Default to earliest month
+        $selectedEndMonth = request('end_month', $allMonths->first()); // Default to latest month
 
-        $monthsToShow = $allMonths;
+        // 3. Filter months to show only those between start and end month (inclusive)
+        $monthsToShow = $allMonths->filter(function ($month) use ($selectedStartMonth, $selectedEndMonth) {
+            return $month >= $selectedStartMonth && $month <= $selectedEndMonth;
+        })->values();
+
+        // 4. If no months match the filter, show all months
+        if ($monthsToShow->isEmpty()) {
+            $monthsToShow = $allMonths;
+        }
+
+        // 5. Generate complete month range between start and end to ensure no gaps
+        if ($selectedStartMonth && $selectedEndMonth) {
+            $start = \Carbon\Carbon::parse($selectedStartMonth);
+            $end = \Carbon\Carbon::parse($selectedEndMonth);
+            $completeMonths = collect();
+            
+            $current = $start->copy();
+            while ($current <= $end) {
+                $completeMonths->push($current->format('Y-m-01'));
+                $current->addMonth();
+            }
+            
+            $monthsToShow = $completeMonths->reverse(); // Reverse to show latest first
+        }
 
         // 3. Build and execute the query for project transactions using a cursor for memory efficiency.
         $reportData = ['revenue' => [], 'expense' => []];
@@ -191,14 +215,26 @@
     {{-- Month Selection Form --}}
     <form action="{{ route('filament.admin.pages.company-financial-report') }}" method="GET"
         class="mb-6 p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
-                <label for="start_month" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Starting
+                <label for="start_month" class="block text-sm font-medium text-gray-700 dark:text-gray-200">From
                     Month</label>
                 <select name="start_month" id="start_month"
                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    @foreach ($allMonths as $month)
-                        <option value="{{ $month }}" @if ($month == $selectedMonth) selected @endif>
+                    @foreach ($allMonths->reverse() as $month)
+                        <option value="{{ $month }}" @if ($month == $selectedStartMonth) selected @endif>
+                            {{ date('F Y', strtotime($month)) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="end_month" class="block text-sm font-medium text-gray-700 dark:text-gray-200">To
+                    Month</label>
+                <select name="end_month" id="end_month"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    @foreach ($allMonths->reverse() as $month)
+                        <option value="{{ $month }}" @if ($month == $selectedEndMonth) selected @endif>
                             {{ date('F Y', strtotime($month)) }}
                         </option>
                     @endforeach
@@ -209,6 +245,12 @@
                     class="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                     Generate Report
                 </button>
+            </div>
+            <div>
+                <a href="{{ route('filament.admin.pages.company-financial-report') }}"
+                    class="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 text-center inline-block">
+                    Reset Filters
+                </a>
             </div>
         </div>
     </form>
