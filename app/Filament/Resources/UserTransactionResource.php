@@ -38,7 +38,7 @@ class UserTransactionResource extends Resource
 
                         Forms\Components\Select::make('transaction_type')
                             ->label('Type')
-                            ->options(fn() => UserTransaction::getAvailableTransactionTypes() ?: [])
+                            ->options(fn() => UserTransaction::getAvailableTransactionTypes())
                             ->required(),
 
                         Forms\Components\TextInput::make('amount')
@@ -53,7 +53,7 @@ class UserTransactionResource extends Resource
                 Forms\Components\Section::make('Payment Information')
                     ->schema([
                         Forms\Components\Select::make('method')
-                            ->options(fn() => UserTransaction::getAvailableMethods() ?: [])
+                            ->options(fn() => UserTransaction::getAvailableMethods())
                             ->nullable()
                             ->searchable(),
 
@@ -63,7 +63,7 @@ class UserTransactionResource extends Resource
                             ->nullable(),
 
                         Forms\Components\Select::make('status')
-                            ->options(fn() => UserTransaction::getAvailableStatuses() ?: [])
+                            ->options(fn() => UserTransaction::getAvailableStatuses())
                             ->required(),
                     ])
                     ->columns(3),
@@ -93,117 +93,72 @@ class UserTransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->contentGrid([
-                'md' => 1,
-                'xl' => 1,
-            ])
-            ->striped()
-            ->defaultPaginationPageOption(25)
             ->columns([
-                Tables\Columns\SelectColumn::make('user_id')
-                    ->label('User')
-                    ->options(function () {
-                        return \App\Models\User::all()
-                            ->mapWithKeys(function ($user) {
-                                return [$user->id => "{$user->full_name} ({$user->email})"];
-                            })
-                            ->toArray();
-                    })
-                    ->rules(['required', 'exists:users,id'])
-                    ->selectablePlaceholder(false)
-                    ->searchable()
-                    ->sortable()
-                    ->width(250),
-
-                Tables\Columns\SelectColumn::make('transaction_type')
-                    ->label('Type')
-                    ->options(fn() => UserTransaction::getAvailableTransactionTypes())
-                    ->rules(['required'])
-                    ->selectablePlaceholder(false)
-                    ->searchable()
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\TextInputColumn::make('amount')
-                    ->extraInputAttributes([
-                        'type' => 'number',
-                        'step' => '0.01',
-                        'required' => true
-                    ])
-                    ->rules(['required', 'numeric', 'min:0.01'])
-                    ->placeholder('0.00')
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\SelectColumn::make('method')
-                    ->options(fn() => UserTransaction::getAvailableMethods() ?: [])
-                    ->placeholder('Select method...')
-                    ->selectablePlaceholder(false)
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\TextInputColumn::make('reference_no')
-                    ->label('Reference')
-                    ->placeholder('Reference number...')
-                    ->rules(['max:255'])
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\SelectColumn::make('status')
-                    ->options(fn() => UserTransaction::getAvailableStatuses() ?: [])
-                    ->rules(['required'])
-                    ->selectablePlaceholder(false)
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\TextInputColumn::make('transaction_date')
-                    ->rules(['required', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}',
-                        'required' => true
-                    ])
-                    ->width(150)
-                    ->sortable(),
-
-                Tables\Columns\TextInputColumn::make('actual_date')
-                    ->rules(['nullable', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                    ])
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\TextInputColumn::make('note')
-                    ->placeholder('Add note...')
-                    ->rules(['max:65535'])
-                    ->sortable()
-                    ->width(200),
-
-                // Read-only columns for reference
                 Tables\Columns\TextColumn::make('user.full_name')
-                    ->label('User Name')
-                    ->searchable()
+                    ->searchable(['full_name', 'email'])
                     ->sortable()
-                    ->limit(30)
-                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
-                        $state = $column->getState();
-                        if (strlen($state) <= 30) {
-                            return null;
-                        }
-                        return $state;
-                    })
-                    ->toggleable(),
+                    ->limit(25),
 
                 Tables\Columns\TextColumn::make('user.email')
-                    ->label('Email')
                     ->searchable()
+                    ->toggleable()
+                    ->limit(30),
+
+                Tables\Columns\TextColumn::make('transaction_type')
+                    ->label('Type')
+                    ->badge()
+                    ->colors([
+                        'success' => 'deposit',
+                        'danger' => 'withdraw',
+                    ])
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('amount')
+                    ->money('USD')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('method')
+                    ->badge()
+                    ->colors([
+                        'primary' => 'cash',
+                        'success' => 'bank_transfer',
+                        'warning' => 'cheque',
+                        'info' => 'card',
+                        'secondary' => 'wire_transfer',
+                        'danger' => 'cryptocurrency',
+                        'gray' => ['paypal', 'stripe'],
+                    ])
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('reference_no')
+                    ->label('Reference')
+                    ->searchable()
+                    ->toggleable()
+                    ->copyable(),
+
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors([
+                        'warning' => 'pending',
+                        'success' => 'completed',
+                        'danger' => 'cancelled',
+                    ])
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('transaction_date')
+                    ->date()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('actual_date')
+                    ->date()
+                    ->sortable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -215,13 +170,13 @@ class UserTransactionResource extends Resource
                     ->preload(),
 
                 Tables\Filters\SelectFilter::make('type')
-                    ->options(fn() => UserTransaction::getAvailableTransactionTypes() ?: []),
+                    ->options(fn() => UserTransaction::getAvailableTransactionTypes()),
 
                 Tables\Filters\SelectFilter::make('status')
-                    ->options(fn() => UserTransaction::getAvailableStatuses() ?: []),
+                    ->options(fn() => UserTransaction::getAvailableStatuses()),
 
                 Tables\Filters\SelectFilter::make('method')
-                    ->options(fn() => UserTransaction::getAvailableMethods() ?: []),
+                    ->options(fn() => UserTransaction::getAvailableMethods()),
 
                 Tables\Filters\Filter::make('amount_range')
                     ->form([
@@ -266,9 +221,6 @@ class UserTransactionResource extends Resource
                     }),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
-                    ->label('Add New Row')
-                    ->keyBindings(['ctrl+n', 'cmd+n']),
                 Tables\Actions\Action::make('import')
                     ->label('Import Excel')
                     ->icon('heroicon-o-arrow-up-tray')
@@ -303,20 +255,13 @@ class UserTransactionResource extends Resource
                     ->openUrlInNewTab()
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make()
-                    ->requiresConfirmation()
-                    ->modalHeading('Delete User Transaction')
-                    ->modalDescription('Are you sure you want to delete this transaction? This action cannot be undone.')
-                    ->modalSubmitActionLabel('Yes, delete it'),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
-            ->recordUrl(null) // Disable row click navigation to allow inline editing
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->requiresConfirmation()
-                        ->modalHeading('Delete Selected Transactions')
-                        ->modalDescription('Are you sure you want to delete the selected transactions? This action cannot be undone.')
-                        ->modalSubmitActionLabel('Yes, delete them'),
+                    Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\BulkAction::make('mark_completed')
                         ->label('Mark as Completed')
                         ->icon('heroicon-o-check-circle')
