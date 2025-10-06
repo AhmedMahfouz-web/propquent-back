@@ -3,11 +3,11 @@
 
         <!-- Filters -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-            <form wire:submit.prevent="filterTable" class="flex gap-4 items-end">
+            <div class="flex gap-4 items-end">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Number of
                         Months</label>
-                    <select wire:model="monthsFilter"
+                    <select wire:model.live="monthsFilter"
                         class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="1">1 Month</option>
                         <option value="2">2 Months</option>
@@ -19,11 +19,17 @@
                         <option value="24">24 Months</option>
                     </select>
                 </div>
-                <button type="submit"
-                    class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400 dark:focus:ring-primary-400 transition duration-150 ease-in-out shadow-sm border border-transparent">
-                    Apply Filters
-                </button>
-            </form>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    <span class="inline-flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        Revenue/Deposits
+                    </span>
+                    <span class="inline-flex items-center ml-4">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                        Expenses/Withdrawals
+                    </span>
+                </div>
+            </div>
         </div>
 
         <!-- Stacked Tables Container -->
@@ -38,8 +44,14 @@
 
                 <!-- Table Container with Fixed Height and Scrolling -->
                 <div class="h-96 overflow-y-auto overflow-x-auto" id="project-table-container">
+                    @php
+                        $monthsToShow = $this->monthsFilter ?? 3;
+                        $baseWidth = 1600; // Base width for 3 months
+                        $dynamicWidth = $baseWidth + (($monthsToShow - 3) * 400); // Add 400px per additional month
+                        $minWidth = max($dynamicWidth, $baseWidth); // Ensure minimum width
+                    @endphp
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
-                        style="min-width: 1600px; table-layout: fixed;">
+                        style="min-width: {{ $minWidth }}px; table-layout: fixed;">
                         <!-- Month Header Row -->
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
@@ -227,10 +239,17 @@
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
                                                 @foreach ($transactions as $transaction)
-                                                    <div class="mb-1 p-1 rounded text-xs cursor-help
-                                                    {{ $transaction->financial_type === 'revenue' ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-100' : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-100' }}"
+                                                    <div class="mb-1 p-1 rounded text-xs cursor-help font-semibold
+                                                    {{ $transaction->financial_type === 'revenue' ? 'bg-green-100 border border-green-300 text-green-900 dark:bg-green-800 dark:border-green-600 dark:text-green-100 shadow-sm' : 'bg-red-100 border border-red-300 text-red-900 dark:bg-red-800 dark:border-red-600 dark:text-red-100 shadow-sm' }}"
                                                         title="{{ ucfirst($transaction->financial_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ $transaction->status === 'done' ? \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') : \Carbon\Carbon::parse($transaction->due_date)->format('M j') }}">
-                                                        {{ number_format($transaction->amount, 0) }}
+                                                        <span class="inline-flex items-center">
+                                                            @if($transaction->financial_type === 'revenue')
+                                                                <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                                            @else
+                                                                <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                                            @endif
+                                                            {{ number_format($transaction->amount, 0) }}
+                                                        </span>
                                                     </div>
                                                 @endforeach
                                             @endif
@@ -254,7 +273,7 @@
                 <!-- Table Container with Fixed Height and Scrolling -->
                 <div class="h-96 overflow-y-auto overflow-x-auto" id="user-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
-                        style="min-width: 1600px; table-layout: fixed;">
+                        style="min-width: {{ $minWidth }}px; table-layout: fixed;">
                         <!-- Month Header Row -->
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
@@ -364,10 +383,17 @@
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
                                                 @foreach ($transactions as $transaction)
-                                                    <div class="mb-1 p-1 rounded text-xs cursor-help
-                                                    {{ $transaction->transaction_type === 'deposit' ? 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-100' : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-100' }}"
+                                                    <div class="mb-1 p-1 rounded text-xs cursor-help font-semibold
+                                                    {{ $transaction->transaction_type === 'deposit' ? 'bg-green-100 border border-green-300 text-green-900 dark:bg-green-800 dark:border-green-600 dark:text-green-100 shadow-sm' : 'bg-red-100 border border-red-300 text-red-900 dark:bg-red-800 dark:border-red-600 dark:text-red-100 shadow-sm' }}"
                                                         title="{{ ucfirst($transaction->transaction_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') }}">
-                                                        {{ number_format($transaction->amount, 0) }}
+                                                        <span class="inline-flex items-center">
+                                                            @if($transaction->transaction_type === 'deposit')
+                                                                <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                                            @else
+                                                                <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                                            @endif
+                                                            {{ number_format($transaction->amount, 0) }}
+                                                        </span>
                                                     </div>
                                                 @endforeach
                                             @endif
