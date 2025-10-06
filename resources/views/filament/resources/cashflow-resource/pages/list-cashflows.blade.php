@@ -32,18 +32,19 @@
             </div>
         </div>
 
-        <!-- Stacked Tables Container -->
-        <div class="space-y-6">
-            <!-- Project Cashflow Table -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <!-- Table Header -->
-                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Project Cashflow</h3>
-                </div>
+        <!-- Shared Horizontal Scroll Container -->
+        <div class="overflow-x-auto" id="shared-scroll-container">
+            <div class="space-y-6">
+                <!-- Project Cashflow Table -->
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <!-- Table Header -->
+                    <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Project Cashflow</h3>
+                    </div>
 
-                <!-- Table Container with Fixed Height and Scrolling -->
-                <div class="h-96 overflow-y-auto overflow-x-auto" id="project-table-container">
+                    <!-- Table Container with Fixed Height and Scrolling -->
+                    <div class="h-96 overflow-y-auto" id="project-table-container">
                     @php
                         $monthsToShow = $this->monthsFilter ?? 3;
                         $baseWidth = 1600; // Base width for 3 months
@@ -239,17 +240,15 @@
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
                                                 @foreach ($transactions as $transaction)
-                                                    <div class="mb-1 p-1 rounded text-xs cursor-help font-semibold
+                                                    <div class="mb-1 p-1 rounded text-xs cursor-help
                                                     {{ $transaction->financial_type === 'revenue' ? 'bg-green-100 border border-green-300 text-green-900 dark:bg-green-800 dark:border-green-600 dark:text-green-100 shadow-sm' : 'bg-red-100 border border-red-300 text-red-900 dark:bg-red-800 dark:border-red-600 dark:text-red-100 shadow-sm' }}"
                                                         title="{{ ucfirst($transaction->financial_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ $transaction->status === 'done' ? \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') : \Carbon\Carbon::parse($transaction->due_date)->format('M j') }}">
-                                                        <span class="inline-flex items-center">
-                                                            @if($transaction->financial_type === 'revenue')
-                                                                <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-                                                            @else
-                                                                <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
-                                                            @endif
+                                                        <div class="text-xs font-medium mb-1">
+                                                            {{ $transaction->financial_type === 'revenue' ? 'REV' : 'EXP' }}
+                                                        </div>
+                                                        <div class="text-xs">
                                                             {{ number_format($transaction->amount, 0) }}
-                                                        </span>
+                                                        </div>
                                                     </div>
                                                 @endforeach
                                             @endif
@@ -262,16 +261,16 @@
                 </div>
             </div>
 
-            <!-- User Transaction Table -->
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <!-- Table Header -->
-                <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">User Transactions</h3>
-                </div>
+                <!-- User Transaction Table -->
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <!-- Table Header -->
+                    <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">User Transactions</h3>
+                    </div>
 
-                <!-- Table Container with Fixed Height and Scrolling -->
-                <div class="h-96 overflow-y-auto overflow-x-auto" id="user-table-container">
+                    <!-- Table Container with Fixed Height and Scrolling -->
+                    <div class="h-96 overflow-y-auto" id="user-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
                         style="min-width: {{ $minWidth }}px; table-layout: fixed;">
                         <!-- Month Header Row -->
@@ -383,17 +382,15 @@
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
                                                 @foreach ($transactions as $transaction)
-                                                    <div class="mb-1 p-1 rounded text-xs cursor-help font-semibold
+                                                    <div class="mb-1 p-1 rounded text-xs cursor-help
                                                     {{ $transaction->transaction_type === 'deposit' ? 'bg-green-100 border border-green-300 text-green-900 dark:bg-green-800 dark:border-green-600 dark:text-green-100 shadow-sm' : 'bg-red-100 border border-red-300 text-red-900 dark:bg-red-800 dark:border-red-600 dark:text-red-100 shadow-sm' }}"
                                                         title="{{ ucfirst($transaction->transaction_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') }}">
-                                                        <span class="inline-flex items-center">
-                                                            @if($transaction->transaction_type === 'deposit')
-                                                                <span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-                                                            @else
-                                                                <span class="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
-                                                            @endif
+                                                        <div class="text-xs font-medium mb-1">
+                                                            {{ $transaction->transaction_type === 'deposit' ? 'DEP' : 'WTH' }}
+                                                        </div>
+                                                        <div class="text-xs">
                                                             {{ number_format($transaction->amount, 0) }}
-                                                        </span>
+                                                        </div>
                                                     </div>
                                                 @endforeach
                                             @endif
@@ -405,39 +402,9 @@
                     </table>
                 </div>
             </div>
+            </div>
         </div>
     </div>
 
-    <!-- Synchronized Horizontal Scroll Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const projectContainer = document.getElementById('project-table-container');
-            const userContainer = document.getElementById('user-table-container');
-            
-            let isScrolling = false;
-            
-            // Sync horizontal scroll from project table to user table
-            projectContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                    userContainer.scrollLeft = this.scrollLeft;
-                    setTimeout(() => {
-                        isScrolling = false;
-                    }, 10);
-                }
-            });
-            
-            // Sync horizontal scroll from user table to project table
-            userContainer.addEventListener('scroll', function() {
-                if (!isScrolling) {
-                    isScrolling = true;
-                    projectContainer.scrollLeft = this.scrollLeft;
-                    setTimeout(() => {
-                        isScrolling = false;
-                    }, 10);
-                }
-            });
-        });
-    </script>
 
 </x-filament-panels::page>
