@@ -148,20 +148,54 @@ class UserFinancialReport extends Page implements HasForms
 
     public function getAvailableMonthsProperty(): array
     {
+        $today = now()->format('Y-m-d');
+        
         $projectMonths = ProjectTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(
                 CASE 
-                    WHEN status = "done" THEN COALESCE(actual_date, transaction_date)
-                    WHEN status = "pending" THEN transaction_date
+                    WHEN status = "done" AND (
+                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                        (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
+                        (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
+                        (actual_date IS NULL AND transaction_date > "' . $today . '")
+                    ) THEN COALESCE(actual_date, transaction_date)
+                    WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                    ELSE NULL
                 END, "%Y-%m-01") as month_date'))
+            ->whereNotNull(DB::raw('CASE 
+                WHEN status = "done" AND (
+                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                    (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
+                    (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
+                    (actual_date IS NULL AND transaction_date > "' . $today . '")
+                ) THEN COALESCE(actual_date, transaction_date)
+                WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                ELSE NULL
+            END'))
             ->distinct();
 
         $userMonths = UserTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(
                 CASE 
-                    WHEN status = "done" THEN COALESCE(actual_date, transaction_date)
-                    WHEN status = "pending" THEN transaction_date
+                    WHEN status = "done" AND (
+                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                        (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
+                        (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
+                        (actual_date IS NULL AND transaction_date > "' . $today . '")
+                    ) THEN COALESCE(actual_date, transaction_date)
+                    WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                    ELSE NULL
                 END, "%Y-%m-01") as month_date'))
+            ->whereNotNull(DB::raw('CASE 
+                WHEN status = "done" AND (
+                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                    (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
+                    (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
+                    (actual_date IS NULL AND transaction_date > "' . $today . '")
+                ) THEN COALESCE(actual_date, transaction_date)
+                WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                ELSE NULL
+            END'))
             ->distinct();
 
         $months = $projectMonths->union($userMonths)

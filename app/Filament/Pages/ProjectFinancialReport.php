@@ -136,12 +136,30 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function getAvailableMonthsProperty(): array
     {
+        $today = now()->format('Y-m-d');
+        
         $months = ProjectTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(
                 CASE 
-                    WHEN status = "done" THEN COALESCE(actual_date, transaction_date)
-                    WHEN status = "pending" THEN transaction_date
+                    WHEN status = "done" AND (
+                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                        (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
+                        (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
+                        (actual_date IS NULL AND transaction_date > "' . $today . '")
+                    ) THEN COALESCE(actual_date, transaction_date)
+                    WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                    ELSE NULL
                 END, "%Y-%m-01") as month_date'))
+            ->whereNotNull(DB::raw('CASE 
+                WHEN status = "done" AND (
+                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                    (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
+                    (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
+                    (actual_date IS NULL AND transaction_date > "' . $today . '")
+                ) THEN COALESCE(actual_date, transaction_date)
+                WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                ELSE NULL
+            END'))
             ->distinct()
             ->orderBy('month_date', 'asc')
             ->pluck('month_date')
@@ -208,16 +226,38 @@ class ProjectFinancialReport extends Page implements HasForms
         foreach ($allMonths as $month) {
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
+        $today = now()->startOfDay();
+        
         foreach ($project->transactions as $transaction) {
             $dateToUse = null;
+            $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
+            $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
             
-            // Determine which date to use based on transaction status
+            // Determine how to handle this transaction based on status and dates
             if ($transaction->status === 'done') {
-                // For completed transactions, use actual_date if available, otherwise transaction_date
-                $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+                if ($actualDate && $actualDate->lte($today)) {
+                    // Done transaction with actual date in past/present - use actual_date
+                    $dateToUse = $transaction->actual_date;
+                } elseif (!$actualDate && $transactionDate->lte($today)) {
+                    // Done transaction without actual_date but transaction_date in past/present
+                    $dateToUse = $transaction->transaction_date;
+                } elseif ($actualDate && $actualDate->gt($today)) {
+                    // Done transaction with future actual_date - treat as pending, use actual_date for projection
+                    $dateToUse = $transaction->actual_date;
+                } elseif (!$actualDate && $transactionDate->gt($today)) {
+                    // Done transaction with future transaction_date - treat as pending
+                    $dateToUse = $transaction->transaction_date;
+                } else {
+                    continue; // Skip if logic doesn't match
+                }
             } elseif ($transaction->status === 'pending') {
-                // For pending transactions, use transaction_date (scheduled date) for future projections
-                $dateToUse = $transaction->transaction_date;
+                if ($transactionDate->gt($today)) {
+                    // Pending transaction with future date - include in projections
+                    $dateToUse = $transaction->transaction_date;
+                } else {
+                    // Pending transaction with past date - ignore (overdue)
+                    continue;
+                }
             } else {
                 // Skip cancelled or other status transactions
                 continue;
@@ -295,16 +335,38 @@ class ProjectFinancialReport extends Page implements HasForms
         $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)
             ->whereIn('status', ['done', 'pending'])
             ->get();
+        $today = now()->startOfDay();
+        
         foreach ($transactions as $transaction) {
             $dateToUse = null;
+            $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
+            $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
             
-            // Determine which date to use based on transaction status
+            // Determine how to handle this transaction based on status and dates
             if ($transaction->status === 'done') {
-                // For completed transactions, use actual_date if available, otherwise transaction_date
-                $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+                if ($actualDate && $actualDate->lte($today)) {
+                    // Done transaction with actual date in past/present - use actual_date
+                    $dateToUse = $transaction->actual_date;
+                } elseif (!$actualDate && $transactionDate->lte($today)) {
+                    // Done transaction without actual_date but transaction_date in past/present
+                    $dateToUse = $transaction->transaction_date;
+                } elseif ($actualDate && $actualDate->gt($today)) {
+                    // Done transaction with future actual_date - treat as pending, use actual_date for projection
+                    $dateToUse = $transaction->actual_date;
+                } elseif (!$actualDate && $transactionDate->gt($today)) {
+                    // Done transaction with future transaction_date - treat as pending
+                    $dateToUse = $transaction->transaction_date;
+                } else {
+                    continue; // Skip if logic doesn't match
+                }
             } elseif ($transaction->status === 'pending') {
-                // For pending transactions, use transaction_date (scheduled date) for future projections
-                $dateToUse = $transaction->transaction_date;
+                if ($transactionDate->gt($today)) {
+                    // Pending transaction with future date - include in projections
+                    $dateToUse = $transaction->transaction_date;
+                } else {
+                    // Pending transaction with past date - ignore (overdue)
+                    continue;
+                }
             } else {
                 // Skip cancelled or other status transactions
                 continue;
