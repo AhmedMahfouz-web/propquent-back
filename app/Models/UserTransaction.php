@@ -149,4 +149,22 @@ class UserTransaction extends Model
     {
         return SystemConfiguration::getOptions('transaction_methods');
     }
+
+    /**
+     * Get validation rules for the model
+     */
+    public static function getValidationRules(): array
+    {
+        return [
+            'user_id' => 'required|exists:users,id',
+            'transaction_type' => 'required|in:' . implode(',', array_keys(self::getAvailableTransactionTypes())),
+            'amount' => 'required|numeric|min:0.01',
+            'transaction_date' => 'required|date',
+            'actual_date' => 'nullable|date',
+            'method' => 'nullable|in:' . implode(',', array_keys(self::getAvailableMethods())),
+            'reference_no' => 'nullable|string|max:255',
+            'status' => 'required|in:' . implode(',', array_keys(self::getAvailableStatuses())),
+            'note' => 'nullable|string|max:65535',
+        ];
+    }
 }
