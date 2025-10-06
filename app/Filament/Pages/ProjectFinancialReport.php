@@ -222,7 +222,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function getProjectFinancialData(Project $project, array $allMonths): array
     {
-        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash'], 0)];
+        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash', 'current_cash', 'projected_cash'], 0)];
         foreach ($allMonths as $month) {
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
@@ -303,11 +303,13 @@ class ProjectFinancialReport extends Page implements HasForms
     private function calculateCumulativeCashflow(array &$data, array $allMonths): void
     {
         $cumulativeCash = 0;
+        $today = now()->startOfDay();
         
         // Sort months chronologically
         $sortedMonths = $allMonths;
         sort($sortedMonths);
         
+        // First pass: Calculate cumulative cash including all transactions (done + future done + pending future)
         foreach ($sortedMonths as $month) {
             if (isset($data['months'][$month])) {
                 // Calculate net cash flow for this month (revenue - expense)
@@ -318,16 +320,28 @@ class ProjectFinancialReport extends Page implements HasForms
                 
                 // Store cumulative cash for this month
                 $data['months'][$month]['cumulative_cash'] = $cumulativeCash;
+                
+                // Also store current cash (what we have today including future done transactions)
+                $monthDate = \Carbon\Carbon::parse($month)->startOfDay();
+                if ($monthDate->lte($today)) {
+                    // This month is current or past - include in current cash
+                    $data['months'][$month]['current_cash'] = $cumulativeCash;
+                } else {
+                    // This month is future - show projected cash
+                    $data['months'][$month]['current_cash'] = $cumulativeCash;
+                    $data['months'][$month]['projected_cash'] = $cumulativeCash;
+                }
             }
         }
         
-        // Add cumulative_cash to totals structure
+        // Add cumulative_cash to totals structure (this includes all transactions)
         $data['totals']['cumulative_cash'] = $cumulativeCash;
+        $data['totals']['current_cash'] = $cumulativeCash; // Show total including future done transactions
     }
 
     private function calculateFinancialSummary($projectsQuery, array $allMonths): array
     {
-        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash'], 0), 'months' => []];
+        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash', 'current_cash', 'projected_cash'], 0), 'months' => []];
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
@@ -415,6 +429,7 @@ class ProjectFinancialReport extends Page implements HasForms
     private function calculateCumulativeCashflowSummary(array &$summary, array $allMonths): void
     {
         $cumulativeCash = 0;
+        $today = now()->startOfDay();
         
         // Sort months chronologically
         $sortedMonths = $allMonths;
@@ -430,11 +445,23 @@ class ProjectFinancialReport extends Page implements HasForms
                 
                 // Store cumulative cash for this month
                 $summary['months'][$month]['cumulative_cash'] = $cumulativeCash;
+                
+                // Also store current cash (what we have today including future done transactions)
+                $monthDate = \Carbon\Carbon::parse($month)->startOfDay();
+                if ($monthDate->lte($today)) {
+                    // This month is current or past - include in current cash
+                    $summary['months'][$month]['current_cash'] = $cumulativeCash;
+                } else {
+                    // This month is future - show projected cash
+                    $summary['months'][$month]['current_cash'] = $cumulativeCash;
+                    $summary['months'][$month]['projected_cash'] = $cumulativeCash;
+                }
             }
         }
         
-        // Add cumulative_cash to totals structure
+        // Add cumulative_cash to totals structure (this includes all transactions)
         $summary['totals']['cumulative_cash'] = $cumulativeCash;
+        $summary['totals']['current_cash'] = $cumulativeCash; // Show total including future done transactions
     }
 
     public function sortBy($field): void
@@ -487,6 +514,9 @@ class ProjectFinancialReport extends Page implements HasForms
             'profit_operation' => 'Profit Operation',
             'profit_asset' => 'Profit Asset',
             'total_profit' => 'Total Profit',
+            'cumulative_cash' => 'Cumulative Cashflow',
+            'current_cash' => 'Current Cash Position',
+            'projected_cash' => 'Projected Cash',
         ];
     }
 }

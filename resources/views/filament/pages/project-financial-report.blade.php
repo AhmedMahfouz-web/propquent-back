@@ -31,6 +31,9 @@
                     'profit_operation' => 'Profit Operation',
                     'profit_asset' => 'Profit Asset',
                     'total_profit' => 'Total Profit',
+                    'cumulative_cash' => 'Cumulative Cashflow',
+                    'current_cash' => 'Current Cash Position',
+                    'projected_cash' => 'Projected Cash',
                 ];
 
                 $metricsToShow = [];
