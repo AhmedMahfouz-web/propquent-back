@@ -1,20 +1,24 @@
 <x-filament-panels::page>
     @php
 
-        // 1. Get all available months for the filter dropdown from both project and user transactions.
-        $projectMonths = App\Models\ProjectTransaction::query()
-            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
-            ->distinct();
+        // 1. Generate all possible months from 2 years ago to 2 years in the future
+        $startDate = now()->subYears(2)->startOfYear();
+        $endDate = now()->addYears(2)->endOfYear();
+        
+        $allMonths = collect();
+        $current = $startDate->copy();
+        
+        while ($current <= $endDate) {
+            $allMonths->push($current->format('Y-m-01'));
+            $current->addMonth();
+        }
+        
+        // Reverse to show latest months first
+        $allMonths = $allMonths->reverse();
 
-        $userMonths = App\Models\UserTransaction::query()
-            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
-            ->distinct();
-
-        $allMonths = $projectMonths->union($userMonths)->orderBy('month_date', 'desc')->pluck('month_date');
-
-        // 2. Get the selected months from the request, or default to show all months.
-        $selectedStartMonth = request('start_month', $allMonths->last()); // Default to earliest month
-        $selectedEndMonth = request('end_month', $allMonths->first()); // Default to latest month
+        // 2. Get the selected months from the request, or default to current year.
+        $selectedStartMonth = request('start_month', now()->startOfYear()->format('Y-m-01')); // Default to January of current year
+        $selectedEndMonth = request('end_month', now()->format('Y-m-01')); // Default to current month
 
         // 3. Filter months to show only those between start and end month (inclusive)
         $monthsToShow = $allMonths->filter(function ($month) use ($selectedStartMonth, $selectedEndMonth) {
