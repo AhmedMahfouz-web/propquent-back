@@ -38,9 +38,11 @@ class SystemConfigurationResource extends Resource
                                 'project_targets' => 'Project Targets',
                                 'property_types' => 'Property Types',
                                 'investment_types' => 'Investment Types',
-                                'transaction_types' => 'Transaction Types',
+                                'project_transaction_types' => 'Project Transaction Types',
+                                'user_transaction_types' => 'User Transaction Types',
                                 'transaction_statuses' => 'Transaction Statuses',
                                 'transaction_serving' => 'Transaction Serving',
+                                'transaction_what' => 'Transaction What',
                                 'transaction_methods' => 'Transaction Methods',
                             ])
                             ->required()
@@ -118,9 +120,11 @@ class SystemConfigurationResource extends Resource
                     ->colors([
                         'primary' => 'project_statuses',
                         'success' => 'project_stages',
-                        'warning' => 'transaction_types',
+                        'warning' => 'project_transaction_types',
                         'info' => 'property_types',
                         'secondary' => 'investment_types',
+                        'danger' => 'transaction_what',
+                        'gray' => 'transaction_serving',
                     ])
                     ->searchable()
                     ->sortable(),
@@ -170,9 +174,11 @@ class SystemConfigurationResource extends Resource
                         'project_targets' => 'Project Targets',
                         'property_types' => 'Property Types',
                         'investment_types' => 'Investment Types',
-                        'transaction_types' => 'Transaction Types',
+                        'project_transaction_types' => 'Project Transaction Types',
+                        'user_transaction_types' => 'User Transaction Types',
                         'transaction_statuses' => 'Transaction Statuses',
                         'transaction_serving' => 'Transaction Serving',
+                        'transaction_what' => 'Transaction What',
                         'transaction_methods' => 'Transaction Methods',
                     ])
                     ->multiple(),
