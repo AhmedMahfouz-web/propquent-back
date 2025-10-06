@@ -204,7 +204,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function getProjectFinancialData(Project $project, array $allMonths): array
     {
-        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset'], 0)];
+        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash'], 0)];
         foreach ($allMonths as $month) {
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
@@ -253,12 +253,41 @@ class ProjectFinancialReport extends Page implements HasForms
                 $total += $monthData[$key];
             }
         }
+        
+        // Calculate cumulative cashflow for each month
+        $this->calculateCumulativeCashflow($data, $allMonths);
+        
         return $data;
+    }
+
+    private function calculateCumulativeCashflow(array &$data, array $allMonths): void
+    {
+        $cumulativeCash = 0;
+        
+        // Sort months chronologically
+        $sortedMonths = $allMonths;
+        sort($sortedMonths);
+        
+        foreach ($sortedMonths as $month) {
+            if (isset($data['months'][$month])) {
+                // Calculate net cash flow for this month (revenue - expense)
+                $monthlyNetCash = $data['months'][$month]['revenue_total'] - $data['months'][$month]['expense_total'];
+                
+                // Add to cumulative cash
+                $cumulativeCash += $monthlyNetCash;
+                
+                // Store cumulative cash for this month
+                $data['months'][$month]['cumulative_cash'] = $cumulativeCash;
+            }
+        }
+        
+        // Add cumulative_cash to totals structure
+        $data['totals']['cumulative_cash'] = $cumulativeCash;
     }
 
     private function calculateFinancialSummary($projectsQuery, array $allMonths): array
     {
-        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset'], 0), 'months' => []];
+        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash'], 0), 'months' => []];
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
@@ -314,7 +343,36 @@ class ProjectFinancialReport extends Page implements HasForms
                 $total += $monthData[$key];
             }
         }
+        
+        // Calculate cumulative cashflow for summary
+        $this->calculateCumulativeCashflowSummary($summary, $allMonths);
+        
         return $summary;
+    }
+
+    private function calculateCumulativeCashflowSummary(array &$summary, array $allMonths): void
+    {
+        $cumulativeCash = 0;
+        
+        // Sort months chronologically
+        $sortedMonths = $allMonths;
+        sort($sortedMonths);
+        
+        foreach ($sortedMonths as $month) {
+            if (isset($summary['months'][$month])) {
+                // Calculate net cash flow for this month (revenue - expense)
+                $monthlyNetCash = $summary['months'][$month]['revenue_total'] - $summary['months'][$month]['expense_total'];
+                
+                // Add to cumulative cash
+                $cumulativeCash += $monthlyNetCash;
+                
+                // Store cumulative cash for this month
+                $summary['months'][$month]['cumulative_cash'] = $cumulativeCash;
+            }
+        }
+        
+        // Add cumulative_cash to totals structure
+        $summary['totals']['cumulative_cash'] = $cumulativeCash;
     }
 
     public function sortBy($field): void
