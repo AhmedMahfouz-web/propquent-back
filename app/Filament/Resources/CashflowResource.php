@@ -501,30 +501,27 @@ class CashflowResource extends Resource
         $currentBalance = self::getCurrentCashBalance();
         $today = now()->startOfDay();
 
-        // Add all project transactions that should be completed by the end of this week
+        // Add ALL transactions that should be completed by the end of this week (cumulative)
         // Include both pending future transactions and done future transactions
         $weeklyProjectTransactions = DB::table('project_transactions')
-            ->where(function ($query) use ($today, $weekStart, $weekEnd) {
-                $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
-                    // Pending transactions with due_date in this week
+            ->where(function ($query) use ($today, $weekEnd) {
+                $query->where(function ($q) use ($today, $weekEnd) {
+                    // Pending transactions with due_date up to this week end
                     $q->where('status', 'pending')
                       ->where('due_date', '>', $today)
-                      ->where('due_date', '<=', $weekEnd)
-                      ->where('due_date', '>=', $weekStart);
-                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                    // Done transactions with future actual_date in this week
+                      ->where('due_date', '<=', $weekEnd);
+                })->orWhere(function ($q) use ($today, $weekEnd) {
+                    // Done transactions with future actual_date up to this week end
                     $q->where('status', 'done')
                       ->whereNotNull('actual_date')
                       ->where('actual_date', '>', $today)
-                      ->where('actual_date', '<=', $weekEnd)
-                      ->where('actual_date', '>=', $weekStart);
-                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                    // Done transactions with future transaction_date in this week (no actual_date)
+                      ->where('actual_date', '<=', $weekEnd);
+                })->orWhere(function ($q) use ($today, $weekEnd) {
+                    // Done transactions with future transaction_date up to this week end (no actual_date)
                     $q->where('status', 'done')
                       ->whereNull('actual_date')
                       ->where('transaction_date', '>', $today)
-                      ->where('transaction_date', '<=', $weekEnd)
-                      ->where('transaction_date', '>=', $weekStart);
+                      ->where('transaction_date', '<=', $weekEnd);
                 });
             })
             ->selectRaw('
@@ -533,29 +530,26 @@ class CashflowResource extends Resource
             ')
             ->first();
 
-        // Add all user transactions that should be completed by the end of this week
+        // Add ALL user transactions that should be completed by the end of this week (cumulative)
         $weeklyUserTransactions = DB::table('user_transactions')
-            ->where(function ($query) use ($today, $weekStart, $weekEnd) {
-                $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
-                    // Pending transactions with transaction_date in this week
+            ->where(function ($query) use ($today, $weekEnd) {
+                $query->where(function ($q) use ($today, $weekEnd) {
+                    // Pending transactions with transaction_date up to this week end
                     $q->where('status', 'pending')
                       ->where('transaction_date', '>', $today)
-                      ->where('transaction_date', '<=', $weekEnd)
-                      ->where('transaction_date', '>=', $weekStart);
-                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                    // Done transactions with future actual_date in this week
+                      ->where('transaction_date', '<=', $weekEnd);
+                })->orWhere(function ($q) use ($today, $weekEnd) {
+                    // Done transactions with future actual_date up to this week end
                     $q->where('status', 'done')
                       ->whereNotNull('actual_date')
                       ->where('actual_date', '>', $today)
-                      ->where('actual_date', '<=', $weekEnd)
-                      ->where('actual_date', '>=', $weekStart);
-                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                    // Done transactions with future transaction_date in this week (no actual_date)
+                      ->where('actual_date', '<=', $weekEnd);
+                })->orWhere(function ($q) use ($today, $weekEnd) {
+                    // Done transactions with future transaction_date up to this week end (no actual_date)
                     $q->where('status', 'done')
                       ->whereNull('actual_date')
                       ->where('transaction_date', '>', $today)
-                      ->where('transaction_date', '<=', $weekEnd)
-                      ->where('transaction_date', '>=', $weekStart);
+                      ->where('transaction_date', '<=', $weekEnd);
                 });
             })
             ->selectRaw('
