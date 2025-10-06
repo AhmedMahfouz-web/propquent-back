@@ -138,16 +138,54 @@ class MonthlyCashflowChartWidget extends LineChartWidget
 
         $runningBalance = CashflowResource::getCurrentCashBalance();
 
+        $today = now()->startOfDay();
+        
         $transactions = collect(DB::table('project_transactions')
-            ->where('status', 'pending')
-            ->whereBetween('due_date', [$startDate, $endDate])
-            ->selectRaw('due_date, financial_type, amount')
+            ->where(function ($query) use ($today, $startDate, $endDate) {
+                $query->where(function ($q) use ($today, $startDate, $endDate) {
+                    // Pending transactions with future due_date
+                    $q->where('status', 'pending')
+                      ->where('due_date', '>', $today)
+                      ->whereBetween('due_date', [$startDate, $endDate]);
+                })->orWhere(function ($q) use ($today, $startDate, $endDate) {
+                    // Done transactions with future actual_date
+                    $q->where('status', 'done')
+                      ->whereNotNull('actual_date')
+                      ->where('actual_date', '>', $today)
+                      ->whereBetween('actual_date', [$startDate, $endDate]);
+                })->orWhere(function ($q) use ($today, $startDate, $endDate) {
+                    // Done transactions with future transaction_date (no actual_date)
+                    $q->where('status', 'done')
+                      ->whereNull('actual_date')
+                      ->where('transaction_date', '>', $today)
+                      ->whereBetween('transaction_date', [$startDate, $endDate]);
+                });
+            })
+            ->selectRaw('COALESCE(actual_date, due_date, transaction_date) as due_date, financial_type, amount')
             ->orderBy('due_date')->get())
             ->merge(DB::table('user_transactions')
-                ->where('status', 'pending')
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->selectRaw('transaction_date as due_date, transaction_type as financial_type, amount')
-                ->orderBy('transaction_date')->get());
+                ->where(function ($query) use ($today, $startDate, $endDate) {
+                    $query->where(function ($q) use ($today, $startDate, $endDate) {
+                        // Pending transactions with future transaction_date
+                        $q->where('status', 'pending')
+                          ->where('transaction_date', '>', $today)
+                          ->whereBetween('transaction_date', [$startDate, $endDate]);
+                    })->orWhere(function ($q) use ($today, $startDate, $endDate) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->whereBetween('actual_date', [$startDate, $endDate]);
+                    })->orWhere(function ($q) use ($today, $startDate, $endDate) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->whereBetween('transaction_date', [$startDate, $endDate]);
+                    });
+                })
+                ->selectRaw('COALESCE(actual_date, transaction_date) as due_date, transaction_type as financial_type, amount')
+                ->orderBy('due_date')->get());
 
         $weeklyData = [];
         $currentWeek = $startDate->copy()->startOfWeek();

@@ -189,20 +189,44 @@ class CashflowResource extends Resource
     public static function getCurrentCashBalance(): float
     {
         return Cache::remember('current_cash_balance', now()->addMinutes(5), function () {
-            // Project transactions
+            $today = now()->startOfDay();
+            
+            // Project transactions - use smart date logic
             $projectBalance = DB::table('project_transactions')
-                ->where('status', 'done')
-                ->where('transaction_date', '<', now()->startOfDay())
+                ->where(function ($query) use ($today) {
+                    $query->where(function ($q) use ($today) {
+                        // Done transactions with actual_date in past/present
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '<=', $today);
+                    })->orWhere(function ($q) use ($today) {
+                        // Done transactions without actual_date but transaction_date in past/present
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '<=', $today);
+                    });
+                })
                 ->selectRaw('
                     SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) -
                     SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as balance
                 ')
                 ->value('balance') ?? 0;
 
-            // User transactions
+            // User transactions - use smart date logic
             $userBalance = DB::table('user_transactions')
-                ->where('status', 'done')
-                ->where('transaction_date', '<', now()->startOfDay())
+                ->where(function ($query) use ($today) {
+                    $query->where(function ($q) use ($today) {
+                        // Done transactions with actual_date in past/present
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '<=', $today);
+                    })->orWhere(function ($q) use ($today) {
+                        // Done transactions without actual_date but transaction_date in past/present
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '<=', $today);
+                    });
+                })
                 ->selectRaw('
                     SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) -
                     SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as balance
@@ -224,26 +248,112 @@ class CashflowResource extends Resource
             // Get pending transactions for next 30 days
             $next30Days = now()->addDays(30);
 
+            $today = now()->startOfDay();
+            
+            // Include both pending future transactions and done future transactions
             $pendingIn = DB::table('project_transactions')
-                ->where('status', 'pending')
                 ->where('financial_type', 'revenue')
-                ->whereBetween('due_date', [now(), $next30Days])
+                ->where(function ($query) use ($today, $next30Days) {
+                    $query->where(function ($q) use ($today, $next30Days) {
+                        // Pending transactions with future due_date
+                        $q->where('status', 'pending')
+                          ->where('due_date', '>', $today)
+                          ->where('due_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->where('actual_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->where('transaction_date', '<=', $next30Days);
+                    });
+                })
                 ->sum('amount') ?? 0;
 
-            // User transactions don't use due_date - they're immediate
-            // So we don't include pending user transactions in projections
+            // Include pending user transactions with future dates
+            $pendingUserIn = DB::table('user_transactions')
+                ->where('transaction_type', 'deposit')
+                ->where(function ($query) use ($today, $next30Days) {
+                    $query->where(function ($q) use ($today, $next30Days) {
+                        // Pending transactions with future transaction_date
+                        $q->where('status', 'pending')
+                          ->where('transaction_date', '>', $today)
+                          ->where('transaction_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->where('actual_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->where('transaction_date', '<=', $next30Days);
+                    });
+                })
+                ->sum('amount') ?? 0;
 
             $pendingOut = DB::table('project_transactions')
-                ->where('status', 'pending')
                 ->where('financial_type', 'expense')
-                ->whereBetween('due_date', [now(), $next30Days])
+                ->where(function ($query) use ($today, $next30Days) {
+                    $query->where(function ($q) use ($today, $next30Days) {
+                        // Pending transactions with future due_date
+                        $q->where('status', 'pending')
+                          ->where('due_date', '>', $today)
+                          ->where('due_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->where('actual_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->where('transaction_date', '<=', $next30Days);
+                    });
+                })
+                ->sum('amount') ?? 0;
+
+            // Include pending user withdrawals
+            $pendingUserOut = DB::table('user_transactions')
+                ->where('transaction_type', 'withdraw')
+                ->where(function ($query) use ($today, $next30Days) {
+                    $query->where(function ($q) use ($today, $next30Days) {
+                        // Pending transactions with future transaction_date
+                        $q->where('status', 'pending')
+                          ->where('transaction_date', '>', $today)
+                          ->where('transaction_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->where('actual_date', '<=', $next30Days);
+                    })->orWhere(function ($q) use ($today, $next30Days) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->where('transaction_date', '<=', $next30Days);
+                    });
+                })
                 ->sum('amount') ?? 0;
 
             return [
                 'current_balance' => (float) $currentBalance,
-                'pending_in_30_days' => (float) $pendingIn,
-                'pending_out_30_days' => (float) $pendingOut,
-                'projected_balance_30_days' => (float) ($currentBalance + $pendingIn - $pendingOut),
+                'pending_in_30_days' => (float) ($pendingIn + $pendingUserIn),
+                'pending_out_30_days' => (float) ($pendingOut + $pendingUserOut),
+                'projected_balance_30_days' => (float) ($currentBalance + $pendingIn + $pendingUserIn - $pendingOut - $pendingUserOut),
             ];
         });
     }
@@ -389,12 +499,34 @@ class CashflowResource extends Resource
     {
         // Start with current balance
         $currentBalance = self::getCurrentCashBalance();
+        $today = now()->startOfDay();
 
         // Add all project transactions that should be completed by the end of this week
+        // Include both pending future transactions and done future transactions
         $weeklyProjectTransactions = DB::table('project_transactions')
-            ->where('status', 'pending')
-            ->where('due_date', '<=', $weekEnd)
-            ->where('due_date', '>=', now())
+            ->where(function ($query) use ($today, $weekStart, $weekEnd) {
+                $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
+                    // Pending transactions with due_date in this week
+                    $q->where('status', 'pending')
+                      ->where('due_date', '>', $today)
+                      ->where('due_date', '<=', $weekEnd)
+                      ->where('due_date', '>=', $weekStart);
+                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                    // Done transactions with future actual_date in this week
+                    $q->where('status', 'done')
+                      ->whereNotNull('actual_date')
+                      ->where('actual_date', '>', $today)
+                      ->where('actual_date', '<=', $weekEnd)
+                      ->where('actual_date', '>=', $weekStart);
+                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                    // Done transactions with future transaction_date in this week (no actual_date)
+                    $q->where('status', 'done')
+                      ->whereNull('actual_date')
+                      ->where('transaction_date', '>', $today)
+                      ->where('transaction_date', '<=', $weekEnd)
+                      ->where('transaction_date', '>=', $weekStart);
+                });
+            })
             ->selectRaw('
                 SUM(CASE WHEN financial_type = "revenue" THEN amount ELSE 0 END) as revenue,
                 SUM(CASE WHEN financial_type = "expense" THEN amount ELSE 0 END) as expenses
@@ -403,9 +535,29 @@ class CashflowResource extends Resource
 
         // Add all user transactions that should be completed by the end of this week
         $weeklyUserTransactions = DB::table('user_transactions')
-            ->where('status', 'pending')
-            ->where('transaction_date', '<=', $weekEnd)
-            ->where('transaction_date', '>=', now())
+            ->where(function ($query) use ($today, $weekStart, $weekEnd) {
+                $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
+                    // Pending transactions with transaction_date in this week
+                    $q->where('status', 'pending')
+                      ->where('transaction_date', '>', $today)
+                      ->where('transaction_date', '<=', $weekEnd)
+                      ->where('transaction_date', '>=', $weekStart);
+                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                    // Done transactions with future actual_date in this week
+                    $q->where('status', 'done')
+                      ->whereNotNull('actual_date')
+                      ->where('actual_date', '>', $today)
+                      ->where('actual_date', '<=', $weekEnd)
+                      ->where('actual_date', '>=', $weekStart);
+                })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                    // Done transactions with future transaction_date in this week (no actual_date)
+                    $q->where('status', 'done')
+                      ->whereNull('actual_date')
+                      ->where('transaction_date', '>', $today)
+                      ->where('transaction_date', '<=', $weekEnd)
+                      ->where('transaction_date', '>=', $weekStart);
+                });
+            })
             ->selectRaw('
                 SUM(CASE WHEN transaction_type = "deposit" THEN amount ELSE 0 END) as deposits,
                 SUM(CASE WHEN transaction_type = "withdraw" THEN amount ELSE 0 END) as withdrawals
