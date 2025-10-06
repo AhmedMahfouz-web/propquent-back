@@ -136,8 +136,12 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function getAvailableMonthsProperty(): array
     {
-        $months = ProjectTransaction::where('status', 'done')
-            ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
+        $months = ProjectTransaction::whereIn('status', ['done', 'pending'])
+            ->select(DB::raw('DATE_FORMAT(
+                CASE 
+                    WHEN status = "done" THEN COALESCE(actual_date, transaction_date)
+                    WHEN status = "pending" THEN transaction_date
+                END, "%Y-%m-01") as month_date'))
             ->distinct()
             ->orderBy('month_date', 'asc')
             ->pluck('month_date')
@@ -205,13 +209,20 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
         foreach ($project->transactions as $transaction) {
-            // Only include transactions that are marked as "done"
-            if ($transaction->status !== 'done') {
+            $dateToUse = null;
+            
+            // Determine which date to use based on transaction status
+            if ($transaction->status === 'done') {
+                // For completed transactions, use actual_date if available, otherwise transaction_date
+                $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+            } elseif ($transaction->status === 'pending') {
+                // For pending transactions, use transaction_date (scheduled date) for future projections
+                $dateToUse = $transaction->transaction_date;
+            } else {
+                // Skip cancelled or other status transactions
                 continue;
             }
             
-            // Use actual_date if available, otherwise fall back to transaction_date
-            $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
             $month = date('Y-m-01', strtotime($dateToUse));
             
             if (isset($data['months'][$month]) && $transaction->financial_type && $transaction->serving) {
@@ -253,11 +264,23 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         $projectKeys = (clone $projectsQuery)->pluck('key');
         $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)
-            ->where('status', 'done')
+            ->whereIn('status', ['done', 'pending'])
             ->get();
         foreach ($transactions as $transaction) {
-            // Use actual_date if available, otherwise fall back to transaction_date
-            $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+            $dateToUse = null;
+            
+            // Determine which date to use based on transaction status
+            if ($transaction->status === 'done') {
+                // For completed transactions, use actual_date if available, otherwise transaction_date
+                $dateToUse = $transaction->actual_date ?: $transaction->transaction_date;
+            } elseif ($transaction->status === 'pending') {
+                // For pending transactions, use transaction_date (scheduled date) for future projections
+                $dateToUse = $transaction->transaction_date;
+            } else {
+                // Skip cancelled or other status transactions
+                continue;
+            }
+            
             $month = date('Y-m-01', strtotime($dateToUse));
             
             if (isset($summary['months'][$month]) && $transaction->financial_type && $transaction->serving) {
