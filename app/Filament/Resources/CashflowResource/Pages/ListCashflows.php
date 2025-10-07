@@ -96,16 +96,54 @@ class ListCashflows extends Page
         $startDate = now()->startOfWeek();
         $weekStart = $startDate->copy()->addWeeks($weekIndex);
         $weekEnd = $weekStart->copy()->endOfWeek();
+        $today = now()->startOfDay();
         
-        return $projects->sort(function ($a, $b) use ($weekStart, $weekEnd) {
+        return $projects->sort(function ($a, $b) use ($weekStart, $weekEnd, $today) {
+            // Use smart date logic for sorting
             $amountA = $a->transactions()
-                ->where('status', 'pending')
-                ->whereBetween('due_date', [$weekStart, $weekEnd])
+                ->where(function ($query) use ($today, $weekStart, $weekEnd) {
+                    $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->whereBetween('actual_date', [$weekStart, $weekEnd]);
+                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
+                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                        // Pending transactions with future due_date
+                        $q->where('status', 'pending')
+                          ->where('due_date', '>', $today)
+                          ->whereBetween('due_date', [$weekStart, $weekEnd]);
+                    });
+                })
                 ->sum('amount');
                 
             $amountB = $b->transactions()
-                ->where('status', 'pending')
-                ->whereBetween('due_date', [$weekStart, $weekEnd])
+                ->where(function ($query) use ($today, $weekStart, $weekEnd) {
+                    $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
+                        // Done transactions with future actual_date
+                        $q->where('status', 'done')
+                          ->whereNotNull('actual_date')
+                          ->where('actual_date', '>', $today)
+                          ->whereBetween('actual_date', [$weekStart, $weekEnd]);
+                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                        // Done transactions with future transaction_date (no actual_date)
+                        $q->where('status', 'done')
+                          ->whereNull('actual_date')
+                          ->where('transaction_date', '>', $today)
+                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
+                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                        // Pending transactions with future due_date
+                        $q->where('status', 'pending')
+                          ->where('due_date', '>', $today)
+                          ->whereBetween('due_date', [$weekStart, $weekEnd]);
+                    });
+                })
                 ->sum('amount');
             
             if ($this->weekSortDirection === 'desc') {
@@ -139,6 +177,20 @@ class ListCashflows extends Page
         
         // Reset regular field sorting
         $this->sortField = null;
+    }
+
+    public function resetTable()
+    {
+        // Reset all filters and sorting to default values
+        $this->monthsFilter = 3;
+        $this->statusFilter = '';
+        $this->sortField = 'status';
+        $this->sortDirection = 'asc';
+        $this->weekSortField = null;
+        $this->weekSortDirection = 'desc';
+        
+        // Trigger a re-render of the component
+        $this->dispatch('table-reset');
     }
 
     protected function getHeaderActions(): array
