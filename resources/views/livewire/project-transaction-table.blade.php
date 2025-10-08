@@ -26,8 +26,6 @@
 </div>
 
 <script>
-    // Auto-redirect after 3 seconds
-    setTimeout(function() {
-        window.location.href = "{{ route('filament.admin.resources.project-transactions.index') }}";
-    }, 3000);
+    // Immediate redirect
+    window.location.href = "{{ route('filament.admin.resources.project-transactions.index') }}";
 </script>
