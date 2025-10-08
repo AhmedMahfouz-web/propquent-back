@@ -23,10 +23,13 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     {
         return $table
             ->query(ProjectTransaction::query()->with('project.developer'))
-            ->height('400px')
             ->striped()
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
+            ->contentGrid([
+                'md' => 1,
+                'xl' => 1,
+            ])
             ->columns([
                 Tables\Columns\SelectColumn::make('project_key')
                     ->label('Project')

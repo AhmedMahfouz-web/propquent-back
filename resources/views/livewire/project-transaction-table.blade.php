@@ -9,6 +9,8 @@
             </p>
         </div>
         
-        {{ $this->table }}
+        <div class="max-h-96 overflow-y-auto">
+            {{ $this->table }}
+        </div>
     </div>
 </div>
