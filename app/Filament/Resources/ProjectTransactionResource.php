@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Actions\ImportAction;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Artisan;
 
 class ProjectTransactionResource extends Resource
 {
@@ -372,8 +373,23 @@ class ProjectTransactionResource extends Resource
                 Tables\Actions\Action::make('downloadTemplate')
                     ->label('Download Template')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->url(asset('templates/project-transactions-template.xlsx'))
-                    ->openUrlInNewTab()
+                    ->action(function () {
+                        // Generate fresh template with current data
+                        \Artisan::call('template:project-transactions');
+                        
+                        // Return the generated file for download
+                        $templatePath = public_path('templates/project-transactions-template.xlsx');
+                        
+                        if (file_exists($templatePath)) {
+                            return response()->download($templatePath, 'project-transactions-template-' . date('Y-m-d') . '.xlsx');
+                        } else {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error')
+                                ->body('Failed to generate template. Please try again.')
+                                ->danger()
+                                ->send();
+                        }
+                    })
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),

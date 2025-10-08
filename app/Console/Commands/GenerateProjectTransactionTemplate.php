@@ -429,10 +429,12 @@ class GenerateProjectTransactionTemplate extends Command
 
         $this->info('Enhanced project transactions template generated successfully!');
         $this->info('Location: ' . $templatePath);
+        $this->info('Projects loaded: ' . $projects->count());
         $this->info('Features:');
         $this->info('- Main sheet with sample data and all required columns');
         $this->info('- Projects reference sheet with all project keys and names');
         $this->info('- Dropdown options sheet with all valid values');
+        $this->info('- Instructions sheet with usage guide');
         
         return 0;
     }
