@@ -21,7 +21,8 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow, WithValidatio
         return new ProjectTransaction([
             'project_key' => $row['project_key'],
             'financial_type' => $row['financial_type'],
-            'serving' => $row['serving'],
+            'serving' => $row['serving'] ?? null,
+            'what' => $row['what'] ?? null,
             'amount' => !empty($row['amount']) ? (float) $row['amount'] : 0,
             'due_date' => !empty($row['due_date']) ? $this->parseDate($row['due_date']) : null,
             'actual_date' => !empty($row['actual_date']) ? $this->parseDate($row['actual_date']) : null,
@@ -38,15 +39,16 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow, WithValidatio
     {
         return [
             'project_key' => ['required', 'string', Rule::exists('projects', 'key')],
-            'financial_type' => ['required', 'string', Rule::in(ProjectTransaction::getAvailableFinancialTypes())],
-            'serving' => ['required', 'string', Rule::in(ProjectTransaction::getAvailableServingTypes())],
+            'financial_type' => ['required', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableFinancialTypes()))],
+            'serving' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableServingTypes()))],
+            'what' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableWhatTypes()))],
             'amount' => ['required', 'numeric', 'min:0'],
             'due_date' => ['nullable', 'date'],
             'actual_date' => ['nullable', 'date'],
             'transaction_date' => ['required'],
-            'method' => ['nullable', 'string', 'max:255'],
+            'method' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableTransactionMethods()))],
             'reference_no' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'string', Rule::in(ProjectTransaction::getAvailableStatuses())],
+            'status' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableStatuses()))],
             'note' => ['nullable', 'string'],
             'transaction_category' => ['nullable', 'string', 'max:255'],
         ];

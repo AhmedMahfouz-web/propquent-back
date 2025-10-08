@@ -142,6 +142,9 @@ class ProjectTransactionResource extends Resource
             ])
             ->striped()
             ->defaultPaginationPageOption(25)
+            ->paginated([10, 25, 50, 100])
+            ->extremePaginationLinks()
+            ->height('400px')
             ->columns([
                 Tables\Columns\SelectColumn::make('project_key')
                     ->label('Project')
