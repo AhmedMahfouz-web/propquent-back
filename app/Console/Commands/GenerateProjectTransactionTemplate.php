@@ -8,6 +8,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 
@@ -91,6 +92,127 @@ class GenerateProjectTransactionTemplate extends Command
             $sheet->setCellValue('N' . $row, 'Sample transaction note'); // Example
             $sheet->setCellValue('O' . $row, 'Sample category'); // Example
             $row++;
+        }
+
+        // Add dropdown validation for project keys (column A)
+        $projectKeys = $projects->pluck('key')->toArray();
+        if (!empty($projectKeys)) {
+            $projectKeysString = '"' . implode(',', $projectKeys) . '"';
+            $validation = $sheet->getCell('A2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(false);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a value from the drop-down list.');
+            $validation->setFormula1($projectKeysString);
+            
+            // Apply to range A2:A1000
+            $sheet->setDataValidation('A2:A1000', clone $validation);
+        }
+
+        // Add dropdown validation for financial types (column D)
+        $financialTypes = array_keys(ProjectTransaction::getAvailableFinancialTypes());
+        if (!empty($financialTypes)) {
+            $financialTypesString = '"' . implode(',', $financialTypes) . '"';
+            $validation = $sheet->getCell('D2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(false);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a value from the drop-down list.');
+            $validation->setFormula1($financialTypesString);
+            
+            $sheet->setDataValidation('D2:D1000', clone $validation);
+        }
+
+        // Add dropdown validation for serving types (column E)
+        $servingTypes = array_keys(ProjectTransaction::getAvailableServingTypes());
+        if (!empty($servingTypes)) {
+            $servingTypesString = '"' . implode(',', $servingTypes) . '"';
+            $validation = $sheet->getCell('E2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a value from the drop-down list.');
+            $validation->setFormula1($servingTypesString);
+            
+            $sheet->setDataValidation('E2:E1000', clone $validation);
+        }
+
+        // Add dropdown validation for what types (column F)
+        $whatTypes = array_keys(ProjectTransaction::getAvailableWhatTypes());
+        if (!empty($whatTypes)) {
+            $whatTypesString = '"' . implode(',', $whatTypes) . '"';
+            $validation = $sheet->getCell('F2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a value from the drop-down list.');
+            $validation->setFormula1($whatTypesString);
+            
+            $sheet->setDataValidation('F2:F1000', clone $validation);
+        }
+
+        // Add dropdown validation for methods (column H)
+        $methods = array_keys(ProjectTransaction::getAvailableTransactionMethods());
+        if (!empty($methods)) {
+            $methodsString = '"' . implode(',', $methods) . '"';
+            $validation = $sheet->getCell('H2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a value from the drop-down list.');
+            $validation->setFormula1($methodsString);
+            
+            $sheet->setDataValidation('H2:H1000', clone $validation);
+        }
+
+        // Add dropdown validation for status (column J)
+        $statuses = array_keys(ProjectTransaction::getAvailableStatuses());
+        if (!empty($statuses)) {
+            $statusesString = '"' . implode(',', $statuses) . '"';
+            $validation = $sheet->getCell('J2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(false);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a value from the drop-down list.');
+            $validation->setFormula1($statusesString);
+            
+            $sheet->setDataValidation('J2:J1000', clone $validation);
         }
 
         // Auto-size columns

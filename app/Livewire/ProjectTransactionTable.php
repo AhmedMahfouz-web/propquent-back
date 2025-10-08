@@ -31,112 +31,101 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 'xl' => 1,
             ])
             ->columns([
-                Tables\Columns\SelectColumn::make('project_key')
+                Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
-                    ->options(function () {
-                        return Project::with('developer')
-                            ->get()
-                            ->mapWithKeys(function ($project) {
-                                return [$project->key => "{$project->title} ({$project->developer->name})"];
-                            })
-                            ->toArray();
-                    })
-                    ->rules(['required', 'exists:projects,key'])
-                    ->selectablePlaceholder(false)
                     ->searchable()
                     ->sortable()
-                    ->width(200),
+                    ->limit(30)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= 30) {
+                            return null;
+                        }
+                        return $state;
+                    }),
 
-                Tables\Columns\SelectColumn::make('financial_type')
+                Tables\Columns\TextColumn::make('project_key')
+                    ->label('Project Key')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable(),
+
+                Tables\Columns\TextColumn::make('project.developer.name')
+                    ->label('Developer')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\BadgeColumn::make('financial_type')
                     ->label('Financial Type')
-                    ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
-                    ->rules(['required'])
-                    ->selectablePlaceholder(false)
-                    ->searchable()
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\SelectColumn::make('serving')
-                    ->options(fn() => ProjectTransaction::getAvailableServingTypes())
-                    ->placeholder('Select serving...')
-                    ->selectablePlaceholder(false)
+                    ->formatStateUsing(fn (string $state): string => ProjectTransaction::getAvailableFinancialTypes()[$state] ?? $state)
+                    ->colors([
+                        'success' => 'revenue',
+                        'danger' => 'expense',
+                    ])
                     ->sortable(),
 
-                Tables\Columns\SelectColumn::make('what')
+                Tables\Columns\TextColumn::make('serving')
+                    ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableServingTypes()[$state] ?? $state) : '-')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('what')
                     ->label('What')
-                    ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
-                    ->placeholder('Select purpose...')
-                    ->selectablePlaceholder(false)
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\TextInputColumn::make('amount')
-                    ->extraInputAttributes([
-                        'type' => 'number',
-                        'step' => '0.01',
-                        'required' => true
-                    ])
-                    ->rules(['required', 'numeric', 'min:0.01'])
-                    ->placeholder('0.00')
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\SelectColumn::make('method')
-                    ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
-                    ->placeholder('Select method...')
-                    ->selectablePlaceholder(false)
+                    ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableWhatTypes()[$state] ?? $state) : '-')
                     ->sortable(),
 
-                Tables\Columns\TextInputColumn::make('reference_no')
+                Tables\Columns\TextColumn::make('amount')
+                    ->money('USD')
+                    ->sortable()
+                    ->alignEnd(),
+
+                Tables\Columns\TextColumn::make('method')
+                    ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('reference_no')
                     ->label('Reference')
-                    ->placeholder('Reference number...')
-                    ->rules(['max:255'])
-                    ->sortable()
-                    ->width(150),
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('-'),
 
-                Tables\Columns\SelectColumn::make('status')
-                    ->options(fn() => ProjectTransaction::getAvailableStatuses())
-                    ->rules(['required'])
-                    ->selectablePlaceholder(false)
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\TextInputColumn::make('transaction_date')
-                    ->rules(['required', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}',
-                        'required' => true
+                Tables\Columns\BadgeColumn::make('status')
+                    ->formatStateUsing(fn (string $state): string => ProjectTransaction::getAvailableStatuses()[$state] ?? $state)
+                    ->colors([
+                        'success' => 'completed',
+                        'warning' => 'pending',
+                        'danger' => 'cancelled',
                     ])
-                    ->width(150)
                     ->sortable(),
 
-                Tables\Columns\TextInputColumn::make('due_date')
-                    ->rules(['nullable', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                    ])
-                    ->sortable()
-                    ->width(150),
+                Tables\Columns\TextColumn::make('transaction_date')
+                    ->date()
+                    ->sortable(),
 
-                Tables\Columns\TextInputColumn::make('actual_date')
-                    ->rules(['nullable', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                    ])
-                    ->sortable()
-                    ->width(150),
+                Tables\Columns\TextColumn::make('due_date')
+                    ->date()
+                    ->placeholder('-')
+                    ->sortable(),
 
-                Tables\Columns\TextInputColumn::make('note')
-                    ->placeholder('Add note...')
-                    ->rules(['max:65535'])
+                Tables\Columns\TextColumn::make('actual_date')
+                    ->date()
+                    ->placeholder('-')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('note')
+                    ->limit(50)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= 50) {
+                            return null;
+                        }
+                        return $state;
+                    })
+                    ->placeholder('-'),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
                     ->sortable()
-                    ->width(200),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('project')
