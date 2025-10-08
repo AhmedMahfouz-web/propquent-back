@@ -72,6 +72,20 @@ class GenerateProjectTransactionTemplate extends Command
 
         // Get all projects with developers
         $projects = Project::with('developer')->get();
+        
+        // Debug: Check if we have projects
+        if ($projects->isEmpty()) {
+            $this->warn('No projects found in database. Creating sample template with placeholder data.');
+            // Create sample project data for template
+            $sampleProjects = collect([
+                (object)['key' => 'PROJ-001', 'title' => 'Sample Project 1', 'developer' => (object)['name' => 'Sample Developer 1']],
+                (object)['key' => 'PROJ-002', 'title' => 'Sample Project 2', 'developer' => (object)['name' => 'Sample Developer 2']],
+                (object)['key' => 'PROJ-003', 'title' => 'Sample Project 3', 'developer' => (object)['name' => 'Sample Developer 3']],
+            ]);
+            $projects = $sampleProjects;
+        } else {
+            $this->info('Found ' . $projects->count() . ' projects');
+        }
 
         // Add project data rows (for reference) - only fill non-lookup columns
         $row = 2;
@@ -94,8 +108,13 @@ class GenerateProjectTransactionTemplate extends Command
             $row++;
         }
 
-        // Add dropdown validation for project keys (column A) - reference to Projects sheet
-        if ($projects->count() > 0) {
+        // First, we need to create the Projects Reference sheet before referencing it
+        // This will be done after the main sheet setup
+
+        // For now, create simple dropdowns with project keys from the collection
+        $projectKeys = $projects->pluck('key')->toArray();
+        if (!empty($projectKeys)) {
+            $projectKeysString = '"' . implode(',', $projectKeys) . '"';
             $validation = $sheet->getCell('A2')->getDataValidation();
             $validation->setType(DataValidation::TYPE_LIST);
             $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
@@ -107,14 +126,19 @@ class GenerateProjectTransactionTemplate extends Command
             $validation->setError('Value is not in list.');
             $validation->setPromptTitle('Pick from list');
             $validation->setPrompt('Please pick a project key from the drop-down list.');
-            $validation->setFormula1('=\'Projects Reference\'.$A$2:$A$' . ($projects->count() + 1));
+            $validation->setFormula1($projectKeysString);
             
             // Apply to range A2:A1000
             $sheet->setDataValidation('A2:A1000', clone $validation);
         }
 
-        // Add dropdown validation for project names (column B) - reference to Projects sheet  
-        if ($projects->count() > 0) {
+        // Add dropdown validation for project names (column B)
+        $projectNames = $projects->pluck('title')->toArray();
+        if (!empty($projectNames)) {
+            $projectNamesString = '"' . implode(',', array_map(function($name) {
+                return str_replace('"', '""', $name); // Escape quotes in project names
+            }, $projectNames)) . '"';
+            
             $validation = $sheet->getCell('B2')->getDataValidation();
             $validation->setType(DataValidation::TYPE_LIST);
             $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
@@ -126,7 +150,7 @@ class GenerateProjectTransactionTemplate extends Command
             $validation->setError('Value is not in list.');
             $validation->setPromptTitle('Pick from list');
             $validation->setPrompt('Please pick a project name from the drop-down list.');
-            $validation->setFormula1('=\'Projects Reference\'.$B$2:$B$' . ($projects->count() + 1));
+            $validation->setFormula1($projectNamesString);
             
             // Apply to range B2:B1000
             $sheet->setDataValidation('B2:B1000', clone $validation);
