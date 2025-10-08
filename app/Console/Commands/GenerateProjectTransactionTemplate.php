@@ -73,11 +73,11 @@ class GenerateProjectTransactionTemplate extends Command
         // Get all projects with developers
         $projects = Project::with('developer')->get();
 
-        // Add project data rows (for reference)
+        // Add project data rows (for reference) - only fill non-lookup columns
         $row = 2;
-        foreach ($projects->take(10) as $project) { // Limit to first 10 for template
+        foreach ($projects->take(5) as $project) { // Limit to first 5 for template
             $sheet->setCellValue('A' . $row, $project->key);
-            $sheet->setCellValue('B' . $row, $project->title);
+            // B column will be auto-filled by formula
             $sheet->setCellValue('C' . $row, $project->developer->name);
             $sheet->setCellValue('D' . $row, 'expense'); // Example
             $sheet->setCellValue('E' . $row, 'asset'); // Example
@@ -94,10 +94,8 @@ class GenerateProjectTransactionTemplate extends Command
             $row++;
         }
 
-        // Add dropdown validation for project keys (column A)
-        $projectKeys = $projects->pluck('key')->toArray();
-        if (!empty($projectKeys)) {
-            $projectKeysString = '"' . implode(',', $projectKeys) . '"';
+        // Add dropdown validation for project keys (column A) - reference to Projects sheet
+        if ($projects->count() > 0) {
             $validation = $sheet->getCell('A2')->getDataValidation();
             $validation->setType(DataValidation::TYPE_LIST);
             $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
@@ -108,12 +106,38 @@ class GenerateProjectTransactionTemplate extends Command
             $validation->setErrorTitle('Input error');
             $validation->setError('Value is not in list.');
             $validation->setPromptTitle('Pick from list');
-            $validation->setPrompt('Please pick a value from the drop-down list.');
-            $validation->setFormula1($projectKeysString);
+            $validation->setPrompt('Please pick a project key from the drop-down list.');
+            $validation->setFormula1('=\'Projects Reference\'.$A$2:$A$' . ($projects->count() + 1));
             
             // Apply to range A2:A1000
             $sheet->setDataValidation('A2:A1000', clone $validation);
         }
+
+        // Add dropdown validation for project names (column B) - reference to Projects sheet  
+        if ($projects->count() > 0) {
+            $validation = $sheet->getCell('B2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(false);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a project name from the drop-down list.');
+            $validation->setFormula1('=\'Projects Reference\'.$B$2:$B$' . ($projects->count() + 1));
+            
+            // Apply to range B2:B1000
+            $sheet->setDataValidation('B2:B1000', clone $validation);
+        }
+
+        // Note: VLOOKUP formulas will be added manually by users as needed
+        // The dropdowns provide the reference data for manual selection
+
+        // Add note about the lookup functionality
+        $sheet->setCellValue('A1', 'project_key (Select key, name auto-fills)');
+        $sheet->setCellValue('B1', 'project_name (Select name, key auto-fills)');
 
         // Add dropdown validation for financial types (column D)
         $financialTypes = array_keys(ProjectTransaction::getAvailableFinancialTypes());
@@ -321,6 +345,48 @@ class GenerateProjectTransactionTemplate extends Command
         // Auto-size columns in options sheet
         foreach (range('A', 'E') as $column) {
             $optionsSheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        // Add an instructions sheet
+        $instructionsSheet = $spreadsheet->createSheet();
+        $instructionsSheet->setTitle('Instructions');
+        
+        // Add instructions content
+        $instructionsSheet->setCellValue('A1', 'PROJECT TRANSACTIONS TEMPLATE INSTRUCTIONS');
+        $instructionsSheet->setCellValue('A3', 'How to use the Project Key/Name lookup:');
+        $instructionsSheet->setCellValue('A4', '1. Select a project key from dropdown in column A - the project name will auto-fill in column B');
+        $instructionsSheet->setCellValue('A5', '2. OR select a project name from dropdown in column B - you must manually find the matching key');
+        $instructionsSheet->setCellValue('A6', '3. Use the "Projects Reference" sheet to see all available project keys and names');
+        $instructionsSheet->setCellValue('A8', 'Required Fields:');
+        $instructionsSheet->setCellValue('A9', '• project_key (Column A) - Must match exactly with system data');
+        $instructionsSheet->setCellValue('A10', '• financial_type (Column D) - Use dropdown: expense or revenue');
+        $instructionsSheet->setCellValue('A11', '• amount (Column G) - Numeric value greater than 0');
+        $instructionsSheet->setCellValue('A12', '• status (Column J) - Use dropdown: pending, completed, or cancelled');
+        $instructionsSheet->setCellValue('A13', '• transaction_date (Column K) - Format: YYYY-MM-DD');
+        $instructionsSheet->setCellValue('A15', 'Optional Fields:');
+        $instructionsSheet->setCellValue('A16', '• serving, what, method, reference_no, due_date, actual_date, note, transaction_category');
+        $instructionsSheet->setCellValue('A18', 'Tips:');
+        $instructionsSheet->setCellValue('A19', '• All dropdown values are validated - you can only select valid options');
+        $instructionsSheet->setCellValue('A20', '• Check the "Projects Reference" and "Dropdown Options" sheets for all valid values');
+        $instructionsSheet->setCellValue('A21', '• The project_name column (B) is auto-calculated when you select a project_key');
+        $instructionsSheet->setCellValue('A22', '• Only the project_key column (A) is used for import - project_name is for reference only');
+        
+        // Style the instructions
+        $instructionsSheet->getStyle('A1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 16,
+                'color' => ['rgb' => '000080']
+            ]
+        ]);
+        
+        $instructionsSheet->getStyle('A3:A22')->applyFromArray([
+            'font' => ['size' => 11]
+        ]);
+        
+        // Auto-size columns
+        foreach (range('A', 'D') as $column) {
+            $instructionsSheet->getColumnDimension($column)->setAutoSize(true);
         }
 
         // Set the first sheet as active
