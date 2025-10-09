@@ -1,90 +1,70 @@
 <div>
     <style>
-        /* Ultra compact table rows */
+        /* Fixed height table rows - exactly 30px */
+        table tbody tr {
+            height: 30px !important;
+            min-height: 30px !important;
+            max-height: 30px !important;
+            padding: 0 !important;
+        }
+
+        table tbody td {
+            height: 30px !important;
+            padding: 2px 8px !important;
+            vertical-align: middle !important;
+            font-size: 14px !important;
+            line-height: 1.2 !important;
+        }
+
+        table thead th {
+            padding: 8px !important;
+            font-size: 14px !important;
+        }
+
+        /* Input fields styling */
+        table tbody td input,
+        table tbody td select {
+            height: 26px !important;
+            padding: 2px 6px !important;
+            font-size: 14px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 4px !important;
+            line-height: 1.2 !important;
+        }
+
+        /* Amount column - right aligned */
+        table tbody td input[type="number"] {
+            text-align: right !important;
+            font-weight: 500 !important;
+        }
+
+        /* Normal button styling */
+        table tbody td button {
+            height: 26px !important;
+            width: 26px !important;
+            padding: 4px !important;
+            border-radius: 4px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* Clean font for amounts in summary */
+        .font-mono {
+            font-family: system-ui, -apple-system, sans-serif !important;
+            font-weight: 600 !important;
+        }
+
+        /* Remove any extra padding from Filament classes */
         .fi-ta-row {
-            padding: 0.125rem 0.25rem !important;
-            height: auto !important;
-            min-height: 1.5rem !important;
+            padding: 0 !important;
         }
 
         .fi-ta-cell {
-            padding: 0.125rem 0.25rem !important;
-            font-size: 0.8125rem !important;
-            line-height: 1.125rem !important;
-            vertical-align: middle !important;
+            padding: 2px 8px !important;
         }
 
-        .fi-ta-header-cell {
-            padding: 0.25rem !important;
-            font-size: 0.8125rem !important;
-            font-weight: 600 !important;
-        }
-
-        /* Ultra compact input fields */
-        .fi-ta-cell input,
-        .fi-ta-cell select {
-            padding: 0.125rem 0.25rem !important;
-            font-size: 0.8125rem !important;
-            min-height: 1.25rem !important;
-            height: 1.25rem !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 0.25rem !important;
-            line-height: 1 !important;
-        }
-
-        .fi-ta-cell input:focus,
-        .fi-ta-cell select:focus {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 1px #3b82f6 !important;
-            outline: none !important;
-        }
-
-        /* Amount column - clean sans-serif font */
-        .fi-ta-col-amount input {
-            font-weight: 600 !important;
-            text-align: right !important;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            background-color: #f8fafc !important;
-            border: 1px solid #e5e7eb !important;
-        }
-
-        .fi-ta-col-amount input:focus {
-            background-color: #ffffff !important;
-            border-color: #3b82f6 !important;
-        }
-
-        /* Clean sans-serif font for amounts in summary */
-        .font-mono {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-weight: 600 !important;
-            letter-spacing: 0 !important;
-        }
-
-        /* Ultra compact action buttons */
         .fi-ta-actions {
-            padding: 0.125rem !important;
-        }
-
-        .fi-ta-actions .fi-ac-btn-action {
-            padding: 0.125rem !important;
-            min-height: 1.25rem !important;
-            width: 1.25rem !important;
-        }
-
-        /* Status select styling */
-        .fi-ta-col-status select {
-            font-size: 0.75rem !important;
-            padding: 0.125rem 0.25rem !important;
-            height: 1.25rem !important;
-        }
-
-        /* Checkbox styling */
-        .fi-ta-checkbox {
-            transform: scale(0.8) !important;
-        }
-
-        /* Remove extra spacing */
-        .fi-ta-content {
             padding: 0 !important;
         }
     </style>
