@@ -86,9 +86,24 @@
                 if (e.target.type === 'checkbox' && e.target.closest('.fi-ta-table')) {
                     // Small delay to let Filament update its state
                     setTimeout(() => {
-                        // Use modern Livewire syntax
+                        // Get all selected checkboxes
+                        const selectedCheckboxes = document.querySelectorAll('.fi-ta-table input[type="checkbox"]:checked');
+                        const selectedIds = [];
+                        
+                        selectedCheckboxes.forEach(checkbox => {
+                            const value = checkbox.value;
+                            if (value && value !== 'on' && !isNaN(value)) {
+                                selectedIds.push(parseInt(value));
+                            }
+                        });
+                        
+                        // Update Livewire component with selected IDs
                         if (window.Livewire) {
-                            window.Livewire.dispatch('updateSelectedSummary');
+                            const component = window.Livewire.find('{{ $this->getId() }}');
+                            if (component) {
+                                component.set('selectedTableRecords', selectedIds);
+                                component.call('$refresh');
+                            }
                         }
                     }, 100);
                 }
@@ -165,7 +180,6 @@
                             {{ $tableSummary['net_amount'] >= 0 ? number_format($tableSummary['net_amount'], 2) : '(' . number_format(abs($tableSummary['net_amount']), 2) . ')' }}
                         </span>
                     </div>
-                </div>
             </div>
 
             <!-- Selected Summary -->

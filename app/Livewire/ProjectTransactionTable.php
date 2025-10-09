@@ -26,7 +26,15 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public $selectedRecords = [];
     public $showSummary = true;
     
-    protected $listeners = ['updateSelectedSummary' => '$refresh'];
+    // Reactive properties for table state
+    public $tableSearch = '';
+    public $tableColumnSearches = [];
+    public $selectedTableRecords = [];
+    
+    protected $listeners = [
+        'updateSelectedSummary' => '$refresh',
+        'tableSelectionChanged' => 'updateSelectedRecords'
+    ];
     
     #[On('updateSelectedSummary')]
     public function refreshSelectedSummary()
@@ -63,6 +71,22 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 ->danger()
                 ->send();
         }
+    }
+    
+    public function updateSelectedRecords($selectedIds)
+    {
+        $this->selectedTableRecords = $selectedIds;
+    }
+    
+    // Make summaries computed properties that react to changes
+    public function getTableSummaryProperty()
+    {
+        return $this->getTableSummary();
+    }
+    
+    public function getSelectedSummaryProperty()
+    {
+        return $this->getSelectedSummary();
     }
 
     public function table(Table $table): Table
@@ -426,10 +450,34 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->defaultSort('transaction_date', 'desc');
     }
 
+    protected function getTableQueryForSummary()
+    {
+        try {
+            // Get the base query from the table
+            $table = $this->getTable();
+            $query = $table->getQuery();
+            
+            // Apply table filters
+            $query = $table->applyFiltersToTableQuery($query);
+            
+            // Apply search
+            $query = $table->applySearchToTableQuery($query);
+            
+            // Apply column searches  
+            $query = $table->applyColumnSearchesToTableQuery($query);
+            
+            return $query;
+        } catch (\Exception $e) {
+            // Fallback to base query if table methods fail
+            return ProjectTransaction::query()->with('project.developer');
+        }
+    }
+
     public function getTableSummary(): array
     {
         try {
-            $query = $this->getFilteredTableQuery();
+            // Get the filtered query that matches what's shown in the table
+            $query = $this->getTableQueryForSummary();
             $records = $query->get();
             
             $totalAmount = $records->sum('amount');
@@ -458,25 +506,21 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getSelectedSummary(): array
     {
         try {
-            // Try multiple ways to get selected records
-            $selectedIds = [];
+            // Get selected records from Filament table
+            $selectedRecords = collect();
             
-            // Method 1: Try getSelectedTableRecords
-            if (method_exists($this, 'getSelectedTableRecords')) {
-                $selectedIds = $this->getSelectedTableRecords();
+            // Check if we have table selection
+            if (property_exists($this, 'selectedTableRecords') && !empty($this->selectedTableRecords)) {
+                $selectedRecords = ProjectTransaction::whereIn('id', $this->selectedTableRecords)->get();
+            } else {
+                // Try to get from table component state
+                $table = $this->getTable();
+                if ($table && method_exists($table, 'getSelectedRecords')) {
+                    $selectedRecords = $table->getSelectedRecords();
+                }
             }
             
-            // Method 2: Try accessing table state directly
-            if (empty($selectedIds) && isset($this->tableRecordSelection)) {
-                $selectedIds = array_keys(array_filter($this->tableRecordSelection));
-            }
-            
-            // Method 3: Check if we have any selection state
-            if (empty($selectedIds) && property_exists($this, 'selectedTableRecords')) {
-                $selectedIds = $this->selectedTableRecords ?? [];
-            }
-            
-            if (empty($selectedIds)) {
+            if ($selectedRecords->isEmpty()) {
                 return [
                     'selected_records' => 0,
                     'selected_amount' => 0,
@@ -485,8 +529,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     'selected_net' => 0,
                 ];
             }
-            
-            $selectedRecords = ProjectTransaction::whereIn('id', $selectedIds)->get();
             
             $selectedAmount = $selectedRecords->sum('amount');
             $selectedRevenue = $selectedRecords->where('financial_type', 'revenue')->sum('amount');
@@ -512,12 +554,9 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
     public function render()
     {
-        $tableSummary = $this->getTableSummary();
-        $selectedSummary = $this->getSelectedSummary();
-        
         return view('livewire.project-transaction-table', [
-            'tableSummary' => $tableSummary,
-            'selectedSummary' => $selectedSummary,
+            'tableSummary' => $this->tableSummary,
+            'selectedSummary' => $this->selectedSummary,
         ]);
     }
 }
