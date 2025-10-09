@@ -519,4 +519,107 @@ class ProjectFinancialReport extends Page implements HasForms
             'projected_cash' => 'Projected Cash',
         ];
     }
+
+    public function getMetricConfig(): array
+    {
+        return [
+            'value_correction' => [
+                'label' => 'Value Correction',
+                'color' => 'purple',
+                'icon' => 'heroicon-o-adjustments-horizontal',
+                'description' => 'Manual value adjustments'
+            ],
+            'evaluation_asset' => [
+                'label' => 'Evaluation Asset',
+                'color' => 'indigo',
+                'icon' => 'heroicon-o-building-office',
+                'description' => 'Asset evaluation value'
+            ],
+            'revenue_operation' => [
+                'label' => 'Revenue Operation',
+                'color' => 'green',
+                'icon' => 'heroicon-o-arrow-trending-up',
+                'description' => 'Operational revenue'
+            ],
+            'revenue_asset' => [
+                'label' => 'Revenue Asset',
+                'color' => 'emerald',
+                'icon' => 'heroicon-o-banknotes',
+                'description' => 'Asset-based revenue'
+            ],
+            'revenue_total' => [
+                'label' => 'Revenue Total',
+                'color' => 'teal',
+                'icon' => 'heroicon-o-currency-dollar',
+                'description' => 'Total revenue (Operation + Asset)'
+            ],
+            'expense_operation' => [
+                'label' => 'Expense Operation',
+                'color' => 'red',
+                'icon' => 'heroicon-o-arrow-trending-down',
+                'description' => 'Operational expenses'
+            ],
+            'expense_asset' => [
+                'label' => 'Expense Asset',
+                'color' => 'rose',
+                'icon' => 'heroicon-o-minus-circle',
+                'description' => 'Asset-related expenses'
+            ],
+            'expense_total' => [
+                'label' => 'Expense Total',
+                'color' => 'pink',
+                'icon' => 'heroicon-o-exclamation-triangle',
+                'description' => 'Total expenses (Operation + Asset)'
+            ],
+            'profit_operation' => [
+                'label' => 'Profit Operation',
+                'color' => 'blue',
+                'icon' => 'heroicon-o-chart-bar',
+                'description' => 'Operational profit'
+            ],
+            'profit_asset' => [
+                'label' => 'Profit Asset',
+                'color' => 'cyan',
+                'icon' => 'heroicon-o-presentation-chart-line',
+                'description' => 'Asset-based profit'
+            ],
+            'total_profit' => [
+                'label' => 'Total Profit',
+                'color' => 'amber',
+                'icon' => 'heroicon-o-trophy',
+                'description' => 'Total profit (Operation + Asset)'
+            ],
+            'cumulative_cash' => [
+                'label' => 'Cumulative Cashflow',
+                'color' => 'orange',
+                'icon' => 'heroicon-o-arrow-path',
+                'description' => 'Running cash balance'
+            ],
+            'current_cash' => [
+                'label' => 'Current Cash Position',
+                'color' => 'lime',
+                'icon' => 'heroicon-o-wallet',
+                'description' => 'Current cash available'
+            ],
+            'projected_cash' => [
+                'label' => 'Projected Cash',
+                'color' => 'violet',
+                'icon' => 'heroicon-o-eye',
+                'description' => 'Future cash projection'
+            ],
+        ];
+    }
+
+    public function getMetricColorClasses(string $metricKey): array
+    {
+        $config = $this->getMetricConfig();
+        $color = $config[$metricKey]['color'] ?? 'gray';
+        
+        return [
+            'bg' => "bg-{$color}-100 dark:bg-{$color}-900",
+            'text' => "text-{$color}-800 dark:text-{$color}-200",
+            'border' => "border-{$color}-200 dark:border-{$color}-700",
+            'badge' => "bg-{$color}-100 text-{$color}-800 dark:bg-{$color}-900 dark:text-{$color}-200",
+        ];
+    }
 }

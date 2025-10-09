@@ -17,16 +17,9 @@
                 $allMonths = $reportData['allMonths'];
                 $selectedMetrics = $this->selectedMetrics;
 
-                // Filter metrics based on selection
-                $availableMetrics = [
-                    'deposits' => 'Deposits',
-                    'withdrawals' => 'Withdrawals',
-                    'equity' => 'Equity',
-                    'equity_percentage' => 'Equity %',
-                    'total_profit' => 'Total Profit',
-                    'profit_asset' => 'Profit Asset',
-                    'profit_operation' => 'Profit Operation',
-                ];
+                // Get metric configuration with colors and labels
+                $metricConfig = $this->getMetricConfig();
+                $availableMetrics = $this->getAvailableMetrics();
 
                 $metricsToShow = [];
                 foreach ($selectedMetrics as $key) {
@@ -87,7 +80,7 @@
                             @if ($userData && $rowspan > 0)
                                 @foreach ($metricsToShow as $key => $label)
                                     <tr wire:key="user-{{ $user->id }}-metric-{{ $key }}"
-                                        class="{{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} bg-white dark:bg-gray-800">
+                                        class="{{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} bg-white dark:bg-gray-800 metric-row">
                                         @if ($loop->first)
                                             <td rowspan="{{ $rowspan }}"
                                                 class="px-6 py-4 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 bg-white dark:bg-gray-800">
@@ -100,7 +93,28 @@
                                                 </div>
                                             </td>
                                         @endif
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $label }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @php
+                                                $config = $metricConfig[$key] ?? [];
+                                                $colorClasses = $this->getMetricColorClasses($key);
+                                            @endphp
+                                            <div class="flex items-center space-x-2">
+                                                @if(isset($config['icon']))
+                                                    <x-dynamic-component 
+                                                        :component="$config['icon']" 
+                                                        class="w-4 h-4 {{ $colorClasses['text'] }}" 
+                                                    />
+                                                @endif
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium metric-badge {{ $colorClasses['badge'] }}">
+                                                    {{ $config['label'] ?? $label }}
+                                                </span>
+                                            </div>
+                                            @if(isset($config['description']))
+                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    {{ $config['description'] }}
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right font-bold">
                                             @if ($key === 'equity_percentage')
                                                 {{ number_format(array_sum($userData[$key]), 2) }}%
@@ -152,3 +166,38 @@
     </div>
 
 </x-filament-panels::page>
+
+@push('styles')
+    <style>
+        /* Metric badge hover effects */
+        .metric-badge {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .metric-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Metric row hover effects */
+        .metric-row:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .dark .metric-row:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* User name column styling */
+        .user-name-cell {
+            min-width: 200px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .user-name-cell {
+                min-width: 150px;
+            }
+        }
+    </style>
+@endpush

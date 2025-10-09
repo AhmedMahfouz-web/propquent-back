@@ -219,6 +219,67 @@ class UserFinancialReport extends Page implements HasForms
         ];
     }
 
+    public function getMetricConfig(): array
+    {
+        return [
+            'deposits' => [
+                'label' => 'Deposits',
+                'color' => 'green',
+                'icon' => 'heroicon-o-arrow-down-on-square',
+                'description' => 'Money deposited by investor'
+            ],
+            'withdrawals' => [
+                'label' => 'Withdrawals',
+                'color' => 'red',
+                'icon' => 'heroicon-o-arrow-up-on-square',
+                'description' => 'Money withdrawn by investor'
+            ],
+            'equity' => [
+                'label' => 'Equity',
+                'color' => 'blue',
+                'icon' => 'heroicon-o-scale',
+                'description' => 'Investor equity position'
+            ],
+            'equity_percentage' => [
+                'label' => 'Equity %',
+                'color' => 'purple',
+                'icon' => 'heroicon-o-chart-pie',
+                'description' => 'Percentage of total equity'
+            ],
+            'total_profit' => [
+                'label' => 'Total Profit',
+                'color' => 'amber',
+                'icon' => 'heroicon-o-trophy',
+                'description' => 'Total profit earned'
+            ],
+            'profit_asset' => [
+                'label' => 'Profit Asset',
+                'color' => 'cyan',
+                'icon' => 'heroicon-o-building-office',
+                'description' => 'Profit from asset investments'
+            ],
+            'profit_operation' => [
+                'label' => 'Profit Operation',
+                'color' => 'indigo',
+                'icon' => 'heroicon-o-cog-6-tooth',
+                'description' => 'Profit from operations'
+            ],
+        ];
+    }
+
+    public function getMetricColorClasses(string $metricKey): array
+    {
+        $config = $this->getMetricConfig();
+        $color = $config[$metricKey]['color'] ?? 'gray';
+        
+        return [
+            'bg' => "bg-{$color}-100 dark:bg-{$color}-900",
+            'text' => "text-{$color}-800 dark:text-{$color}-200",
+            'border' => "border-{$color}-200 dark:border-{$color}-700",
+            'badge' => "bg-{$color}-100 text-{$color}-800 dark:bg-{$color}-900 dark:text-{$color}-200",
+        ];
+    }
+
     public function sortByField($field): void
     {
         if ($this->sortBy === $field) {

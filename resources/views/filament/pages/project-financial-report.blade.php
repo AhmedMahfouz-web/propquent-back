@@ -18,23 +18,9 @@
                 $allMonths = $reportData['allMonths'];
                 $selectedMetrics = $this->selectedMetrics;
 
-                // Filter metrics based on selection
-                $availableMetrics = [
-                    'value_correction' => 'Value Correction',
-                    'evaluation_asset' => 'Evaluation Asset',
-                    'revenue_operation' => 'Revenue Operation',
-                    'revenue_asset' => 'Revenue Asset',
-                    'revenue_total' => 'Revenue Total',
-                    'expense_operation' => 'Expense Operation',
-                    'expense_asset' => 'Expense Asset',
-                    'expense_total' => 'Expense Total',
-                    'profit_operation' => 'Profit Operation',
-                    'profit_asset' => 'Profit Asset',
-                    'total_profit' => 'Total Profit',
-                    'cumulative_cash' => 'Cumulative Cashflow',
-                    'current_cash' => 'Current Cash Position',
-                    'projected_cash' => 'Projected Cash',
-                ];
+                // Get metric configuration with colors and labels
+                $metricConfig = $this->getMetricConfig();
+                $availableMetrics = $this->getAvailableMetrics();
 
                 $metricsToShow = [];
                 foreach ($selectedMetrics as $key) {
@@ -82,7 +68,7 @@
                         @forelse ($projectsData as $projectKey => $projectData)
                             @foreach ($metricsToShow as $key => $label)
                                 <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}"
-                                    class="bg-white dark:bg-gray-800">
+                                    class="bg-white dark:bg-gray-800 metric-row">
                                     <td
                                         class="px-2 py-4 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         @if ($loop->first)
@@ -98,7 +84,27 @@
                                     </td>
                                     <td
                                         class="px-6 py-4 whitespace-nowrap {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
-                                        {{ $label }}</td>
+                                        @php
+                                            $config = $metricConfig[$key] ?? [];
+                                            $colorClasses = $this->getMetricColorClasses($key);
+                                        @endphp
+                                        <div class="flex items-center space-x-2">
+                                            @if(isset($config['icon']))
+                                                <x-dynamic-component 
+                                                    :component="$config['icon']" 
+                                                    class="w-4 h-4 {{ $colorClasses['text'] }}" 
+                                                />
+                                            @endif
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium metric-badge {{ $colorClasses['badge'] }}">
+                                                {{ $config['label'] ?? $label }}
+                                            </span>
+                                        </div>
+                                        @if(isset($config['description']))
+                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {{ $config['description'] }}
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td
                                         class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
@@ -183,6 +189,25 @@
 
         .project-name-cell::-webkit-scrollbar-thumb:hover {
             background: #a0aec0;
+        }
+
+        /* Metric badge hover effects */
+        .metric-badge {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .metric-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Metric row hover effects */
+        .metric-row:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .dark .metric-row:hover {
+            background-color: rgba(255, 255, 255, 0.02);
         }
 
         /* Responsive adjustments */
