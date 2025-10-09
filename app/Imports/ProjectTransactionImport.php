@@ -6,13 +6,24 @@ use App\Models\ProjectTransaction;
 use App\Models\Project;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\FromSheet;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 
-class ProjectTransactionImport implements ToModel, WithHeadingRow
+class ProjectTransactionImport implements ToModel, WithHeadingRow, FromSheet
 {
     private $currentRow = 1; // Track current row number
     private $processedRows = 0; // Track how many rows we actually process
+    
+    /**
+     * Specify which sheet to import from
+     * This will look for sheets named "project transactions" (case insensitive)
+     */
+    public function sheet(): string
+    {
+        return 'project transactions';
+    }
+    
     /**
      * Clean header names by removing descriptive text in parentheses
      */
@@ -50,6 +61,11 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         $this->currentRow++; // Increment row counter
+        
+        // Log that we're processing from the correct sheet
+        if ($this->currentRow === 2) { // First data row (after headers)
+            Log::info("Starting import from 'project transactions' sheet");
+        }
         
         // Skip empty rows
         if (empty(array_filter($row))) {
@@ -113,6 +129,11 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
             'amount' => $amount,
             'total_processed' => $this->processedRows
         ]);
+
+        // Log summary every 5 transactions or if it's the first one
+        if ($this->processedRows === 1 || $this->processedRows % 5 === 0) {
+            Log::info("Import progress: {$this->processedRows} transactions processed so far");
+        }
 
         return $transaction;
     }

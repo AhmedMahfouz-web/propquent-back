@@ -341,13 +341,13 @@ class ProjectTransactionResource extends Resource
                             Excel::import(new ProjectTransactionImport, $filePath);
                             \Filament\Notifications\Notification::make()
                                 ->title('Import Successful')
-                                ->body('Project transactions have been imported successfully.')
+                                ->body('Project transactions have been imported successfully from "project transactions" sheet.')
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
                             \Filament\Notifications\Notification::make()
                                 ->title('Import Failed')
-                                ->body('Error: ' . $e->getMessage())
+                                ->body('Error: ' . $e->getMessage() . ' (Make sure your Excel has a sheet named "project transactions")')
                                 ->danger()
                                 ->send();
                         }
