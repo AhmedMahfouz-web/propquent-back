@@ -24,6 +24,8 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     
     public $selectedRecords = [];
     public $showSummary = true;
+    
+    protected $listeners = ['updateSelectedSummary' => '$refresh'];
 
     public function table(Table $table): Table
     {
@@ -352,7 +354,24 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getSelectedSummary(): array
     {
         try {
-            $selectedIds = $this->getSelectedTableRecords();
+            // Try multiple ways to get selected records
+            $selectedIds = [];
+            
+            // Method 1: Try getSelectedTableRecords
+            if (method_exists($this, 'getSelectedTableRecords')) {
+                $selectedIds = $this->getSelectedTableRecords();
+            }
+            
+            // Method 2: Try accessing table state directly
+            if (empty($selectedIds) && isset($this->tableRecordSelection)) {
+                $selectedIds = array_keys(array_filter($this->tableRecordSelection));
+            }
+            
+            // Method 3: Check if we have any selection state
+            if (empty($selectedIds) && property_exists($this, 'selectedTableRecords')) {
+                $selectedIds = $this->selectedTableRecords ?? [];
+            }
+            
             if (empty($selectedIds)) {
                 return [
                     'selected_records' => 0,

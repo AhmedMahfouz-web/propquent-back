@@ -22,9 +22,16 @@
         }
 
         /* Input fields styling */
-        table tbody td input,
-        table tbody td select {
+        table tbody td input {
             height: 26px !important;
+            padding: 2px 6px !important;
+            font-size: 14px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 4px !important;
+            line-height: 1.2 !important;
+        }
+
+        table tbody td select {
             padding: 2px 6px !important;
             font-size: 14px !important;
             border: 1px solid #d1d5db !important;
@@ -68,6 +75,20 @@
             padding: 0 !important;
         }
     </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Listen for checkbox changes to update selected summary
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox' && e.target.closest('.fi-ta-table')) {
+                    // Small delay to let Filament update its state
+                    setTimeout(() => {
+                        Livewire.emit('updateSelectedSummary');
+                    }, 100);
+                }
+            });
+        });
+    </script>
     
     <div class="p-6">
         <div class="mb-6">
@@ -148,7 +169,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="text-center py-4">
+                    <div class="text-center py-2">
                         <div class="text-gray-400 dark:text-gray-500 mb-2">
                             <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
