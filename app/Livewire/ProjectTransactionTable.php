@@ -7,15 +7,16 @@ use App\Models\Project;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Artisan;
-use Filament\Forms;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Artisan;
+use Livewire\Attributes\On;
 
 class ProjectTransactionTable extends Component implements HasTable, HasForms
 {
@@ -26,6 +27,43 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public $showSummary = true;
     
     protected $listeners = ['updateSelectedSummary' => '$refresh'];
+    
+    #[On('updateSelectedSummary')]
+    public function refreshSelectedSummary()
+    {
+        $this->dispatch('$refresh');
+    }
+    
+    public function confirmAmountChange($recordId, $newAmount, $oldAmount)
+    {
+        $this->dispatch('openAmountConfirmModal', [
+            'recordId' => $recordId,
+            'newAmount' => $newAmount,
+            'oldAmount' => $oldAmount
+        ]);
+    }
+    
+    public function updateAmount($recordId, $newAmount)
+    {
+        try {
+            $transaction = ProjectTransaction::findOrFail($recordId);
+            $transaction->update(['amount' => $newAmount]);
+            
+            \Filament\Notifications\Notification::make()
+                ->title('Amount Updated')
+                ->body("Amount updated to " . number_format($newAmount, 2))
+                ->success()
+                ->send();
+                
+            $this->dispatch('$refresh');
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('Error')
+                ->body('Failed to update amount')
+                ->danger()
+                ->send();
+        }
+    }
 
     public function table(Table $table): Table
     {
@@ -38,7 +76,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->sortable()
                     ->limit(30)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
@@ -51,14 +89,15 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
                 Tables\Columns\TextColumn::make('project_key')
                     ->label('Project Key')
-                    ->searchable()
-                    ->sortable()
+                    ->searchable(isIndividual: true)
                     ->copyable(),
 
                 Tables\Columns\TextColumn::make('project.developer.name')
                     ->label('Developer')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable(isIndividual: true),
 
                 Tables\Columns\BadgeColumn::make('financial_type')
                     ->label('Financial Type')
@@ -84,10 +123,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->sortable()
                     ->alignEnd()
                     ->rules(['required', 'numeric', 'min:0.01'])
-                    ->extraInputAttributes([
-                        'class' => 'text-sm py-1 text-right font-mono',
-                        'style' => 'font-family: monospace; text-align: right;'
-                    ]),
+                    ->extraInputAttributes(function ($record) {
+                        return [
+                            'class' => 'text-sm py-1 text-right font-mono',
+                            'style' => 'font-family: monospace; text-align: right;',
+                            'data-original-value' => $record->amount ?? '',
+                            'data-record-id' => $record->id ?? '',
+                        ];
+                    }),
 
                 Tables\Columns\TextColumn::make('method')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
@@ -95,7 +138,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
                 Tables\Columns\TextColumn::make('reference_no')
                     ->label('Reference')
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->copyable()
                     ->placeholder('-'),
 
@@ -120,6 +163,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
                 Tables\Columns\TextColumn::make('note')
                     ->limit(50)
+                    ->searchable(isIndividual: true)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
                         if (strlen($state) <= 50) {
@@ -198,6 +242,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                             );
                     }),
             ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContentCollapsible)
             ->persistFiltersInSession()
             ->headerActions([
                 Tables\Actions\CreateAction::make()
@@ -309,6 +354,65 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     })
             ])
             ->actions([
+                Tables\Actions\EditAction::make()
+                    ->label('')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Select::make('project_key')
+                            ->label('Project')
+                            ->options(function () {
+                                return Project::with('developer')
+                                    ->get()
+                                    ->mapWithKeys(function ($project) {
+                                        return [$project->key => "{$project->title} ({$project->developer->name})"];
+                                    })
+                                    ->toArray();
+                            })
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Select::make('financial_type')
+                            ->label('Financial Type')
+                            ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->prefix('EGP')
+                            ->step(0.01)
+                            ->required()
+                            ->afterStateUpdated(function ($state, $get, $set) {
+                                // Show confirmation for amount changes
+                                $this->dispatch('confirmAmountChange', [
+                                    'newAmount' => $state,
+                                    'recordId' => $get('id')
+                                ]);
+                            }),
+                        Forms\Components\Select::make('status')
+                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
+                            ->required(),
+                        Forms\Components\Select::make('serving')
+                            ->options(fn() => ProjectTransaction::getAvailableServingTypes())
+                            ->nullable(),
+                        Forms\Components\Select::make('what')
+                            ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
+                            ->nullable(),
+                        Forms\Components\Select::make('method')
+                            ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
+                            ->nullable(),
+                        Forms\Components\TextInput::make('reference_no')
+                            ->label('Reference Number')
+                            ->maxLength(255)
+                            ->nullable(),
+                        Forms\Components\DatePicker::make('transaction_date')
+                            ->required(),
+                        Forms\Components\DatePicker::make('due_date')
+                            ->nullable(),
+                        Forms\Components\DatePicker::make('actual_date')
+                            ->nullable(),
+                        Forms\Components\Textarea::make('note')
+                            ->maxLength(65535)
+                            ->nullable(),
+                    ]),
                 Tables\Actions\DeleteAction::make()
                     ->label('')
                     ->icon('heroicon-m-trash')

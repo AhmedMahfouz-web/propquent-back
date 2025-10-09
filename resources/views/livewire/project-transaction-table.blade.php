@@ -86,8 +86,31 @@
                 if (e.target.type === 'checkbox' && e.target.closest('.fi-ta-table')) {
                     // Small delay to let Filament update its state
                     setTimeout(() => {
-                        Livewire.emit('updateSelectedSummary');
+                        // Use modern Livewire syntax
+                        if (window.Livewire) {
+                            window.Livewire.dispatch('updateSelectedSummary');
+                        }
                     }, 100);
+                }
+            });
+            
+            // Listen for amount input changes to show confirmation
+            document.addEventListener('input', function(e) {
+                if (e.target.type === 'number' && e.target.closest('.fi-ta-col-amount')) {
+                    const originalValue = e.target.getAttribute('data-original-value');
+                    const newValue = e.target.value;
+                    const recordId = e.target.getAttribute('data-record-id');
+                    
+                    if (originalValue && newValue && originalValue !== newValue) {
+                        // Show confirmation modal
+                        if (confirm(`Are you sure you want to change the amount from ${originalValue} to ${newValue}?`)) {
+                            // Update the amount
+                            window.Livewire.find('{{ $this->getId() }}').call('updateAmount', recordId, parseFloat(newValue));
+                        } else {
+                            // Revert the value
+                            e.target.value = originalValue;
+                        }
+                    }
                 }
             });
         });
