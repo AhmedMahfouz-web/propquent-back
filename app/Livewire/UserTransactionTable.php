@@ -2,379 +2,365 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\UserTransaction;
 use App\Models\User;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Validator;
+use Livewire\Component;
+use Filament\Tables;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Livewire\Attributes\On;
 
-class UserTransactionTable extends Component
+class UserTransactionTable extends Component implements HasTable, HasForms
 {
-    public $transactions = [];
-    public $draftRows = [];
-    public $users = [];
-    public $transactionTypes = [];
-    public $transactionMethods = [];
-    public $statuses = [];
+    use InteractsWithTable;
+    use InteractsWithForms;
     
-    // Sorting properties
-    public $sortField = 'transaction_date';
-    public $sortDirection = 'desc';
-    public $isLoading = false;
+    public $showSummary = true;
+    public $customSelectedRecords = [];
     
-    // Filter properties
-    public $filters = [
-        'user' => '',
-        'transaction_type' => '',
-        'amount_min' => '',
-        'amount_max' => '',
-        'method' => '',
-        'reference_no' => '',
-        'status' => '',
-        'transaction_date_from' => '',
-        'transaction_date_to' => '',
-        'actual_date_from' => '',
-        'actual_date_to' => '',
-        'note' => '',
+    protected $listeners = [
+        'updateSelectedSummary' => '$refresh',
+        'tableSelectionChanged' => 'updateSelectedRecords'
     ];
 
-    public function mount()
+    #[On('updateSelectedSummary')]
+    public function refreshSelectedSummary()
     {
-        $this->loadData();
-        $this->loadOptions();
+        $this->dispatch('$refresh');
+    }
+    
+    public function updateSelectedRecords($selectedIds)
+    {
+        $this->customSelectedRecords = $selectedIds;
+    }
+    
+    // Make summaries computed properties that react to changes
+    public function getTableSummaryProperty()
+    {
+        return $this->getTableSummary();
+    }
+    
+    public function getSelectedSummaryProperty()
+    {
+        return $this->getSelectedSummary();
     }
 
-    public function loadData()
+    public function table(Table $table): Table
     {
-        $query = UserTransaction::with('user');
-        
-        // Apply filters
-        $this->applyFilters($query);
-        
-        // Apply sorting
-        if ($this->sortField === 'user') {
-            $query->join('users', 'user_transactions.user_id', '=', 'users.id')
-                  ->orderBy('users.full_name', $this->sortDirection)
-                  ->select('user_transactions.*');
-        } else {
-            $query->orderBy($this->sortField, $this->sortDirection);
-        }
-        
-        $this->transactions = $query->get()
-            ->map(function ($transaction) {
-                return [
-                    'id' => $transaction->id,
-                    'user_id' => $transaction->user_id,
-                    'transaction_type' => $transaction->transaction_type,
-                    'amount' => $transaction->amount,
-                    'transaction_date' => $transaction->transaction_date?->format('Y-m-d'),
-                    'actual_date' => $transaction->actual_date?->format('Y-m-d'),
-                    'method' => $transaction->method,
-                    'reference_no' => $transaction->reference_no,
-                    'note' => $transaction->note,
-                    'status' => $transaction->status,
-                    'user_name' => $transaction->user->full_name ?? 'Unknown User',
-                ];
-            })
-            ->toArray();
-
+        return $table
+            ->query(UserTransaction::query()->with(['user']))
+            ->striped()
+            ->defaultPaginationPageOption(25)
+            ->paginated([10, 25, 50, 100])
+            ->selectCurrentPageOnly()
+            ->columns([
+                Tables\Columns\TextColumn::make('user.full_name')
+                    ->label('User')
+                    ->searchable(isIndividual: true)
+                    ->sortable()
+                    ->limit(30)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= 30) {
+                            return null;
+                        }
+                        return $state;
+                    }),
+                    
+                Tables\Columns\TextColumn::make('transaction_type')
+                    ->label('Type')
+                    ->searchable(isIndividual: true)
+                    ->sortable()
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'salary' => 'success',
+                        'bonus' => 'info',
+                        'deduction' => 'danger',
+                        'advance' => 'warning',
+                        default => 'gray',
+                    }),
+                    
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Amount')
+                    ->money('EGP')
+                    ->sortable()
+                    ->alignEnd()
+                    ->color(fn ($record): string => $record->transaction_type === 'deduction' ? 'danger' : 'success'),
+                    
+                Tables\Columns\TextColumn::make('transaction_date')
+                    ->label('Transaction Date')
+                    ->date('M j, Y')
+                    ->sortable()
+                    ->searchable(isIndividual: true),
+                    
+                Tables\Columns\TextColumn::make('actual_date')
+                    ->label('Actual Date')
+                    ->date('M j, Y')
+                    ->sortable()
+                    ->placeholder('Not set'),
+                    
+                Tables\Columns\TextColumn::make('method')
+                    ->label('Method')
+                    ->searchable(isIndividual: true)
+                    ->sortable()
+                    ->badge()
+                    ->placeholder('Not specified'),
+                    
+                Tables\Columns\TextColumn::make('reference_no')
+                    ->label('Reference')
+                    ->searchable(isIndividual: true)
+                    ->limit(20)
+                    ->placeholder('No reference'),
+                    
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->searchable(isIndividual: true)
+                    ->sortable()
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'completed' => 'success',
+                        'pending' => 'warning',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+                    
+                Tables\Columns\TextColumn::make('note')
+                    ->label('Note')
+                    ->searchable(isIndividual: true)
+                    ->limit(30)
+                    ->placeholder('No note')
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= 30) {
+                            return null;
+                        }
+                        return $state;
+                    }),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('user_id')
+                    ->label('User')
+                    ->relationship('user', 'full_name')
+                    ->searchable()
+                    ->preload(),
+                    
+                Tables\Filters\SelectFilter::make('transaction_type')
+                    ->label('Transaction Type')
+                    ->options(UserTransaction::getAvailableTransactionTypes()),
+                    
+                Tables\Filters\SelectFilter::make('method')
+                    ->label('Method')
+                    ->options(UserTransaction::getAvailableMethods()),
+                    
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(UserTransaction::getAvailableStatuses()),
+                    
+                Tables\Filters\Filter::make('amount_range')
+                    ->form([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('amount_from')
+                                    ->label('Amount From')
+                                    ->numeric()
+                                    ->placeholder('Min amount'),
+                                Forms\Components\TextInput::make('amount_to')
+                                    ->label('Amount To')
+                                    ->numeric()
+                                    ->placeholder('Max amount'),
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['amount_from'],
+                                fn (Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
+                            )
+                            ->when(
+                                $data['amount_to'],
+                                fn (Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['amount_from'] ?? null) {
+                            $indicators[] = 'Amount from: ' . number_format($data['amount_from'], 2);
+                        }
+                        if ($data['amount_to'] ?? null) {
+                            $indicators[] = 'Amount to: ' . number_format($data['amount_to'], 2);
+                        }
+                        return $indicators;
+                    }),
+                    
+                Tables\Filters\Filter::make('transaction_date_range')
+                    ->form([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\DatePicker::make('transaction_date_from')
+                                    ->label('Transaction Date From'),
+                                Forms\Components\DatePicker::make('transaction_date_to')
+                                    ->label('Transaction Date To'),
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['transaction_date_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('transaction_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['transaction_date_to'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['transaction_date_from'] ?? null) {
+                            $indicators[] = 'Transaction date from: ' . \Carbon\Carbon::parse($data['transaction_date_from'])->format('M j, Y');
+                        }
+                        if ($data['transaction_date_to'] ?? null) {
+                            $indicators[] = 'Transaction date to: ' . \Carbon\Carbon::parse($data['transaction_date_to'])->format('M j, Y');
+                        }
+                        return $indicators;
+                    }),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make()
+                    ->color('primary'),
+                Tables\Actions\DeleteAction::make()
+                    ->color('danger'),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('transaction_date', 'desc');
     }
 
-    public function loadOptions()
-    {
-        $this->users = User::all()
-            ->mapWithKeys(function ($user) {
-                return [$user->id => $user->full_name . ' (' . $user->custom_id . ')'];
-            })
-            ->toArray();
-
-        $this->transactionTypes = UserTransaction::getAvailableTransactionTypes();
-        $this->transactionMethods = UserTransaction::getAvailableMethods();
-        $this->statuses = UserTransaction::getAvailableStatuses();
-    }
-
-    public function addNewRow()
-    {
-        $newRowId = 'draft_' . uniqid();
-        $this->draftRows[$newRowId] = [
-            'id' => $newRowId,
-            'user_id' => '',
-            'transaction_type' => '',
-            'amount' => '',
-            'transaction_date' => today()->format('Y-m-d'),
-            'actual_date' => '',
-            'method' => '',
-            'reference_no' => '',
-            'note' => '',
-            'status' => 'pending',
-        ];
-    }
-
-    public function updateDraftRow($rowId, $field, $value)
-    {
-        if (isset($this->draftRows[$rowId])) {
-            // Convert empty date strings to null
-            if (in_array($field, ['transaction_date', 'actual_date']) && empty($value)) {
-                $value = null;
-            }
-
-            $this->draftRows[$rowId][$field] = $value;
-
-            // Check if all required fields are filled and attempt to save
-            $this->attemptSaveDraftRow($rowId);
-        }
-    }
-
-    public function updateExistingRow($transactionId, $field, $value)
+    protected function getTableQueryForSummary()
     {
         try {
-            $transaction = UserTransaction::find($transactionId);
-            if ($transaction) {
-                // Convert empty date strings to null
-                if (in_array($field, ['transaction_date', 'actual_date']) && empty($value)) {
-                    $value = null;
-                }
-
-                // Validate the single field update
-                $validator = Validator::make([$field => $value], [
-                    $field => $this->getFieldValidationRule($field)
-                ]);
-
-                if ($validator->fails()) {
-                    Notification::make()
-                        ->title('Validation Error')
-                        ->body($validator->errors()->first())
-                        ->danger()
-                        ->send();
-                    return;
-                }
-
-                $transaction->update([$field => $value]);
-                $this->loadData(); // Refresh data
-
-                Notification::make()
-                    ->title('Saved')
-                    ->body('Changes saved automatically')
-                    ->success()
-                    ->send();
-            }
+            // Use Filament's built-in method to get filtered query
+            return $this->getFilteredTableQuery();
         } catch (\Exception $e) {
-            Notification::make()
-                ->title('Error')
-                ->body('Failed to save: ' . $e->getMessage())
-                ->danger()
-                ->send();
+            // Fallback to base query if table methods fail
+            return UserTransaction::query()->with('user');
         }
     }
 
-    private function getFieldValidationRule($field)
+    public function getTableSummary(): array
     {
-        $rules = [
-            'user_id' => 'required|exists:users,id',
-            'transaction_type' => 'required|in:' . implode(',', array_keys($this->transactionTypes ?: [])),
-            'amount' => 'required|numeric|min:0.01',
-            'transaction_date' => 'required|date',
-            'actual_date' => 'nullable|date',
-            'method' => 'nullable|in:' . implode(',', array_keys($this->transactionMethods ?: [])),
-            'reference_no' => 'nullable|string|max:255',
-            'status' => 'required|in:' . implode(',', array_keys($this->statuses ?: [])),
-            'note' => 'nullable|string|max:65535',
-        ];
-
-        return $rules[$field] ?? 'nullable';
-    }
-
-    private function getValidationErrors($row)
-    {
-        $errors = [];
-        $requiredFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date'];
-
-        foreach ($requiredFields as $field) {
-            if (empty($row[$field])) {
-                $errors[] = $field;
-            }
+        try {
+            // Get the current page records from the table
+            $table = $this->getTable();
+            $records = $table->getRecords();
+            
+            // Calculate from current page records only
+            $recordCount = $records->count();
+            $totalAmount = $records->sum('amount');
+            $totalSalary = $records->where('transaction_type', 'salary')->sum('amount');
+            $totalBonus = $records->where('transaction_type', 'bonus')->sum('amount');
+            $totalDeduction = $records->where('transaction_type', 'deduction')->sum('amount');
+            $totalAdvance = $records->where('transaction_type', 'advance')->sum('amount');
+            
+            return [
+                'total_records' => $recordCount,
+                'total_amount' => $totalAmount,
+                'total_salary' => $totalSalary,
+                'total_bonus' => $totalBonus,
+                'total_deduction' => $totalDeduction,
+                'total_advance' => $totalAdvance,
+                'net_amount' => $totalSalary + $totalBonus - $totalDeduction - $totalAdvance,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'total_records' => 0,
+                'total_amount' => 0,
+                'total_salary' => 0,
+                'total_bonus' => 0,
+                'total_deduction' => 0,
+                'total_advance' => 0,
+                'net_amount' => 0,
+            ];
         }
-
-        return $errors;
     }
-
-    private function attemptSaveDraftRow($rowId)
+    
+    public function getSelectedSummary(): array
     {
-        $row = $this->draftRows[$rowId];
-
-        // Check if core fields are filled (user, type, amount, status, date)
-        $coreFields = ['user_id', 'transaction_type', 'amount', 'status', 'transaction_date'];
-        $hasCoreFields = true;
-
-        foreach ($coreFields as $field) {
-            if (empty($row[$field]) && $row[$field] !== '0') {
-                $hasCoreFields = false;
-                break;
-            }
-        }
-
-        if ($hasCoreFields) {
-            // Convert empty date strings to null
-            foreach (['transaction_date', 'actual_date'] as $dateField) {
-                if (isset($row[$dateField]) && empty($row[$dateField])) {
-                    $row[$dateField] = null;
-                }
-            }
-
-            // Validate the data using the model's validation rules
-            $validator = Validator::make($row, UserTransaction::getValidationRules());
-
-            if (!$validator->fails()) {
+        try {
+            // Get selected records using efficient database queries
+            $selectedIds = [];
+            
+            // Try multiple approaches to get selected record IDs
+            if (!empty($this->customSelectedRecords)) {
+                $selectedIds = $this->customSelectedRecords;
+            } else {
+                // Try to get selected records from table
                 try {
-                    // Remove draft-specific fields
-                    unset($row['id']);
-
-                    // Create the transaction
-                    UserTransaction::create($row);
-
-                    // Remove from draft rows
-                    unset($this->draftRows[$rowId]);
-
-                    // Reload data
-                    $this->loadData();
-
-                    Notification::make()
-                        ->title('Saved')
-                        ->body('Transaction saved to database')
-                        ->success()
-                        ->send();
+                    $selectedRecords = $this->getSelectedTableRecords();
+                    if (is_array($selectedRecords)) {
+                        $selectedIds = $selectedRecords;
+                    }
                 } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Error')
-                        ->body('Failed to save: ' . $e->getMessage())
-                        ->danger()
-                        ->send();
+                    $selectedIds = [];
                 }
             }
+            
+            if (empty($selectedIds)) {
+                return [
+                    'selected_records' => 0,
+                    'selected_amount' => 0,
+                    'selected_salary' => 0,
+                    'selected_bonus' => 0,
+                    'selected_deduction' => 0,
+                    'selected_advance' => 0,
+                    'selected_net' => 0,
+                ];
+            }
+            
+            // Use database aggregation for better performance
+            $query = UserTransaction::whereIn('id', $selectedIds);
+            $selectedCount = $query->count();
+            $selectedAmount = $query->sum('amount');
+            $selectedSalary = $query->where('transaction_type', 'salary')->sum('amount');
+            $selectedBonus = $query->where('transaction_type', 'bonus')->sum('amount');
+            $selectedDeduction = $query->where('transaction_type', 'deduction')->sum('amount');
+            $selectedAdvance = $query->where('transaction_type', 'advance')->sum('amount');
+            
+            return [
+                'selected_records' => $selectedCount,
+                'selected_amount' => $selectedAmount,
+                'selected_salary' => $selectedSalary,
+                'selected_bonus' => $selectedBonus,
+                'selected_deduction' => $selectedDeduction,
+                'selected_advance' => $selectedAdvance,
+                'selected_net' => $selectedSalary + $selectedBonus - $selectedDeduction - $selectedAdvance,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'selected_records' => 0,
+                'selected_amount' => 0,
+                'selected_salary' => 0,
+                'selected_bonus' => 0,
+                'selected_deduction' => 0,
+                'selected_advance' => 0,
+                'selected_net' => 0,
+            ];
         }
-    }
-
-    public function deleteDraftRow($rowId)
-    {
-        unset($this->draftRows[$rowId]);
-    }
-
-    public function deleteTransaction($transactionId)
-    {
-        $transaction = UserTransaction::find($transactionId);
-        if ($transaction) {
-            $transaction->delete();
-            $this->loadData();
-
-            Notification::make()
-                ->title('Deleted')
-                ->body('Transaction deleted successfully')
-                ->success()
-                ->send();
-        }
-    }
-
-    private function applyFilters($query)
-    {
-        // User filter
-        if (!empty($this->filters['user'])) {
-            $query->whereHas('user', function ($q) {
-                $q->where('full_name', 'like', '%' . $this->filters['user'] . '%')
-                  ->orWhere('custom_id', 'like', '%' . $this->filters['user'] . '%');
-            });
-        }
-        
-        // Transaction type filter
-        if (!empty($this->filters['transaction_type'])) {
-            $query->where('transaction_type', $this->filters['transaction_type']);
-        }
-        
-        // Amount range filter
-        if (!empty($this->filters['amount_min'])) {
-            $query->where('amount', '>=', $this->filters['amount_min']);
-        }
-        if (!empty($this->filters['amount_max'])) {
-            $query->where('amount', '<=', $this->filters['amount_max']);
-        }
-        
-        // Method filter
-        if (!empty($this->filters['method'])) {
-            $query->where('method', $this->filters['method']);
-        }
-        
-        // Reference filter
-        if (!empty($this->filters['reference_no'])) {
-            $query->where('reference_no', 'like', '%' . $this->filters['reference_no'] . '%');
-        }
-        
-        // Status filter
-        if (!empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
-        }
-        
-        // Transaction date range filter
-        if (!empty($this->filters['transaction_date_from'])) {
-            $query->where('transaction_date', '>=', $this->filters['transaction_date_from']);
-        }
-        if (!empty($this->filters['transaction_date_to'])) {
-            $query->where('transaction_date', '<=', $this->filters['transaction_date_to']);
-        }
-        
-        // Actual date range filter
-        if (!empty($this->filters['actual_date_from'])) {
-            $query->where('actual_date', '>=', $this->filters['actual_date_from']);
-        }
-        if (!empty($this->filters['actual_date_to'])) {
-            $query->where('actual_date', '<=', $this->filters['actual_date_to']);
-        }
-        
-        // Note filter
-        if (!empty($this->filters['note'])) {
-            $query->where('note', 'like', '%' . $this->filters['note'] . '%');
-        }
-    }
-    
-    public function updatedFilters()
-    {
-        $this->loadData();
-    }
-    
-    public function resetFilters()
-    {
-        $this->filters = [
-            'user' => '',
-            'transaction_type' => '',
-            'amount_min' => '',
-            'amount_max' => '',
-            'method' => '',
-            'reference_no' => '',
-            'status' => '',
-            'transaction_date_from' => '',
-            'transaction_date_to' => '',
-            'actual_date_from' => '',
-            'actual_date_to' => '',
-            'note' => '',
-        ];
-        $this->loadData();
-    }
-    
-    public function sortBy($field)
-    {
-        $this->isLoading = true;
-        
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
-        }
-        
-        $this->loadData();
-        $this->isLoading = false;
     }
 
     public function render()
     {
-        return view('livewire.user-transaction-table');
+        return view('livewire.user-transaction-table', [
+            'tableSummary' => $this->tableSummary,
+            'selectedSummary' => $this->selectedSummary,
+        ]);
     }
 }
