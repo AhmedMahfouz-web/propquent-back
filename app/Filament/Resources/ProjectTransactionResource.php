@@ -141,136 +141,105 @@ class ProjectTransactionResource extends Resource
                 'md' => 1,
                 'xl' => 1,
             ])
-            ->striped()
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
             ->extremePaginationLinks()
-            ->height('400px')
             ->columns([
-                Tables\Columns\SelectColumn::make('project_key')
-                    ->label('Project')
-                    ->options(function () {
-                        return \App\Models\Project::with('developer')
-                            ->get()
-                            ->mapWithKeys(function ($project) {
-                                return [$project->key => "{$project->title} ({$project->developer->name})"];
-                            })
-                            ->toArray();
-                    })
-                    ->rules(['required', 'exists:projects,key'])
-                    ->selectablePlaceholder(false)
+                Tables\Columns\TextColumn::make('project_key')
+                    ->label('Project Key')
+                    ->sortable()
                     ->searchable()
-                    ->sortable()
-                    ->width(200),
+                    ->width(200)
+                    ->copyable(),
 
-                Tables\Columns\SelectColumn::make('financial_type')
-                    ->label('Financial Type')
-                    ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
-                    ->rules(['required'])
-                    ->selectablePlaceholder(false)
-                    ->searchable()
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\SelectColumn::make('serving')
-                    ->options(fn() => ProjectTransaction::getAvailableServingTypes())
-                    ->placeholder('Select serving...')
-                    ->selectablePlaceholder(false)
-                    ->sortable(),
-
-                Tables\Columns\SelectColumn::make('what')
-                    ->label('What')
-                    ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
-                    ->placeholder('Select purpose...')
-                    ->selectablePlaceholder(false)
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\TextInputColumn::make('amount')
-                    ->extraInputAttributes([
-                        'type' => 'number',
-                        'step' => '0.01',
-                        'required' => true
-                    ])
-                    ->rules(['required', 'numeric', 'min:0.01'])
-                    ->placeholder('0.00')
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\SelectColumn::make('method')
-                    ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
-                    ->placeholder('Select method...')
-                    ->selectablePlaceholder(false)
-                    ->sortable(),
-
-                Tables\Columns\TextInputColumn::make('reference_no')
-                    ->label('Reference')
-                    ->placeholder('Reference number...')
-                    ->rules(['max:255'])
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\SelectColumn::make('status')
-                    ->options(fn() => ProjectTransaction::getAvailableStatuses())
-                    ->rules(['required'])
-                    ->selectablePlaceholder(false)
-                    ->sortable()
-                    ->width(120),
-
-                Tables\Columns\TextInputColumn::make('transaction_date')
-                    ->rules(['required', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}',
-                        'required' => true
-                    ])
-                    ->width(150)
-                    ->sortable(),
-
-                Tables\Columns\TextInputColumn::make('due_date')
-                    ->rules(['nullable', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                    ])
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\TextInputColumn::make('actual_date')
-                    ->rules(['nullable', 'date_format:Y-m-d'])
-                    ->placeholder('YYYY-MM-DD')
-                    ->extraInputAttributes([
-                        'type' => 'text',
-                        'pattern' => '[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                    ])
-                    ->sortable()
-                    ->width(150),
-
-                Tables\Columns\TextInputColumn::make('note')
-                    ->placeholder('Add note...')
-                    ->rules(['max:65535'])
-                    ->sortable()
-                    ->width(200),
-                // Read-only columns for existing records
                 Tables\Columns\TextColumn::make('project.title')
-                    ->label('Project Title')
-                    ->searchable()
+                    ->label('Project Name')
                     ->sortable()
-                    ->limit(30)
+                    ->searchable()
+                    ->width(250)
                     ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
                         $state = $column->getState();
                         if (strlen($state) <= 30) {
                             return null;
                         }
                         return $state;
-                    })
-                    ->toggleable(),
+                    }),
 
                 Tables\Columns\TextColumn::make('project.developer.name')
                     ->label('Developer')
                     ->searchable()
+                    ->toggleable(),
+
+                Tables\Columns\BadgeColumn::make('financial_type')
+                    ->colors([
+                        'success' => 'revenue',
+                        'danger' => 'expense',
+                    ])
+                    ->sortable()
+                    ->width(120),
+
+                Tables\Columns\TextColumn::make('amount')
+                    ->money('EGP')
+                    ->sortable()
+                    ->width(120)
+                    ->alignEnd(),
+
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors([
+                        'warning' => 'pending',
+                        'success' => 'completed',
+                        'danger' => 'cancelled',
+                    ])
+                    ->sortable()
+                    ->width(120),
+
+                Tables\Columns\TextColumn::make('transaction_date')
+                    ->date()
+                    ->sortable()
+                    ->width(150),
+
+                Tables\Columns\TextColumn::make('serving')
+                    ->sortable()
+                    ->width(120)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('what')
+                    ->sortable()
+                    ->width(150)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('method')
+                    ->sortable()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('reference_no')
+                    ->label('Reference')
+                    ->sortable()
+                    ->width(150)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('due_date')
+                    ->date()
+                    ->sortable()
+                    ->width(150)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('actual_date')
+                    ->date()
+                    ->sortable()
+                    ->width(150)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('note')
+                    ->limit(50)
+                    ->sortable()
+                    ->width(200)
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('transaction_category')
+                    ->label('Category')
+                    ->sortable()
+                    ->width(150)
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -392,7 +361,40 @@ class ProjectTransactionResource extends Resource
                     })
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Edit')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('warning'),
+                    
+                Tables\Actions\Action::make('quickEdit')
+                    ->label('Quick Edit')
+                    ->icon('heroicon-m-bolt')
+                    ->color('info')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->step(0.01)
+                            ->required()
+                            ->prefix('EGP'),
+                    ])
+                    ->fillForm(fn($record) => [
+                        'status' => $record->status,
+                        'amount' => $record->amount,
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->update($data);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Transaction updated successfully')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\DeleteAction::make()
+                    ->label('Delete')
+                    ->icon('heroicon-m-trash'),
             ])
             ->recordUrl(null) // Disable row click navigation to allow inline editing
             ->bulkActions([

@@ -26,8 +26,8 @@ class GenerateProjectTransactionTemplate extends Command
         // Set column headers
         $headers = [
             'A1' => 'project_key (Required - Select from dropdown)',
-            'B1' => 'project_name (Auto-filled from project_key)',
-            'C1' => 'developer_name (Auto-filled from project_key)',
+            'B1' => 'project_name (Optional - Select from dropdown)',
+            'C1' => 'developer_name (Optional - See Projects Reference)',
             'D1' => 'financial_type (Required)',
             'E1' => 'serving (Optional)',
             'F1' => 'what (Optional)',
@@ -267,18 +267,32 @@ class GenerateProjectTransactionTemplate extends Command
             $projectsSheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        // Add auto-fill formulas with error handling
-        try {
-            for ($i = 2; $i <= 100; $i++) { // Extend to 100 rows since it's working
-                // Use Sheet2 reference (Projects Reference is the 2nd sheet)
-                $sheet->setCellValue('B' . $i, '=IF(A' . $i . '="","",VLOOKUP(A' . $i . ',Sheet2.A:C,2,0))');
-                $sheet->setCellValue('C' . $i, '=IF(A' . $i . '="","",VLOOKUP(A' . $i . ',Sheet2.A:C,3,0))');
-            }
-            $this->info('Auto-fill formulas added successfully to 100 rows');
-        } catch (\Exception $e) {
-            $this->warn('Could not add formulas: ' . $e->getMessage());
-            $this->info('Template will be created without formulas');
+        // Skip auto-fill formulas to avoid repair issues
+        // Add dropdown validation for project names (Column B)
+        $projectNames = $projects->pluck('title')->toArray();
+        if (!empty($projectNames)) {
+            $projectNamesString = '"' . implode(',', array_map(function($name) {
+                return str_replace('"', '""', $name); // Escape quotes in project names
+            }, $projectNames)) . '"';
+            
+            $validation = $sheet->getCell('B2')->getDataValidation();
+            $validation->setType(DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+            $validation->setAllowBlank(true);
+            $validation->setShowInputMessage(true);
+            $validation->setShowErrorMessage(true);
+            $validation->setShowDropDown(true);
+            $validation->setErrorTitle('Input error');
+            $validation->setError('Value is not in list.');
+            $validation->setPromptTitle('Pick from list');
+            $validation->setPrompt('Please pick a project name from the drop-down list.');
+            $validation->setFormula1($projectNamesString);
+            
+            // Apply to range B2:B1000
+            $sheet->setDataValidation('B2:B1000', clone $validation);
         }
+        
+        $this->info('Dropdown validation added for project names and keys');
 
         // Add a third sheet with dropdown options
         $optionsSheet = $spreadsheet->createSheet();
