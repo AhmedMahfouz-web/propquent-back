@@ -1,0 +1,41 @@
+/* Custom styles for edited items */
+.fi-ta-row[data-edited="true"] {
+    border: 2px solid #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.fi-ta-row[data-edited="true"]:hover {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Quick edit button styling */
+.fi-ac-btn-action[data-action="quickEdit"] {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+.fi-ac-btn-action[data-action="quickEdit"]:hover {
+    background-color: #2563eb !important;
+}
+
+/* Status badge colors */
+.fi-badge[data-status="pending"] {
+    background-color: #fbbf24 !important;
+    color: #92400e !important;
+}
+
+.fi-badge[data-status="completed"] {
+    background-color: #10b981 !important;
+    color: #065f46 !important;
+}
+
+.fi-badge[data-status="cancelled"] {
+    background-color: #ef4444 !important;
+    color: #991b1b !important;
+}
+
+/* Amount column styling */
+.fi-ta-col-amount {
+    font-weight: 600 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}

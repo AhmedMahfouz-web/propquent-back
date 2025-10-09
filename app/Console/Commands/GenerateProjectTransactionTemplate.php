@@ -385,10 +385,12 @@ class GenerateProjectTransactionTemplate extends Command
         $this->info('Location: ' . $templatePath);
         $this->info('Projects loaded: ' . $projects->count());
         $this->info('Features:');
-        $this->info('- Main sheet with auto-fill formulas (100 rows)');
+        $this->info('- Main sheet ready for data entry');
+        $this->info('- Project key dropdown validation');
+        $this->info('- Project name dropdown validation');
         $this->info('- Projects reference sheet with all project keys and names');
         $this->info('- Dropdown options sheet with all valid values');
-        $this->info('- Auto-fill: Select project key → project name & developer auto-populate');
+        $this->info('- Import uses project_key for validation (not project_name)');
         
         return 0;
     }

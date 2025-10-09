@@ -386,10 +386,30 @@ class ProjectTransactionResource extends Resource
                     ])
                     ->action(function ($record, array $data) {
                         $record->update($data);
+                        
+                        // Add a custom attribute to mark as edited
+                        $record->setAttribute('recently_edited', true);
+                        
                         \Filament\Notifications\Notification::make()
                             ->title('Transaction updated successfully')
                             ->success()
                             ->send();
+                    })
+                    ->after(function () {
+                        // Add JavaScript to highlight edited row
+                        echo '<script>
+                            setTimeout(() => {
+                                const lastRow = document.querySelector(".fi-ta-row:last-child");
+                                if (lastRow) {
+                                    lastRow.style.border = "2px solid #10b981";
+                                    lastRow.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
+                                    setTimeout(() => {
+                                        lastRow.style.border = "";
+                                        lastRow.style.backgroundColor = "";
+                                    }, 3000);
+                                }
+                            }, 100);
+                        </script>';
                     }),
                     
                 Tables\Actions\DeleteAction::make()
