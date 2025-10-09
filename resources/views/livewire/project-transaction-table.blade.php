@@ -101,7 +101,7 @@
                         if (window.Livewire) {
                             const component = window.Livewire.find('{{ $this->getId() }}');
                             if (component) {
-                                component.set('selectedTableRecords', selectedIds);
+                                component.set('customSelectedRecords', selectedIds);
                                 component.call('$refresh');
                             }
                         }

@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Models\ProjectTransaction;
 use App\Models\Project;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -23,9 +22,8 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     use InteractsWithTable;
     use InteractsWithForms;
     
-    public $selectedRecords = [];
     public $showSummary = true;
-    public $selectedTableRecords = [];
+    public $customSelectedRecords = [];
     
     protected $listeners = [
         'updateSelectedSummary' => '$refresh',
@@ -71,7 +69,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     
     public function updateSelectedRecords($selectedIds)
     {
-        $this->selectedTableRecords = $selectedIds;
+        $this->customSelectedRecords = $selectedIds;
     }
     
     // Make summaries computed properties that react to changes
@@ -494,8 +492,8 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             $selectedRecords = collect();
             
             // Try multiple approaches to get selected records
-            if (!empty($this->selectedTableRecords)) {
-                $selectedRecords = ProjectTransaction::whereIn('id', $this->selectedTableRecords)->get();
+            if (!empty($this->customSelectedRecords)) {
+                $selectedRecords = ProjectTransaction::whereIn('id', $this->customSelectedRecords)->get();
             } else {
                 // Try to get selected records from table
                 try {
