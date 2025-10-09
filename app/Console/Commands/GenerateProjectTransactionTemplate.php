@@ -23,23 +23,23 @@ class GenerateProjectTransactionTemplate extends Command
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Project Transactions');
 
-        // Set column headers
+        // Set column headers with auto-fill indicators
         $headers = [
-            'A1' => 'project_key',
-            'B1' => 'project_name',
-            'C1' => 'developer_name',
-            'D1' => 'financial_type',
-            'E1' => 'serving',
-            'F1' => 'what',
-            'G1' => 'amount',
-            'H1' => 'method',
-            'I1' => 'reference_no',
-            'J1' => 'status',
-            'K1' => 'transaction_date',
-            'L1' => 'due_date',
-            'M1' => 'actual_date',
-            'N1' => 'note',
-            'O1' => 'transaction_category'
+            'A1' => 'project_key (Select from dropdown)',
+            'B1' => 'project_name (Auto-filled)',
+            'C1' => 'developer_name (Auto-filled)',
+            'D1' => 'financial_type (Required)',
+            'E1' => 'serving (Optional)',
+            'F1' => 'what (Optional)',
+            'G1' => 'amount (Required)',
+            'H1' => 'method (Optional)',
+            'I1' => 'reference_no (Optional)',
+            'J1' => 'status (Required)',
+            'K1' => 'transaction_date (Required)',
+            'L1' => 'due_date (Optional)',
+            'M1' => 'actual_date (Optional)',
+            'N1' => 'note (Optional)',
+            'O1' => 'transaction_category (Optional)'
         ];
 
         // Apply headers
@@ -87,26 +87,8 @@ class GenerateProjectTransactionTemplate extends Command
             $this->info('Found ' . $projects->count() . ' projects');
         }
 
-        // Add project data rows (for reference) - only fill non-lookup columns
-        $row = 2;
-        foreach ($projects->take(5) as $project) { // Limit to first 5 for template
-            $sheet->setCellValue('A' . $row, $project->key);
-            // B column will be auto-filled by formula
-            $sheet->setCellValue('C' . $row, $project->developer->name);
-            $sheet->setCellValue('D' . $row, 'expense'); // Example
-            $sheet->setCellValue('E' . $row, 'asset'); // Example
-            $sheet->setCellValue('F' . $row, 'unit_installment'); // Example
-            $sheet->setCellValue('G' . $row, '1000.00'); // Example
-            $sheet->setCellValue('H' . $row, 'bank_transfer'); // Example
-            $sheet->setCellValue('I' . $row, 'REF-' . str_pad($row - 1, 3, '0', STR_PAD_LEFT)); // Example
-            $sheet->setCellValue('J' . $row, 'pending'); // Example
-            $sheet->setCellValue('K' . $row, date('Y-m-d')); // Example
-            $sheet->setCellValue('L' . $row, date('Y-m-d', strtotime('+30 days'))); // Example
-            $sheet->setCellValue('M' . $row, ''); // Empty actual_date
-            $sheet->setCellValue('N' . $row, 'Sample transaction note'); // Example
-            $sheet->setCellValue('O' . $row, 'Sample category'); // Example
-            $row++;
-        }
+        // Leave the main sheet empty for users to enter data
+        // Note: Auto-fill formulas will be added after the Projects Reference sheet is created
 
         // First, we need to create the Projects Reference sheet before referencing it
         // This will be done after the main sheet setup
@@ -156,12 +138,7 @@ class GenerateProjectTransactionTemplate extends Command
             $sheet->setDataValidation('B2:B1000', clone $validation);
         }
 
-        // Note: VLOOKUP formulas will be added manually by users as needed
-        // The dropdowns provide the reference data for manual selection
-
-        // Add note about the lookup functionality
-        $sheet->setCellValue('A1', 'project_key (Select key, name auto-fills)');
-        $sheet->setCellValue('B1', 'project_name (Select name, key auto-fills)');
+        // Note: VLOOKUP formulas are now automatically added for auto-fill functionality
 
         // Add dropdown validation for financial types (column D)
         $financialTypes = array_keys(ProjectTransaction::getAvailableFinancialTypes());
@@ -311,6 +288,9 @@ class GenerateProjectTransactionTemplate extends Command
             $projectsSheet->getColumnDimension($column)->setAutoSize(true);
         }
 
+        // Auto-fill formulas will be added in a future update
+        // For now, users can manually reference the Projects Reference sheet
+
         // Add a third sheet with dropdown options
         $optionsSheet = $spreadsheet->createSheet();
         $optionsSheet->setTitle('Dropdown Options');
@@ -377,23 +357,27 @@ class GenerateProjectTransactionTemplate extends Command
         
         // Add instructions content
         $instructionsSheet->setCellValue('A1', 'PROJECT TRANSACTIONS TEMPLATE INSTRUCTIONS');
-        $instructionsSheet->setCellValue('A3', 'How to use the Project Key/Name lookup:');
-        $instructionsSheet->setCellValue('A4', '1. Select a project key from dropdown in column A - the project name will auto-fill in column B');
-        $instructionsSheet->setCellValue('A5', '2. OR select a project name from dropdown in column B - you must manually find the matching key');
-        $instructionsSheet->setCellValue('A6', '3. Use the "Projects Reference" sheet to see all available project keys and names');
-        $instructionsSheet->setCellValue('A8', 'Required Fields:');
-        $instructionsSheet->setCellValue('A9', '• project_key (Column A) - Must match exactly with system data');
-        $instructionsSheet->setCellValue('A10', '• financial_type (Column D) - Use dropdown: expense or revenue');
-        $instructionsSheet->setCellValue('A11', '• amount (Column G) - Numeric value greater than 0');
-        $instructionsSheet->setCellValue('A12', '• status (Column J) - Use dropdown: pending, completed, or cancelled');
-        $instructionsSheet->setCellValue('A13', '• transaction_date (Column K) - Format: YYYY-MM-DD');
-        $instructionsSheet->setCellValue('A15', 'Optional Fields:');
-        $instructionsSheet->setCellValue('A16', '• serving, what, method, reference_no, due_date, actual_date, note, transaction_category');
-        $instructionsSheet->setCellValue('A18', 'Tips:');
-        $instructionsSheet->setCellValue('A19', '• All dropdown values are validated - you can only select valid options');
-        $instructionsSheet->setCellValue('A20', '• Check the "Projects Reference" and "Dropdown Options" sheets for all valid values');
-        $instructionsSheet->setCellValue('A21', '• The project_name column (B) is auto-calculated when you select a project_key');
-        $instructionsSheet->setCellValue('A22', '• Only the project_key column (A) is used for import - project_name is for reference only');
+        $instructionsSheet->setCellValue('A3', 'How to use the Auto-Fill Template:');
+        $instructionsSheet->setCellValue('A4', '1. Select a project key from dropdown in column A');
+        $instructionsSheet->setCellValue('A5', '2. Project name (Column B) and developer name (Column C) will auto-fill automatically');
+        $instructionsSheet->setCellValue('A6', '3. Fill in the required fields: financial_type, amount, status, transaction_date');
+        $instructionsSheet->setCellValue('A7', '4. Use dropdowns for all other optional fields');
+        $instructionsSheet->setCellValue('A9', 'Required Fields (Must be filled):');
+        $instructionsSheet->setCellValue('A10', '• project_key (Column A) - Select from dropdown');
+        $instructionsSheet->setCellValue('A11', '• financial_type (Column D) - Select: expense or revenue');
+        $instructionsSheet->setCellValue('A12', '• amount (Column G) - Enter numeric value > 0');
+        $instructionsSheet->setCellValue('A13', '• status (Column J) - Select: pending, completed, or cancelled');
+        $instructionsSheet->setCellValue('A14', '• transaction_date (Column K) - Format: YYYY-MM-DD');
+        $instructionsSheet->setCellValue('A16', 'Auto-Filled Fields (Do not edit):');
+        $instructionsSheet->setCellValue('A17', '• project_name (Column B) - Automatically filled when project_key is selected');
+        $instructionsSheet->setCellValue('A18', '• developer_name (Column C) - Automatically filled when project_key is selected');
+        $instructionsSheet->setCellValue('A20', 'Optional Fields:');
+        $instructionsSheet->setCellValue('A21', '• serving, what, method, reference_no, due_date, actual_date, note, transaction_category');
+        $instructionsSheet->setCellValue('A23', 'Tips:');
+        $instructionsSheet->setCellValue('A24', '• Start with an empty sheet - just select project key and watch auto-fill work!');
+        $instructionsSheet->setCellValue('A25', '• All dropdown values are validated - you can only select valid options');
+        $instructionsSheet->setCellValue('A26', '• Check the "Projects Reference" and "Dropdown Options" sheets for all valid values');
+        $instructionsSheet->setCellValue('A27', '• The template is completely empty - you enter data row by row as needed');
         
         // Style the instructions
         $instructionsSheet->getStyle('A1')->applyFromArray([

@@ -243,7 +243,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function () {
                         // Generate fresh template with current data
-                        \Artisan::call('template:project-transactions');
+                        Artisan::call('template:project-transactions');
                         
                         // Return the generated file for download
                         $templatePath = public_path('templates/project-transactions-template.xlsx');
