@@ -1,41 +1,72 @@
-/* Custom styles for edited items */
-.fi-ta-row[data-edited="true"] {
-    border: 2px solid #10b981 !important;
-    background-color: rgba(16, 185, 129, 0.05) !important;
+/* Compact table rows with reduced padding */
+.fi-ta-row {
+    padding: 0.25rem 0.5rem !important;
+    height: auto !important;
+    min-height: 2rem !important;
 }
 
-.fi-ta-row[data-edited="true"]:hover {
-    background-color: rgba(16, 185, 129, 0.1) !important;
+.fi-ta-cell {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
 }
 
-/* Quick edit button styling */
-.fi-ac-btn-action[data-action="quickEdit"] {
-    background-color: #3b82f6 !important;
-    color: white !important;
+.fi-ta-header-cell {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
 }
 
-.fi-ac-btn-action[data-action="quickEdit"]:hover {
-    background-color: #2563eb !important;
+/* Compact input fields in table */
+.fi-ta-cell input,
+.fi-ta-cell select {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    min-height: 1.75rem !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
 }
 
-/* Status badge colors */
-.fi-badge[data-status="pending"] {
-    background-color: #fbbf24 !important;
-    color: #92400e !important;
+.fi-ta-cell input:focus,
+.fi-ta-cell select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px #3b82f6 !important;
 }
 
-.fi-badge[data-status="completed"] {
-    background-color: #10b981 !important;
-    color: #065f46 !important;
+/* Compact action buttons */
+.fi-ta-actions {
+    padding: 0.25rem !important;
 }
 
-.fi-badge[data-status="cancelled"] {
-    background-color: #ef4444 !important;
-    color: #991b1b !important;
+.fi-ta-actions .fi-ac-btn-action {
+    padding: 0.25rem !important;
+    min-height: 1.5rem !important;
+    width: 1.5rem !important;
 }
 
 /* Amount column styling */
-.fi-ta-col-amount {
+.fi-ta-col-amount input {
     font-weight: 600 !important;
-    font-family: 'JetBrains Mono', monospace !important;
+    text-align: right !important;
+}
+
+/* Status column styling */
+.fi-ta-col-status select {
+    font-size: 0.75rem !important;
+    padding: 0.125rem 0.25rem !important;
+}
+
+/* Filters styling - make them more compact */
+.fi-ta-filters {
+    padding: 0.5rem !important;
+    gap: 0.5rem !important;
+}
+
+.fi-ta-filter {
+    min-width: 120px !important;
+}
+
+/* Summary cards margin */
+.summary-cards {
+    margin-top: 1rem !important;
+    gap: 1rem !important;
 }

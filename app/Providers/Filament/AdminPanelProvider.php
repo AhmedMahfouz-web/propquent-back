@@ -42,6 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 'info' => Color::Blue,
             ])
             ->font('Inter')
+            ->viteTheme('resources/css/filament-custom.css')
             ->navigationGroups([
                 NavigationGroup::make('Financial Reports')
                     ->icon('heroicon-o-chart-bar')

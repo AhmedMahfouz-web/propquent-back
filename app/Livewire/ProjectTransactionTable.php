@@ -34,6 +34,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->paginated([10, 25, 50, 100])
             ->selectCurrentPageOnly()
             ->checkIfRecordIsSelectableUsing(fn () => true)
+            ->recordClasses('!py-1 !px-2 text-sm')
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -77,11 +78,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableWhatTypes()[$state] ?? $state) : '-')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('amount')
-                    ->money('EGP')
+                Tables\Columns\TextInputColumn::make('amount')
+                    ->type('number')
+                    ->step(0.01)
+                    ->prefix('EGP')
                     ->sortable()
                     ->alignEnd()
-                    ->weight('bold'),
+                    ->rules(['required', 'numeric', 'min:0.01'])
+                    ->extraInputAttributes(['class' => 'text-sm py-1']),
 
                 Tables\Columns\TextColumn::make('method')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
@@ -93,14 +97,11 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->copyable()
                     ->placeholder('-'),
 
-                Tables\Columns\BadgeColumn::make('status')
-                    ->formatStateUsing(fn (string $state): string => ProjectTransaction::getAvailableStatuses()[$state] ?? $state)
-                    ->colors([
-                        'success' => 'completed',
-                        'warning' => 'pending',
-                        'danger' => 'cancelled',
-                    ])
-                    ->sortable(),
+                Tables\Columns\SelectColumn::make('status')
+                    ->options(fn() => ProjectTransaction::getAvailableStatuses())
+                    ->sortable()
+                    ->selectablePlaceholder(false)
+                    ->extraAttributes(['class' => 'text-sm']),
 
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
@@ -196,7 +197,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                             );
                     }),
             ])
-            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
             ->persistFiltersInSession()
             ->headerActions([
                 Tables\Actions\CreateAction::make()
@@ -308,88 +308,11 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     })
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->label('Edit')
-                    ->icon('heroicon-m-pencil-square')
-                    ->color('warning')
-                    ->form([
-                        Forms\Components\Select::make('project_key')
-                            ->label('Project')
-                            ->options(function () {
-                                return Project::with('developer')
-                                    ->get()
-                                    ->mapWithKeys(function ($project) {
-                                        return [$project->key => "{$project->title} ({$project->developer->name})"];
-                                    })
-                                    ->toArray();
-                            })
-                            ->searchable()
-                            ->required(),
-                        Forms\Components\Select::make('financial_type')
-                            ->label('Financial Type')
-                            ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
-                            ->required(),
-                        Forms\Components\TextInput::make('amount')
-                            ->numeric()
-                            ->prefix('EGP')
-                            ->step(0.01)
-                            ->required(),
-                        Forms\Components\Select::make('status')
-                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
-                            ->required(),
-                        Forms\Components\Select::make('serving')
-                            ->options(fn() => ProjectTransaction::getAvailableServingTypes())
-                            ->nullable(),
-                        Forms\Components\Select::make('what')
-                            ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
-                            ->nullable(),
-                        Forms\Components\Select::make('method')
-                            ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
-                            ->nullable(),
-                        Forms\Components\TextInput::make('reference_no')
-                            ->label('Reference Number')
-                            ->maxLength(255)
-                            ->nullable(),
-                        Forms\Components\DatePicker::make('transaction_date')
-                            ->required(),
-                        Forms\Components\DatePicker::make('due_date')
-                            ->nullable(),
-                        Forms\Components\DatePicker::make('actual_date')
-                            ->nullable(),
-                        Forms\Components\Textarea::make('note')
-                            ->maxLength(65535)
-                            ->nullable(),
-                    ]),
-                    
-                Tables\Actions\Action::make('quickEdit')
-                    ->label('Quick Edit')
-                    ->icon('heroicon-m-bolt')
-                    ->color('info')
-                    ->form([
-                        Forms\Components\Select::make('status')
-                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
-                            ->required(),
-                        Forms\Components\TextInput::make('amount')
-                            ->numeric()
-                            ->step(0.01)
-                            ->required()
-                            ->prefix('EGP'),
-                    ])
-                    ->fillForm(fn($record) => [
-                        'status' => $record->status,
-                        'amount' => $record->amount,
-                    ])
-                    ->action(function ($record, array $data) {
-                        $record->update($data);
-                        \Filament\Notifications\Notification::make()
-                            ->title('Transaction updated successfully')
-                            ->success()
-                            ->send();
-                    }),
-                    
                 Tables\Actions\DeleteAction::make()
-                    ->label('Delete')
-                    ->icon('heroicon-m-trash'),
+                    ->label('')
+                    ->icon('heroicon-m-trash')
+                    ->size('sm')
+                    ->color('danger'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
