@@ -91,7 +91,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
             ->selectCurrentPageOnly()
-            ->deferLoading()
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -459,14 +458,15 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getTableSummary(): array
     {
         try {
-            // Get the filtered query that matches what's shown in the table
-            $query = $this->getTableQueryForSummary();
+            // Get the current page records from the table
+            $table = $this->getTable();
+            $records = $table->getRecords();
             
-            // Use database aggregation for better performance instead of loading all records
-            $recordCount = $query->count();
-            $totalAmount = $query->sum('amount');
-            $totalRevenue = $query->where('financial_type', 'revenue')->sum('amount');
-            $totalExpense = $query->where('financial_type', 'expense')->sum('amount');
+            // Calculate from current page records only
+            $recordCount = $records->count();
+            $totalAmount = $records->sum('amount');
+            $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
+            $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
             
             return [
                 'total_records' => $recordCount,
