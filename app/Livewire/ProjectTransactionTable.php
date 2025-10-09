@@ -86,11 +86,12 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function table(Table $table): Table
     {
         return $table
-            ->query(ProjectTransaction::query()->with('project.developer'))
+            ->query(ProjectTransaction::query()->with(['project.developer']))
             ->striped()
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
             ->selectCurrentPageOnly()
+            ->deferLoading()
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -460,12 +461,12 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
         try {
             // Get the filtered query that matches what's shown in the table
             $query = $this->getTableQueryForSummary();
-            $records = $query->get();
             
-            $totalAmount = $records->sum('amount');
-            $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
-            $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
-            $recordCount = $records->count();
+            // Use database aggregation for better performance instead of loading all records
+            $recordCount = $query->count();
+            $totalAmount = $query->sum('amount');
+            $totalRevenue = $query->where('financial_type', 'revenue')->sum('amount');
+            $totalExpense = $query->where('financial_type', 'expense')->sum('amount');
             
             return [
                 'total_records' => $recordCount,
@@ -488,25 +489,25 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getSelectedSummary(): array
     {
         try {
-            // Get selected records using Filament's built-in methods
-            $selectedRecords = collect();
+            // Get selected records using efficient database queries
+            $selectedIds = [];
             
-            // Try multiple approaches to get selected records
+            // Try multiple approaches to get selected record IDs
             if (!empty($this->customSelectedRecords)) {
-                $selectedRecords = ProjectTransaction::whereIn('id', $this->customSelectedRecords)->get();
+                $selectedIds = $this->customSelectedRecords;
             } else {
                 // Try to get selected records from table
                 try {
                     $selectedRecords = $this->getSelectedTableRecords();
                     if (is_array($selectedRecords)) {
-                        $selectedRecords = ProjectTransaction::whereIn('id', $selectedRecords)->get();
+                        $selectedIds = $selectedRecords;
                     }
                 } catch (\Exception $e) {
-                    $selectedRecords = collect();
+                    $selectedIds = [];
                 }
             }
             
-            if ($selectedRecords->isEmpty()) {
+            if (empty($selectedIds)) {
                 return [
                     'selected_records' => 0,
                     'selected_amount' => 0,
@@ -516,12 +517,15 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 ];
             }
             
-            $selectedAmount = $selectedRecords->sum('amount');
-            $selectedRevenue = $selectedRecords->where('financial_type', 'revenue')->sum('amount');
-            $selectedExpense = $selectedRecords->where('financial_type', 'expense')->sum('amount');
+            // Use database aggregation for better performance
+            $query = ProjectTransaction::whereIn('id', $selectedIds);
+            $selectedCount = $query->count();
+            $selectedAmount = $query->sum('amount');
+            $selectedRevenue = $query->where('financial_type', 'revenue')->sum('amount');
+            $selectedExpense = $query->where('financial_type', 'expense')->sum('amount');
             
             return [
-                'selected_records' => $selectedRecords->count(),
+                'selected_records' => $selectedCount,
                 'selected_amount' => $selectedAmount,
                 'selected_revenue' => $selectedRevenue,
                 'selected_expense' => $selectedExpense,

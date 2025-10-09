@@ -144,12 +144,12 @@
         <!-- Full page scroll - no height restriction -->
         {{ $this->table }}
 
-        <!-- Summary Section - Smaller and with margin -->
-        <div class="summary-cards mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Summary Section - Side by side -->
+        <div class="summary-cards mt-6 grid grid-cols-2 gap-4">
             <!-- Table Summary -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Table Summary (Filtered Results)
+                    All Filtered Results
                 </h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
