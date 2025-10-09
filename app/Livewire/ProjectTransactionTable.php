@@ -336,17 +336,32 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->action(function (array $data) {
                         try {
                             $filePath = storage_path('app/public/' . $data['file']);
-                            \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\ProjectTransactionImport, $filePath);
+                            $import = new \App\Imports\ProjectTransactionSheetImport;
+                            
+                            // Add debug marker to confirm this code is running
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Successful')
-                                ->body('Project transactions have been imported successfully.')
+                                ->title('🔍 DEBUG: Starting Import (Livewire)')
+                                ->body('File: ' . basename($filePath) . '\nSheet target: "Project Transactions"')
+                                ->info()
+                                ->send();
+                            
+                            \Maatwebsite\Excel\Facades\Excel::import($import, $filePath);
+                            
+                            $debugInfo = $import->getDebugInfo();
+                            $debugText = empty($debugInfo) ? 'No debug information available.' : implode("\n", $debugInfo);
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title('🔍 DEBUG: Import Process Complete')
+                                ->body("Debug Information:\n\n" . $debugText)
                                 ->success()
+                                ->persistent()
                                 ->send();
                         } catch (\Exception $e) {
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Failed')
+                                ->title('🔍 DEBUG: Import Failed')
                                 ->body('Error: ' . $e->getMessage())
                                 ->danger()
+                                ->persistent()
                                 ->send();
                         }
                     }),

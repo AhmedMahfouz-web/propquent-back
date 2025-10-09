@@ -339,21 +339,29 @@ class ProjectTransactionResource extends Resource
                         try {
                             $filePath = storage_path('app/public/' . $data['file']);
                             $import = new ProjectTransactionSheetImport;
+                            
+                            // Add debug marker to confirm this code is running
+                            \Filament\Notifications\Notification::make()
+                                ->title('DEBUG: Starting Import')
+                                ->body('File path: ' . $filePath . '\nImport class: ' . get_class($import))
+                                ->info()
+                                ->send();
+                            
                             Excel::import($import, $filePath);
                             
                             $debugInfo = $import->getDebugInfo();
-                            $debugText = empty($debugInfo) ? 'No debug information available.' : implode("\n", $debugInfo);
+                            $debugText = empty($debugInfo) ? 'No debug information available. Import object: ' . get_class($import) : implode("\n", $debugInfo);
                             
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Process Complete')
+                                ->title('DEBUG: Import Process Complete')
                                 ->body("Debug Information:\n\n" . $debugText)
                                 ->success()
                                 ->persistent() // Keep notification open so user can read debug info
                                 ->send();
                         } catch (\Exception $e) {
                             \Filament\Notifications\Notification::make()
-                                ->title('Import Failed')
-                                ->body('Error: ' . $e->getMessage() . ' (Make sure your Excel has a sheet named "project transactions")')
+                                ->title('DEBUG: Import Failed')
+                                ->body('Error: ' . $e->getMessage() . '\nFile: ' . ($filePath ?? 'unknown'))
                                 ->danger()
                                 ->persistent()
                                 ->send();
