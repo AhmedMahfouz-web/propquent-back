@@ -74,7 +74,7 @@
                                     $rowBgClass = $isEvenRow ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
                                 @endphp
                                 <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}"
-                                    class="{{ $rowBgClass }} metric-row border-l-4 {{ $colorClasses['border'] }}">
+                                    class="{{ $rowBgClass }} metric-row border-l-4 {{ $colorClasses['border'] }} metric-{{ $config['color'] ?? 'gray' }}">
                                     <td
                                         class="px-2 py-2 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 {{ $rowBgClass }} z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         @if ($loop->first)
@@ -89,7 +89,7 @@
                                         @endif
                                     </td>
                                     <td
-                                        class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         <div class="flex items-center space-x-1.5">
                                             @if(isset($config['icon']))
                                                 <x-dynamic-component 
@@ -108,14 +108,14 @@
                                         @endif
                                     </td>
                                     <td
-                                        class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $colorClasses['bg'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         <span class="text-sm {{ $colorClasses['text'] }}">
                                             ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
                                         </span>
                                     </td>
                                     @foreach ($allMonths as $month)
                                         <td
-                                            class="px-3 py-2 whitespace-nowrap text-right {{ $colorClasses['bg'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                            class="px-3 py-2 whitespace-nowrap text-right {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                             @if ($key === 'value_correction')
                                                 @livewire(
                                                     'quick-value-correction-edit',
@@ -251,6 +251,38 @@
             font-size: 0.75rem;
             line-height: 1rem;
         }
+
+        /* Fallback colors for metrics */
+        .metric-green { background-color: #dcfce7 !important; color: #166534 !important; border-left-color: #22c55e !important; }
+        .metric-emerald { background-color: #d1fae5 !important; color: #065f46 !important; border-left-color: #10b981 !important; }
+        .metric-teal { background-color: #ccfdf7 !important; color: #134e4a !important; border-left-color: #14b8a6 !important; }
+        .metric-red { background-color: #fee2e2 !important; color: #991b1b !important; border-left-color: #ef4444 !important; }
+        .metric-rose { background-color: #ffe4e6 !important; color: #9f1239 !important; border-left-color: #f43f5e !important; }
+        .metric-pink { background-color: #fce7f3 !important; color: #831843 !important; border-left-color: #ec4899 !important; }
+        .metric-blue { background-color: #dbeafe !important; color: #1e40af !important; border-left-color: #3b82f6 !important; }
+        .metric-cyan { background-color: #cffafe !important; color: #155e75 !important; border-left-color: #06b6d4 !important; }
+        .metric-amber { background-color: #fef3c7 !important; color: #92400e !important; border-left-color: #f59e0b !important; }
+        .metric-orange { background-color: #fed7aa !important; color: #9a3412 !important; border-left-color: #f97316 !important; }
+        .metric-lime { background-color: #ecfccb !important; color: #365314 !important; border-left-color: #84cc16 !important; }
+        .metric-violet { background-color: #ede9fe !important; color: #5b21b6 !important; border-left-color: #8b5cf6 !important; }
+        .metric-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; border-left-color: #a855f7 !important; }
+        .metric-indigo { background-color: #e0e7ff !important; color: #3730a3 !important; border-left-color: #6366f1 !important; }
+
+        /* Dark mode fallback colors */
+        .dark .metric-green { background-color: #14532d !important; color: #bbf7d0 !important; }
+        .dark .metric-emerald { background-color: #064e3b !important; color: #a7f3d0 !important; }
+        .dark .metric-teal { background-color: #134e4a !important; color: #99f6e4 !important; }
+        .dark .metric-red { background-color: #7f1d1d !important; color: #fecaca !important; }
+        .dark .metric-rose { background-color: #881337 !important; color: #fda4af !important; }
+        .dark .metric-pink { background-color: #831843 !important; color: #f9a8d4 !important; }
+        .dark .metric-blue { background-color: #1e3a8a !important; color: #bfdbfe !important; }
+        .dark .metric-cyan { background-color: #164e63 !important; color: #a5f3fc !important; }
+        .dark .metric-amber { background-color: #78350f !important; color: #fde68a !important; }
+        .dark .metric-orange { background-color: #9a3412 !important; color: #fed7aa !important; }
+        .dark .metric-lime { background-color: #365314 !important; color: #d9f99d !important; }
+        .dark .metric-violet { background-color: #4c1d95 !important; color: #ddd6fe !important; }
+        .dark .metric-purple { background-color: #581c87 !important; color: #e9d5ff !important; }
+        .dark .metric-indigo { background-color: #312e81 !important; color: #c7d2fe !important; }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {

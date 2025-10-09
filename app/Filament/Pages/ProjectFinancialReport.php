@@ -615,11 +615,99 @@ class ProjectFinancialReport extends Page implements HasForms
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
         
-        return [
-            'bg' => "bg-{$color}-100 dark:bg-{$color}-900",
-            'text' => "text-{$color}-800 dark:text-{$color}-200",
-            'border' => "border-{$color}-200 dark:border-{$color}-700",
-            'badge' => "bg-{$color}-100 text-{$color}-800 dark:bg-{$color}-900 dark:text-{$color}-200",
+        // Use explicit color mappings to ensure Tailwind generates the classes
+        $colorMap = [
+            'green' => [
+                'bg' => 'bg-green-100 dark:bg-green-900',
+                'text' => 'text-green-800 dark:text-green-200',
+                'border' => 'border-green-500 dark:border-green-400',
+                'badge' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            ],
+            'emerald' => [
+                'bg' => 'bg-emerald-100 dark:bg-emerald-900',
+                'text' => 'text-emerald-800 dark:text-emerald-200',
+                'border' => 'border-emerald-500 dark:border-emerald-400',
+                'badge' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+            ],
+            'teal' => [
+                'bg' => 'bg-teal-100 dark:bg-teal-900',
+                'text' => 'text-teal-800 dark:text-teal-200',
+                'border' => 'border-teal-500 dark:border-teal-400',
+                'badge' => 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+            ],
+            'red' => [
+                'bg' => 'bg-red-100 dark:bg-red-900',
+                'text' => 'text-red-800 dark:text-red-200',
+                'border' => 'border-red-500 dark:border-red-400',
+                'badge' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            ],
+            'rose' => [
+                'bg' => 'bg-rose-100 dark:bg-rose-900',
+                'text' => 'text-rose-800 dark:text-rose-200',
+                'border' => 'border-rose-500 dark:border-rose-400',
+                'badge' => 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200',
+            ],
+            'pink' => [
+                'bg' => 'bg-pink-100 dark:bg-pink-900',
+                'text' => 'text-pink-800 dark:text-pink-200',
+                'border' => 'border-pink-500 dark:border-pink-400',
+                'badge' => 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+            ],
+            'blue' => [
+                'bg' => 'bg-blue-100 dark:bg-blue-900',
+                'text' => 'text-blue-800 dark:text-blue-200',
+                'border' => 'border-blue-500 dark:border-blue-400',
+                'badge' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            ],
+            'cyan' => [
+                'bg' => 'bg-cyan-100 dark:bg-cyan-900',
+                'text' => 'text-cyan-800 dark:text-cyan-200',
+                'border' => 'border-cyan-500 dark:border-cyan-400',
+                'badge' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+            ],
+            'amber' => [
+                'bg' => 'bg-amber-100 dark:bg-amber-900',
+                'text' => 'text-amber-800 dark:text-amber-200',
+                'border' => 'border-amber-500 dark:border-amber-400',
+                'badge' => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+            ],
+            'orange' => [
+                'bg' => 'bg-orange-100 dark:bg-orange-900',
+                'text' => 'text-orange-800 dark:text-orange-200',
+                'border' => 'border-orange-500 dark:border-orange-400',
+                'badge' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            ],
+            'lime' => [
+                'bg' => 'bg-lime-100 dark:bg-lime-900',
+                'text' => 'text-lime-800 dark:text-lime-200',
+                'border' => 'border-lime-500 dark:border-lime-400',
+                'badge' => 'bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200',
+            ],
+            'violet' => [
+                'bg' => 'bg-violet-100 dark:bg-violet-900',
+                'text' => 'text-violet-800 dark:text-violet-200',
+                'border' => 'border-violet-500 dark:border-violet-400',
+                'badge' => 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
+            ],
+            'purple' => [
+                'bg' => 'bg-purple-100 dark:bg-purple-900',
+                'text' => 'text-purple-800 dark:text-purple-200',
+                'border' => 'border-purple-500 dark:border-purple-400',
+                'badge' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            ],
+            'indigo' => [
+                'bg' => 'bg-indigo-100 dark:bg-indigo-900',
+                'text' => 'text-indigo-800 dark:text-indigo-200',
+                'border' => 'border-indigo-500 dark:border-indigo-400',
+                'badge' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+            ],
+        ];
+        
+        return $colorMap[$color] ?? $colorMap['gray'] ?? [
+            'bg' => 'bg-gray-100 dark:bg-gray-900',
+            'text' => 'text-gray-800 dark:text-gray-200',
+            'border' => 'border-gray-500 dark:border-gray-400',
+            'badge' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
         ];
     }
 }

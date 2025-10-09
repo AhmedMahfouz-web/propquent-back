@@ -86,7 +86,7 @@
                                         $rowBgClass = $isEvenRow ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
                                     @endphp
                                     <tr wire:key="user-{{ $user->id }}-metric-{{ $key }}"
-                                        class="{{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} {{ $rowBgClass }} metric-row border-l-4 {{ $colorClasses['border'] }}">
+                                        class="{{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} {{ $rowBgClass }} metric-row border-l-4 {{ $colorClasses['border'] }} metric-{{ $config['color'] ?? 'gray' }}">
                                         @if ($loop->first)
                                             <td rowspan="{{ $rowspan }}"
                                                 class="px-4 py-2 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 {{ $rowBgClass }} user-name-cell">
@@ -99,7 +99,7 @@
                                                 </div>
                                             </td>
                                         @endif
-                                        <td class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }}">
+                                        <td class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }}">
                                             <div class="flex items-center space-x-1.5">
                                                 @if(isset($config['icon']))
                                                     <x-dynamic-component 
@@ -117,7 +117,7 @@
                                                 </div>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $colorClasses['bg'] }}">
+                                        <td class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }}">
                                             <span class="text-sm {{ $colorClasses['text'] }}">
                                                 @if ($key === 'equity_percentage')
                                                     {{ number_format(array_sum($userData[$key]), 2) }}%
@@ -127,7 +127,7 @@
                                             </span>
                                         </td>
                                         @foreach ($allMonths as $month)
-                                            <td class="px-3 py-2 whitespace-nowrap text-right {{ $colorClasses['bg'] }}">
+                                            <td class="px-3 py-2 whitespace-nowrap text-right {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }}">
                                                 <span class="text-xs {{ $colorClasses['text'] }}">
                                                     @if ($key === 'equity_percentage')
                                                         {{ number_format($userData[$key][$month] ?? 0, 2) }}%
@@ -229,6 +229,24 @@
             font-size: 0.75rem;
             line-height: 1rem;
         }
+
+        /* Fallback colors for user metrics */
+        .metric-green { background-color: #dcfce7 !important; color: #166534 !important; border-left-color: #22c55e !important; }
+        .metric-red { background-color: #fee2e2 !important; color: #991b1b !important; border-left-color: #ef4444 !important; }
+        .metric-blue { background-color: #dbeafe !important; color: #1e40af !important; border-left-color: #3b82f6 !important; }
+        .metric-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; border-left-color: #a855f7 !important; }
+        .metric-amber { background-color: #fef3c7 !important; color: #92400e !important; border-left-color: #f59e0b !important; }
+        .metric-cyan { background-color: #cffafe !important; color: #155e75 !important; border-left-color: #06b6d4 !important; }
+        .metric-indigo { background-color: #e0e7ff !important; color: #3730a3 !important; border-left-color: #6366f1 !important; }
+
+        /* Dark mode fallback colors */
+        .dark .metric-green { background-color: #14532d !important; color: #bbf7d0 !important; }
+        .dark .metric-red { background-color: #7f1d1d !important; color: #fecaca !important; }
+        .dark .metric-blue { background-color: #1e3a8a !important; color: #bfdbfe !important; }
+        .dark .metric-purple { background-color: #581c87 !important; color: #e9d5ff !important; }
+        .dark .metric-amber { background-color: #78350f !important; color: #fde68a !important; }
+        .dark .metric-cyan { background-color: #164e63 !important; color: #a5f3fc !important; }
+        .dark .metric-indigo { background-color: #312e81 !important; color: #c7d2fe !important; }
 
         /* User name column styling */
         .user-name-cell {

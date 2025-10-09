@@ -272,11 +272,57 @@ class UserFinancialReport extends Page implements HasForms
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
         
-        return [
-            'bg' => "bg-{$color}-100 dark:bg-{$color}-900",
-            'text' => "text-{$color}-800 dark:text-{$color}-200",
-            'border' => "border-{$color}-200 dark:border-{$color}-700",
-            'badge' => "bg-{$color}-100 text-{$color}-800 dark:bg-{$color}-900 dark:text-{$color}-200",
+        // Use explicit color mappings to ensure Tailwind generates the classes
+        $colorMap = [
+            'green' => [
+                'bg' => 'bg-green-100 dark:bg-green-900',
+                'text' => 'text-green-800 dark:text-green-200',
+                'border' => 'border-green-500 dark:border-green-400',
+                'badge' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            ],
+            'red' => [
+                'bg' => 'bg-red-100 dark:bg-red-900',
+                'text' => 'text-red-800 dark:text-red-200',
+                'border' => 'border-red-500 dark:border-red-400',
+                'badge' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            ],
+            'blue' => [
+                'bg' => 'bg-blue-100 dark:bg-blue-900',
+                'text' => 'text-blue-800 dark:text-blue-200',
+                'border' => 'border-blue-500 dark:border-blue-400',
+                'badge' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            ],
+            'purple' => [
+                'bg' => 'bg-purple-100 dark:bg-purple-900',
+                'text' => 'text-purple-800 dark:text-purple-200',
+                'border' => 'border-purple-500 dark:border-purple-400',
+                'badge' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            ],
+            'amber' => [
+                'bg' => 'bg-amber-100 dark:bg-amber-900',
+                'text' => 'text-amber-800 dark:text-amber-200',
+                'border' => 'border-amber-500 dark:border-amber-400',
+                'badge' => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+            ],
+            'cyan' => [
+                'bg' => 'bg-cyan-100 dark:bg-cyan-900',
+                'text' => 'text-cyan-800 dark:text-cyan-200',
+                'border' => 'border-cyan-500 dark:border-cyan-400',
+                'badge' => 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+            ],
+            'indigo' => [
+                'bg' => 'bg-indigo-100 dark:bg-indigo-900',
+                'text' => 'text-indigo-800 dark:text-indigo-200',
+                'border' => 'border-indigo-500 dark:border-indigo-400',
+                'badge' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+            ],
+        ];
+        
+        return $colorMap[$color] ?? [
+            'bg' => 'bg-gray-100 dark:bg-gray-900',
+            'text' => 'text-gray-800 dark:text-gray-200',
+            'border' => 'border-gray-500 dark:border-gray-400',
+            'badge' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
         ];
     }
 
