@@ -703,11 +703,82 @@ class ProjectFinancialReport extends Page implements HasForms
             ],
         ];
         
-        return $colorMap[$color] ?? $colorMap['gray'] ?? [
+        return $colorMap[$color] ?? [
             'bg' => 'bg-gray-100 dark:bg-gray-900',
             'text' => 'text-gray-800 dark:text-gray-200',
             'border' => 'border-gray-500 dark:border-gray-400',
             'badge' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+        ];
+    }
+
+    public function getMetricTotalColorClasses(string $metricKey): array
+    {
+        $config = $this->getMetricConfig();
+        $color = $config[$metricKey]['color'] ?? 'gray';
+        
+        // Darker colors for totals
+        $colorMap = [
+            'green' => [
+                'bg' => 'bg-green-200 dark:bg-green-800',
+                'text' => 'text-green-900 dark:text-green-100',
+            ],
+            'emerald' => [
+                'bg' => 'bg-emerald-200 dark:bg-emerald-800',
+                'text' => 'text-emerald-900 dark:text-emerald-100',
+            ],
+            'teal' => [
+                'bg' => 'bg-teal-200 dark:bg-teal-800',
+                'text' => 'text-teal-900 dark:text-teal-100',
+            ],
+            'red' => [
+                'bg' => 'bg-red-200 dark:bg-red-800',
+                'text' => 'text-red-900 dark:text-red-100',
+            ],
+            'rose' => [
+                'bg' => 'bg-rose-200 dark:bg-rose-800',
+                'text' => 'text-rose-900 dark:text-rose-100',
+            ],
+            'pink' => [
+                'bg' => 'bg-pink-200 dark:bg-pink-800',
+                'text' => 'text-pink-900 dark:text-pink-100',
+            ],
+            'blue' => [
+                'bg' => 'bg-blue-200 dark:bg-blue-800',
+                'text' => 'text-blue-900 dark:text-blue-100',
+            ],
+            'cyan' => [
+                'bg' => 'bg-cyan-200 dark:bg-cyan-800',
+                'text' => 'text-cyan-900 dark:text-cyan-100',
+            ],
+            'amber' => [
+                'bg' => 'bg-amber-200 dark:bg-amber-800',
+                'text' => 'text-amber-900 dark:text-amber-100',
+            ],
+            'orange' => [
+                'bg' => 'bg-orange-200 dark:bg-orange-800',
+                'text' => 'text-orange-900 dark:text-orange-100',
+            ],
+            'lime' => [
+                'bg' => 'bg-lime-200 dark:bg-lime-800',
+                'text' => 'text-lime-900 dark:text-lime-100',
+            ],
+            'violet' => [
+                'bg' => 'bg-violet-200 dark:bg-violet-800',
+                'text' => 'text-violet-900 dark:text-violet-100',
+            ],
+            'purple' => [
+                'bg' => 'bg-purple-200 dark:bg-purple-800',
+                'text' => 'text-purple-900 dark:text-purple-100',
+            ],
+            'indigo' => [
+                'bg' => 'bg-indigo-200 dark:bg-indigo-800',
+                'text' => 'text-indigo-900 dark:text-indigo-100',
+            ],
+        ];
+        
+        return $colorMap[$color] ?? [
+            'bg' => 'bg-gray-200 dark:bg-gray-800',
+            'text' => 'text-gray-900 dark:text-gray-100',
         ];
     }
 }

@@ -70,11 +70,12 @@
                                 @php
                                     $config = $metricConfig[$key] ?? [];
                                     $colorClasses = $this->getMetricColorClasses($key);
+                                    $totalColorClasses = $this->getMetricTotalColorClasses($key);
                                     $isEvenRow = ($loop->index % 2 == 0);
                                     $rowBgClass = $isEvenRow ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
                                 @endphp
                                 <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}"
-                                    class="{{ $rowBgClass }} metric-row border-l-4 {{ $colorClasses['border'] }} metric-{{ $config['color'] ?? 'gray' }}">
+                                    class="{{ $rowBgClass }} metric-row">
                                     <td
                                         class="px-2 py-2 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 {{ $rowBgClass }} z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         @if ($loop->first)
@@ -89,7 +90,7 @@
                                         @endif
                                     </td>
                                     <td
-                                        class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} border-l-4 {{ $colorClasses['border'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         <div class="flex items-center space-x-1.5">
                                             @if(isset($config['icon']))
                                                 <x-dynamic-component 
@@ -108,14 +109,14 @@
                                         @endif
                                     </td>
                                     <td
-                                        class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
-                                        <span class="text-sm {{ $colorClasses['text'] }}">
+                                        class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $totalColorClasses['bg'] }} metric-total-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        <span class="text-sm {{ $totalColorClasses['text'] }}">
                                             ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
                                         </span>
                                     </td>
                                     @foreach ($allMonths as $month)
                                         <td
-                                            class="px-3 py-2 whitespace-nowrap text-right {{ $colorClasses['bg'] }} metric-{{ $config['color'] ?? 'gray' }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                            class="px-3 py-2 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                             @if ($key === 'value_correction')
                                                 @livewire(
                                                     'quick-value-correction-edit',
@@ -127,11 +128,11 @@
                                                     key($projectData['key'] . '-' . $month . '-correction')
                                                 )
                                             @elseif ($key === 'evaluation_asset')
-                                                <span class="font-medium text-xs {{ $colorClasses['text'] }}">
+                                                <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                                 </span>
                                             @else
-                                                <span class="text-xs {{ $colorClasses['text'] }}">
+                                                <span class="text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                                 </span>
                                             @endif
@@ -283,6 +284,38 @@
         .dark .metric-violet { background-color: #4c1d95 !important; color: #ddd6fe !important; }
         .dark .metric-purple { background-color: #581c87 !important; color: #e9d5ff !important; }
         .dark .metric-indigo { background-color: #312e81 !important; color: #c7d2fe !important; }
+
+        /* Darker total colors */
+        .metric-total-green { background-color: #bbf7d0 !important; color: #14532d !important; }
+        .metric-total-emerald { background-color: #a7f3d0 !important; color: #064e3b !important; }
+        .metric-total-teal { background-color: #99f6e4 !important; color: #134e4a !important; }
+        .metric-total-red { background-color: #fecaca !important; color: #7f1d1d !important; }
+        .metric-total-rose { background-color: #fda4af !important; color: #881337 !important; }
+        .metric-total-pink { background-color: #f9a8d4 !important; color: #831843 !important; }
+        .metric-total-blue { background-color: #bfdbfe !important; color: #1e3a8a !important; }
+        .metric-total-cyan { background-color: #a5f3fc !important; color: #164e63 !important; }
+        .metric-total-amber { background-color: #fde68a !important; color: #78350f !important; }
+        .metric-total-orange { background-color: #fed7aa !important; color: #9a3412 !important; }
+        .metric-total-lime { background-color: #d9f99d !important; color: #365314 !important; }
+        .metric-total-violet { background-color: #ddd6fe !important; color: #4c1d95 !important; }
+        .metric-total-purple { background-color: #e9d5ff !important; color: #581c87 !important; }
+        .metric-total-indigo { background-color: #c7d2fe !important; color: #312e81 !important; }
+
+        /* Dark mode darker total colors */
+        .dark .metric-total-green { background-color: #166534 !important; color: #bbf7d0 !important; }
+        .dark .metric-total-emerald { background-color: #065f46 !important; color: #a7f3d0 !important; }
+        .dark .metric-total-teal { background-color: #134e4a !important; color: #99f6e4 !important; }
+        .dark .metric-total-red { background-color: #991b1b !important; color: #fecaca !important; }
+        .dark .metric-total-rose { background-color: #9f1239 !important; color: #fda4af !important; }
+        .dark .metric-total-pink { background-color: #831843 !important; color: #f9a8d4 !important; }
+        .dark .metric-total-blue { background-color: #1e40af !important; color: #bfdbfe !important; }
+        .dark .metric-total-cyan { background-color: #155e75 !important; color: #a5f3fc !important; }
+        .dark .metric-total-amber { background-color: #92400e !important; color: #fde68a !important; }
+        .dark .metric-total-orange { background-color: #9a3412 !important; color: #fed7aa !important; }
+        .dark .metric-total-lime { background-color: #365314 !important; color: #d9f99d !important; }
+        .dark .metric-total-violet { background-color: #5b21b6 !important; color: #ddd6fe !important; }
+        .dark .metric-total-purple { background-color: #6b21a8 !important; color: #e9d5ff !important; }
+        .dark .metric-total-indigo { background-color: #3730a3 !important; color: #c7d2fe !important; }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {

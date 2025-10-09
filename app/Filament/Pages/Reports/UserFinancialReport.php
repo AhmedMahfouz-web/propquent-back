@@ -326,6 +326,49 @@ class UserFinancialReport extends Page implements HasForms
         ];
     }
 
+    public function getMetricTotalColorClasses(string $metricKey): array
+    {
+        $config = $this->getMetricConfig();
+        $color = $config[$metricKey]['color'] ?? 'gray';
+        
+        // Darker colors for totals
+        $colorMap = [
+            'green' => [
+                'bg' => 'bg-green-200 dark:bg-green-800',
+                'text' => 'text-green-900 dark:text-green-100',
+            ],
+            'red' => [
+                'bg' => 'bg-red-200 dark:bg-red-800',
+                'text' => 'text-red-900 dark:text-red-100',
+            ],
+            'blue' => [
+                'bg' => 'bg-blue-200 dark:bg-blue-800',
+                'text' => 'text-blue-900 dark:text-blue-100',
+            ],
+            'purple' => [
+                'bg' => 'bg-purple-200 dark:bg-purple-800',
+                'text' => 'text-purple-900 dark:text-purple-100',
+            ],
+            'amber' => [
+                'bg' => 'bg-amber-200 dark:bg-amber-800',
+                'text' => 'text-amber-900 dark:text-amber-100',
+            ],
+            'cyan' => [
+                'bg' => 'bg-cyan-200 dark:bg-cyan-800',
+                'text' => 'text-cyan-900 dark:text-cyan-100',
+            ],
+            'indigo' => [
+                'bg' => 'bg-indigo-200 dark:bg-indigo-800',
+                'text' => 'text-indigo-900 dark:text-indigo-100',
+            ],
+        ];
+        
+        return $colorMap[$color] ?? [
+            'bg' => 'bg-gray-200 dark:bg-gray-800',
+            'text' => 'text-gray-900 dark:text-gray-100',
+        ];
+    }
+
     public function sortByField($field): void
     {
         if ($this->sortBy === $field) {
