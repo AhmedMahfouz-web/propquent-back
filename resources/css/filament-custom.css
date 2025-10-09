@@ -43,10 +43,25 @@
     width: 1.5rem !important;
 }
 
-/* Amount column styling */
+/* Amount column styling - Accounting format */
 .fi-ta-col-amount input {
     font-weight: 600 !important;
     text-align: right !important;
+    font-family: 'Courier New', monospace !important;
+    background-color: #f9fafb !important;
+    border: 1px solid #d1d5db !important;
+}
+
+.fi-ta-col-amount input:focus {
+    background-color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Monospace font for all amounts */
+.font-mono {
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: 0.025em !important;
 }
 
 /* Status column styling */

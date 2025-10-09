@@ -26,21 +26,21 @@
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600 dark:text-gray-400">Total Amount:</span>
-                        <span class="font-semibold text-gray-900 dark:text-white">EGP {{ number_format($tableSummary['total_amount'], 2) }}</span>
+                        <span class="font-semibold text-gray-900 dark:text-white font-mono">{{ number_format($tableSummary['total_amount'], 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-green-600 dark:text-green-400">Total Revenue:</span>
-                        <span class="font-semibold text-green-600 dark:text-green-400">EGP {{ number_format($tableSummary['total_revenue'], 2) }}</span>
+                        <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($tableSummary['total_revenue'], 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-red-600 dark:text-red-400">Total Expense:</span>
-                        <span class="font-semibold text-red-600 dark:text-red-400">EGP {{ number_format($tableSummary['total_expense'], 2) }}</span>
+                        <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($tableSummary['total_expense'], 2) }})</span>
                     </div>
                     <hr class="border-gray-200 dark:border-gray-600 my-2">
                     <div class="flex justify-between">
                         <span class="text-gray-900 dark:text-white font-semibold">Net Amount:</span>
-                        <span class="font-bold {{ $tableSummary['net_amount'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                            EGP {{ number_format($tableSummary['net_amount'], 2) }}
+                        <span class="font-bold font-mono {{ $tableSummary['net_amount'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                            {{ $tableSummary['net_amount'] >= 0 ? number_format($tableSummary['net_amount'], 2) : '(' . number_format(abs($tableSummary['net_amount']), 2) . ')' }}
                         </span>
                     </div>
                 </div>
@@ -59,21 +59,21 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-400">Selected Amount:</span>
-                            <span class="font-semibold text-gray-900 dark:text-white">EGP {{ number_format($selectedSummary['selected_amount'], 2) }}</span>
+                            <span class="font-semibold text-gray-900 dark:text-white font-mono">{{ number_format($selectedSummary['selected_amount'], 2) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-green-600 dark:text-green-400">Selected Revenue:</span>
-                            <span class="font-semibold text-green-600 dark:text-green-400">EGP {{ number_format($selectedSummary['selected_revenue'], 2) }}</span>
+                            <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($selectedSummary['selected_revenue'], 2) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-red-600 dark:text-red-400">Selected Expense:</span>
-                            <span class="font-semibold text-red-600 dark:text-red-400">EGP {{ number_format($selectedSummary['selected_expense'], 2) }}</span>
+                            <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($selectedSummary['selected_expense'], 2) }})</span>
                         </div>
                         <hr class="border-gray-200 dark:border-gray-600 my-2">
                         <div class="flex justify-between">
                             <span class="text-gray-900 dark:text-white font-semibold">Selected Net:</span>
-                            <span class="font-bold {{ $selectedSummary['selected_net'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                EGP {{ number_format($selectedSummary['selected_net'], 2) }}
+                            <span class="font-bold font-mono {{ $selectedSummary['selected_net'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                {{ $selectedSummary['selected_net'] >= 0 ? number_format($selectedSummary['selected_net'], 2) : '(' . number_format(abs($selectedSummary['selected_net']), 2) . ')' }}
                             </span>
                         </div>
                     </div>

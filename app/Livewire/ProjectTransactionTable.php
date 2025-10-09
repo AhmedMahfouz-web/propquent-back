@@ -81,11 +81,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 Tables\Columns\TextInputColumn::make('amount')
                     ->type('number')
                     ->step(0.01)
-                    ->prefix('EGP')
                     ->sortable()
                     ->alignEnd()
                     ->rules(['required', 'numeric', 'min:0.01'])
-                    ->extraInputAttributes(['class' => 'text-sm py-1']),
+                    ->extraInputAttributes([
+                        'class' => 'text-sm py-1 text-right font-mono',
+                        'style' => 'font-family: monospace; text-align: right;'
+                    ])
+                    ->formatStateUsing(fn ($state) => number_format($state, 2)),
 
                 Tables\Columns\TextColumn::make('method')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
