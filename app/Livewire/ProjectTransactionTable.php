@@ -14,11 +14,16 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Artisan;
+use Filament\Forms;
+use Illuminate\Database\Eloquent\Collection;
 
 class ProjectTransactionTable extends Component implements HasTable, HasForms
 {
     use InteractsWithTable;
     use InteractsWithForms;
+    
+    public $selectedRecords = [];
+    public $showSummary = true;
 
     public function table(Table $table): Table
     {
@@ -27,10 +32,8 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->striped()
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
-            ->contentGrid([
-                'md' => 1,
-                'xl' => 1,
-            ])
+            ->selectCurrentPageOnly()
+            ->checkIfRecordIsSelectableUsing(fn () => true)
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -43,6 +46,15 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                             return null;
                         }
                         return $state;
+                    })
+                    ->filterForm([
+                        Forms\Components\Select::make('project_id')
+                            ->relationship('project', 'title')
+                            ->searchable()
+                            ->preload()
+                    ])
+                    ->filter(function (Builder $query, array $data): Builder {
+                        return $query->when($data['project_id'], fn ($q) => $q->where('project_key', Project::find($data['project_id'])?->key));
                     }),
 
                 Tables\Columns\TextColumn::make('project_key')
@@ -63,7 +75,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                         'success' => 'revenue',
                         'danger' => 'expense',
                     ])
-                    ->sortable(),
+                    ->sortable()
+                    ->filterForm([
+                        Forms\Components\Select::make('financial_type')
+                            ->options(ProjectTransaction::getAvailableFinancialTypes())
+                    ])
+                    ->filter(function (Builder $query, array $data): Builder {
+                        return $query->when($data['financial_type'], fn ($q) => $q->where('financial_type', $data['financial_type']));
+                    }),
 
                 Tables\Columns\TextColumn::make('serving')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableServingTypes()[$state] ?? $state) : '-')
@@ -75,9 +94,23 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->money('USD')
+                    ->money('EGP')
                     ->sortable()
-                    ->alignEnd(),
+                    ->alignEnd()
+                    ->weight('bold')
+                    ->filterForm([
+                        Forms\Components\TextInput::make('amount_min')
+                            ->label('Min Amount')
+                            ->numeric(),
+                        Forms\Components\TextInput::make('amount_max')
+                            ->label('Max Amount')
+                            ->numeric(),
+                    ])
+                    ->filter(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['amount_min'], fn ($q) => $q->where('amount', '>=', $data['amount_min']))
+                            ->when($data['amount_max'], fn ($q) => $q->where('amount', '<=', $data['amount_max']));
+                    }),
 
                 Tables\Columns\TextColumn::make('method')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
@@ -96,7 +129,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                         'warning' => 'pending',
                         'danger' => 'cancelled',
                     ])
-                    ->sortable(),
+                    ->sortable()
+                    ->filterForm([
+                        Forms\Components\Select::make('status')
+                            ->options(ProjectTransaction::getAvailableStatuses())
+                    ])
+                    ->filter(function (Builder $query, array $data): Builder {
+                        return $query->when($data['status'], fn ($q) => $q->where('status', $data['status']));
+                    }),
 
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
@@ -260,7 +300,88 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     })
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Edit')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Select::make('project_key')
+                            ->label('Project')
+                            ->options(function () {
+                                return Project::with('developer')
+                                    ->get()
+                                    ->mapWithKeys(function ($project) {
+                                        return [$project->key => "{$project->title} ({$project->developer->name})"];
+                                    })
+                                    ->toArray();
+                            })
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Select::make('financial_type')
+                            ->label('Financial Type')
+                            ->options(fn() => ProjectTransaction::getAvailableFinancialTypes())
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->prefix('EGP')
+                            ->step(0.01)
+                            ->required(),
+                        Forms\Components\Select::make('status')
+                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
+                            ->required(),
+                        Forms\Components\Select::make('serving')
+                            ->options(fn() => ProjectTransaction::getAvailableServingTypes())
+                            ->nullable(),
+                        Forms\Components\Select::make('what')
+                            ->options(fn() => ProjectTransaction::getAvailableWhatTypes())
+                            ->nullable(),
+                        Forms\Components\Select::make('method')
+                            ->options(fn() => ProjectTransaction::getAvailableTransactionMethods())
+                            ->nullable(),
+                        Forms\Components\TextInput::make('reference_no')
+                            ->label('Reference Number')
+                            ->maxLength(255)
+                            ->nullable(),
+                        Forms\Components\DatePicker::make('transaction_date')
+                            ->required(),
+                        Forms\Components\DatePicker::make('due_date')
+                            ->nullable(),
+                        Forms\Components\DatePicker::make('actual_date')
+                            ->nullable(),
+                        Forms\Components\Textarea::make('note')
+                            ->maxLength(65535)
+                            ->nullable(),
+                    ]),
+                    
+                Tables\Actions\Action::make('quickEdit')
+                    ->label('Quick Edit')
+                    ->icon('heroicon-m-bolt')
+                    ->color('info')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->step(0.01)
+                            ->required()
+                            ->prefix('EGP'),
+                    ])
+                    ->fillForm(fn($record) => [
+                        'status' => $record->status,
+                        'amount' => $record->amount,
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->update($data);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Transaction updated successfully')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\DeleteAction::make()
+                    ->label('Delete')
+                    ->icon('heroicon-m-trash'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -270,8 +391,61 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->defaultSort('transaction_date', 'desc');
     }
 
+    public function getTableSummary(): array
+    {
+        $query = $this->getFilteredTableQuery();
+        $records = $query->get();
+        
+        $totalAmount = $records->sum('amount');
+        $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
+        $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
+        $recordCount = $records->count();
+        
+        return [
+            'total_records' => $recordCount,
+            'total_amount' => $totalAmount,
+            'total_revenue' => $totalRevenue,
+            'total_expense' => $totalExpense,
+            'net_amount' => $totalRevenue - $totalExpense,
+        ];
+    }
+    
+    public function getSelectedSummary(): array
+    {
+        $selectedIds = $this->getSelectedTableRecords();
+        if (empty($selectedIds)) {
+            return [
+                'selected_records' => 0,
+                'selected_amount' => 0,
+                'selected_revenue' => 0,
+                'selected_expense' => 0,
+                'selected_net' => 0,
+            ];
+        }
+        
+        $selectedRecords = ProjectTransaction::whereIn('id', $selectedIds)->get();
+        
+        $selectedAmount = $selectedRecords->sum('amount');
+        $selectedRevenue = $selectedRecords->where('financial_type', 'revenue')->sum('amount');
+        $selectedExpense = $selectedRecords->where('financial_type', 'expense')->sum('amount');
+        
+        return [
+            'selected_records' => $selectedRecords->count(),
+            'selected_amount' => $selectedAmount,
+            'selected_revenue' => $selectedRevenue,
+            'selected_expense' => $selectedExpense,
+            'selected_net' => $selectedRevenue - $selectedExpense,
+        ];
+    }
+
     public function render()
     {
-        return view('livewire.project-transaction-table');
+        $tableSummary = $this->getTableSummary();
+        $selectedSummary = $this->getSelectedSummary();
+        
+        return view('livewire.project-transaction-table', [
+            'tableSummary' => $tableSummary,
+            'selectedSummary' => $selectedSummary,
+        ]);
     }
 }
