@@ -1,4 +1,72 @@
 <div>
+    <style>
+        /* Compact table rows with reduced padding */
+        .fi-ta-row {
+            padding: 0.25rem 0.5rem !important;
+            height: auto !important;
+            min-height: 2rem !important;
+        }
+
+        .fi-ta-cell {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.875rem !important;
+            line-height: 1.25rem !important;
+        }
+
+        .fi-ta-header-cell {
+            padding: 0.5rem !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* Compact input fields in table */
+        .fi-ta-cell input,
+        .fi-ta-cell select {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.875rem !important;
+            min-height: 1.75rem !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem !important;
+        }
+
+        .fi-ta-cell input:focus,
+        .fi-ta-cell select:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 1px #3b82f6 !important;
+        }
+
+        /* Amount column styling - Accounting format */
+        .fi-ta-col-amount input {
+            font-weight: 600 !important;
+            text-align: right !important;
+            font-family: 'Courier New', monospace !important;
+            background-color: #f9fafb !important;
+            border: 1px solid #d1d5db !important;
+        }
+
+        .fi-ta-col-amount input:focus {
+            background-color: #ffffff !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 1px #3b82f6 !important;
+        }
+
+        /* Monospace font for all amounts */
+        .font-mono {
+            font-family: 'Courier New', monospace !important;
+            letter-spacing: 0.025em !important;
+        }
+
+        /* Compact action buttons */
+        .fi-ta-actions {
+            padding: 0.25rem !important;
+        }
+
+        .fi-ta-actions .fi-ac-btn-action {
+            padding: 0.25rem !important;
+            min-height: 1.5rem !important;
+            width: 1.5rem !important;
+        }
+    </style>
+    
     <div class="p-6">
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
