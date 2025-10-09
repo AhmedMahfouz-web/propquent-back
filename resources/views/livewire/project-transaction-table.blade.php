@@ -23,7 +23,6 @@
 
         /* Input fields styling */
         table tbody td input {
-            height: 26px !important;
             padding: 2px 6px !important;
             font-size: 14px !important;
             border: 1px solid #d1d5db !important;
