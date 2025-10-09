@@ -16,11 +16,34 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
     public $debugInfo = []; // Store debug information to show on website
     
     /**
-     * Clean header names by removing descriptive text in parentheses
+     * Clean header names by removing descriptive text in parentheses and underscores
      */
     private function cleanHeaderName($header): string
     {
-        return trim(explode('(', $header)[0]);
+        // First remove text in parentheses
+        $cleaned = trim(explode('(', $header)[0]);
+        
+        // Then extract the base field name from descriptive headers
+        // e.g., "project_key_required_select_from_dropdown" -> "project_key"
+        $fieldMappings = [
+            'project_key_required_select_from_dropdown' => 'project_key',
+            'project_name_optional_select_from_dropdown' => 'project_name',
+            'developer_name_optional_see_projects_reference' => 'developer_name',
+            'financial_type_required' => 'financial_type',
+            'serving_optional' => 'serving',
+            'what_optional' => 'what',
+            'amount_required' => 'amount',
+            'method_optional' => 'method',
+            'reference_no_optional' => 'reference_no',
+            'status_required' => 'status',
+            'transaction_date_required' => 'transaction_date',
+            'due_date_optional' => 'due_date',
+            'actual_date_optional' => 'actual_date',
+            'note_optional' => 'note',
+            'transaction_category_optional' => 'transaction_category',
+        ];
+        
+        return $fieldMappings[$cleaned] ?? $cleaned;
     }
 
     /**
@@ -69,8 +92,26 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
         $rawAmount = $this->getRowValue($row, 'amount');
         $amount = $this->parseAmount($rawAmount);
         
+        // Show column mapping for debugging
+        if ($this->currentRow === 2) {
+            $mappedColumns = [];
+            foreach (array_keys($row) as $originalColumn) {
+                $mappedColumn = $this->cleanHeaderName($originalColumn);
+                if ($originalColumn !== $mappedColumn) {
+                    $mappedColumns[] = "'{$originalColumn}' -> '{$mappedColumn}'";
+                }
+            }
+            if (!empty($mappedColumns)) {
+                $this->debugInfo[] = "Column mappings: " . implode(', ', $mappedColumns);
+            }
+        }
+        
         // Collect debug info for website display
-        $this->debugInfo[] = "Row {$this->currentRow}: Found data - Project: {$projectKey}, Type: {$financialType}, Amount: {$rawAmount} -> {$amount}";
+        $this->debugInfo[] = "Row {$this->currentRow}: Found data - Project: '{$projectKey}', Type: '{$financialType}', Amount: '{$rawAmount}' -> {$amount}";
+        
+        // Show field extraction details
+        $this->debugInfo[] = "Row {$this->currentRow}: Field extraction - project_key: '{$this->getRowValue($row, 'project_key')}', financial_type: '{$this->getRowValue($row, 'financial_type')}', amount: '{$this->getRowValue($row, 'amount')}'";
+        
         $this->debugInfo[] = "Row {$this->currentRow}: Available columns: " . implode(', ', array_keys($row));
         
         // Skip if no project key found
