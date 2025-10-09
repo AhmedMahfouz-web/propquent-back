@@ -33,8 +33,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->defaultPaginationPageOption(25)
             ->paginated([10, 25, 50, 100])
             ->selectCurrentPageOnly()
-            ->checkIfRecordIsSelectableUsing(fn () => true)
-            ->recordClasses('!py-1 !px-2 text-sm')
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -87,8 +85,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->extraInputAttributes([
                         'class' => 'text-sm py-1 text-right font-mono',
                         'style' => 'font-family: monospace; text-align: right;'
-                    ])
-                    ->formatStateUsing(fn ($state) => number_format($state, 2)),
+                    ]),
 
                 Tables\Columns\TextColumn::make('method')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
@@ -103,7 +100,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 Tables\Columns\SelectColumn::make('status')
                     ->options(fn() => ProjectTransaction::getAvailableStatuses())
                     ->sortable()
-                    ->selectablePlaceholder(false)
                     ->extraAttributes(['class' => 'text-sm']),
 
                 Tables\Columns\TextColumn::make('transaction_date')
@@ -314,7 +310,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 Tables\Actions\DeleteAction::make()
                     ->label('')
                     ->icon('heroicon-m-trash')
-                    ->size('sm')
                     ->color('danger'),
             ])
             ->bulkActions([
@@ -327,27 +322,61 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
     public function getTableSummary(): array
     {
-        $query = $this->getFilteredTableQuery();
-        $records = $query->get();
-        
-        $totalAmount = $records->sum('amount');
-        $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
-        $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
-        $recordCount = $records->count();
-        
-        return [
-            'total_records' => $recordCount,
-            'total_amount' => $totalAmount,
-            'total_revenue' => $totalRevenue,
-            'total_expense' => $totalExpense,
-            'net_amount' => $totalRevenue - $totalExpense,
-        ];
+        try {
+            $query = $this->getFilteredTableQuery();
+            $records = $query->get();
+            
+            $totalAmount = $records->sum('amount');
+            $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
+            $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
+            $recordCount = $records->count();
+            
+            return [
+                'total_records' => $recordCount,
+                'total_amount' => $totalAmount,
+                'total_revenue' => $totalRevenue,
+                'total_expense' => $totalExpense,
+                'net_amount' => $totalRevenue - $totalExpense,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'total_records' => 0,
+                'total_amount' => 0,
+                'total_revenue' => 0,
+                'total_expense' => 0,
+                'net_amount' => 0,
+            ];
+        }
     }
     
     public function getSelectedSummary(): array
     {
-        $selectedIds = $this->getSelectedTableRecords();
-        if (empty($selectedIds)) {
+        try {
+            $selectedIds = $this->getSelectedTableRecords();
+            if (empty($selectedIds)) {
+                return [
+                    'selected_records' => 0,
+                    'selected_amount' => 0,
+                    'selected_revenue' => 0,
+                    'selected_expense' => 0,
+                    'selected_net' => 0,
+                ];
+            }
+            
+            $selectedRecords = ProjectTransaction::whereIn('id', $selectedIds)->get();
+            
+            $selectedAmount = $selectedRecords->sum('amount');
+            $selectedRevenue = $selectedRecords->where('financial_type', 'revenue')->sum('amount');
+            $selectedExpense = $selectedRecords->where('financial_type', 'expense')->sum('amount');
+            
+            return [
+                'selected_records' => $selectedRecords->count(),
+                'selected_amount' => $selectedAmount,
+                'selected_revenue' => $selectedRevenue,
+                'selected_expense' => $selectedExpense,
+                'selected_net' => $selectedRevenue - $selectedExpense,
+            ];
+        } catch (\Exception $e) {
             return [
                 'selected_records' => 0,
                 'selected_amount' => 0,
@@ -356,20 +385,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 'selected_net' => 0,
             ];
         }
-        
-        $selectedRecords = ProjectTransaction::whereIn('id', $selectedIds)->get();
-        
-        $selectedAmount = $selectedRecords->sum('amount');
-        $selectedRevenue = $selectedRecords->where('financial_type', 'revenue')->sum('amount');
-        $selectedExpense = $selectedRecords->where('financial_type', 'expense')->sum('amount');
-        
-        return [
-            'selected_records' => $selectedRecords->count(),
-            'selected_amount' => $selectedAmount,
-            'selected_revenue' => $selectedRevenue,
-            'selected_expense' => $selectedExpense,
-            'selected_net' => $selectedRevenue - $selectedExpense,
-        ];
     }
 
     public function render()
