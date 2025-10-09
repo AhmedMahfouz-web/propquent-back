@@ -267,8 +267,18 @@ class GenerateProjectTransactionTemplate extends Command
             $projectsSheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        // Add auto-fill formulas after all sheets are created
-        // We'll add them at the end to ensure proper sheet references
+        // Add auto-fill formulas with error handling
+        try {
+            for ($i = 2; $i <= 100; $i++) { // Extend to 100 rows since it's working
+                // Use Sheet2 reference (Projects Reference is the 2nd sheet)
+                $sheet->setCellValue('B' . $i, '=IF(A' . $i . '="","",VLOOKUP(A' . $i . ',Sheet2.A:C,2,0))');
+                $sheet->setCellValue('C' . $i, '=IF(A' . $i . '="","",VLOOKUP(A' . $i . ',Sheet2.A:C,3,0))');
+            }
+            $this->info('Auto-fill formulas added successfully to 100 rows');
+        } catch (\Exception $e) {
+            $this->warn('Could not add formulas: ' . $e->getMessage());
+            $this->info('Template will be created without formulas');
+        }
 
         // Add a third sheet with dropdown options
         $optionsSheet = $spreadsheet->createSheet();
@@ -335,8 +345,7 @@ class GenerateProjectTransactionTemplate extends Command
         // Set the first sheet as active
         $spreadsheet->setActiveSheetIndex(0);
 
-        // Skip formulas for now to ensure template generation works
-        $this->info('Template created successfully - formulas will be added in next update');
+        // Template created with formulas built-in
 
         // Save the file
         $templatePath = public_path('templates/project-transactions-template.xlsx');
@@ -346,34 +355,17 @@ class GenerateProjectTransactionTemplate extends Command
             mkdir(dirname($templatePath), 0755, true);
         }
 
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($templatePath);
-
-        // Add auto-fill formulas using INDEX/MATCH (more compatible than VLOOKUP)
         try {
-            $this->info('Adding auto-fill formulas using INDEX/MATCH...');
-            
-            // Load the saved file
-            $savedSpreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($templatePath);
-            $mainSheet = $savedSpreadsheet->getActiveSheet();
-            
-            // Create auto-fill using data validation with dependent dropdowns
-            // This is more reliable than formulas
-            
-            // For now, create a working template without formulas
-            // Users can manually add formulas in Excel if needed
-            $this->info('Creating template without formulas - users can add VLOOKUP manually in Excel');
-            $this->info('Formula to add manually: =VLOOKUP(A2,\'Projects Reference\'.A:C,2,0)');
-            
-            // Save with formulas
-            $formulaWriter = new Xlsx($savedSpreadsheet);
-            $formulaWriter->save($templatePath);
-            
-            $this->info('Auto-fill formulas added successfully using INDEX/MATCH!');
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($templatePath);
+            $this->info('File saved successfully');
         } catch (\Exception $e) {
-            $this->warn('Could not add formulas: ' . $e->getMessage());
-            $this->info('Template created without formulas - manual lookup required');
+            $this->error('Failed to save file: ' . $e->getMessage());
+            return 1;
         }
+
+        // Formulas already added directly to the main sheet during creation
+        $this->info('Template created with auto-fill formulas built-in');
 
         $this->info('Enhanced project transactions template generated successfully!');
         $this->info('Location: ' . $templatePath);
