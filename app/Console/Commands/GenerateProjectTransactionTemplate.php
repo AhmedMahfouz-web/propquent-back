@@ -114,29 +114,8 @@ class GenerateProjectTransactionTemplate extends Command
             $sheet->setDataValidation('A2:A1000', clone $validation);
         }
 
-        // Add dropdown validation for project names (column B)
-        $projectNames = $projects->pluck('title')->toArray();
-        if (!empty($projectNames)) {
-            $projectNamesString = '"' . implode(',', array_map(function($name) {
-                return str_replace('"', '""', $name); // Escape quotes in project names
-            }, $projectNames)) . '"';
-            
-            $validation = $sheet->getCell('B2')->getDataValidation();
-            $validation->setType(DataValidation::TYPE_LIST);
-            $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-            $validation->setAllowBlank(false);
-            $validation->setShowInputMessage(true);
-            $validation->setShowErrorMessage(true);
-            $validation->setShowDropDown(true);
-            $validation->setErrorTitle('Input error');
-            $validation->setError('Value is not in list.');
-            $validation->setPromptTitle('Pick from list');
-            $validation->setPrompt('Please pick a project name from the drop-down list.');
-            $validation->setFormula1($projectNamesString);
-            
-            // Apply to range B2:B1000
-            $sheet->setDataValidation('B2:B1000', clone $validation);
-        }
+        // Skip dropdown validation for project names (Column B) - it will be auto-filled
+        // No validation needed since this column is auto-populated by formulas
 
         // Note: VLOOKUP formulas are now automatically added for auto-fill functionality
 
@@ -351,53 +330,7 @@ class GenerateProjectTransactionTemplate extends Command
             $optionsSheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        // Add an instructions sheet
-        $instructionsSheet = $spreadsheet->createSheet();
-        $instructionsSheet->setTitle('Instructions');
-        
-        // Add instructions content
-        $instructionsSheet->setCellValue('A1', 'PROJECT TRANSACTIONS TEMPLATE INSTRUCTIONS');
-        $instructionsSheet->setCellValue('A3', 'How to use the Auto-Fill Template:');
-        $instructionsSheet->setCellValue('A4', '1. Select a project key from dropdown in column A (Required)');
-        $instructionsSheet->setCellValue('A5', '2. Project name (Column B) and developer name (Column C) will auto-fill automatically!');
-        $instructionsSheet->setCellValue('A6', '3. Fill in the required fields: financial_type, amount, status, transaction_date');
-        $instructionsSheet->setCellValue('A7', '4. Use dropdowns for all other optional fields');
-        $instructionsSheet->setCellValue('A8', '5. Repeat for each transaction row as needed');
-        $instructionsSheet->setCellValue('A10', 'Required Fields (Must be filled):');
-        $instructionsSheet->setCellValue('A11', '• project_key (Column A) - Select from dropdown - MUST match system data');
-        $instructionsSheet->setCellValue('A12', '• financial_type (Column D) - Select: expense or revenue');
-        $instructionsSheet->setCellValue('A13', '• amount (Column G) - Enter numeric value > 0');
-        $instructionsSheet->setCellValue('A14', '• status (Column J) - Select: pending, completed, or cancelled');
-        $instructionsSheet->setCellValue('A15', '• transaction_date (Column K) - Format: YYYY-MM-DD');
-        $instructionsSheet->setCellValue('A17', 'Auto-Filled Fields (Filled automatically):');
-        $instructionsSheet->setCellValue('A18', '• project_name (Column B) - Auto-filled when project_key is selected');
-        $instructionsSheet->setCellValue('A19', '• developer_name (Column C) - Auto-filled when project_key is selected');
-        $instructionsSheet->setCellValue('A21', 'Optional Fields (Can be left empty):');
-        $instructionsSheet->setCellValue('A22', '• serving, what, method, reference_no, due_date, actual_date, note, transaction_category');
-        $instructionsSheet->setCellValue('A24', 'Important Notes:');
-        $instructionsSheet->setCellValue('A25', '• Only project_key (Column A) is used for import validation');
-        $instructionsSheet->setCellValue('A26', '• Auto-fill works by selecting project key - project name and developer appear automatically');
-        $instructionsSheet->setCellValue('A27', '• All dropdown values are validated - you can only select valid options');
-        $instructionsSheet->setCellValue('A28', '• Check the "Dropdown Options" sheet for all valid field values');
-        $instructionsSheet->setCellValue('A29', '• The template is completely empty - enter data row by row as needed');
-        
-        // Style the instructions
-        $instructionsSheet->getStyle('A1')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 16,
-                'color' => ['rgb' => '000080']
-            ]
-        ]);
-        
-        $instructionsSheet->getStyle('A3:A22')->applyFromArray([
-            'font' => ['size' => 11]
-        ]);
-        
-        // Auto-size columns
-        foreach (range('A', 'D') as $column) {
-            $instructionsSheet->getColumnDimension($column)->setAutoSize(true);
-        }
+        // Instructions removed to simplify template and avoid conflicts
 
         // Set the first sheet as active
         $spreadsheet->setActiveSheetIndex(0);
@@ -445,10 +378,10 @@ class GenerateProjectTransactionTemplate extends Command
         $this->info('Location: ' . $templatePath);
         $this->info('Projects loaded: ' . $projects->count());
         $this->info('Features:');
-        $this->info('- Main sheet with sample data and all required columns');
+        $this->info('- Main sheet with auto-fill formulas (200 rows)');
         $this->info('- Projects reference sheet with all project keys and names');
         $this->info('- Dropdown options sheet with all valid values');
-        $this->info('- Instructions sheet with usage guide');
+        $this->info('- Auto-fill: Select project key → project name & developer auto-populate');
         
         return 0;
     }
