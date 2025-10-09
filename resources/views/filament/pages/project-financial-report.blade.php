@@ -30,7 +30,7 @@
                 }
             @endphp
             <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm compact-table">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th
@@ -67,51 +67,55 @@
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse ($projectsData as $projectKey => $projectData)
                             @foreach ($metricsToShow as $key => $label)
+                                @php
+                                    $config = $metricConfig[$key] ?? [];
+                                    $colorClasses = $this->getMetricColorClasses($key);
+                                    $isEvenRow = ($loop->index % 2 == 0);
+                                    $rowBgClass = $isEvenRow ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
+                                @endphp
                                 <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}"
-                                    class="bg-white dark:bg-gray-800 metric-row">
+                                    class="{{ $rowBgClass }} metric-row border-l-4 {{ $colorClasses['border'] }}">
                                     <td
-                                        class="px-2 py-4 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        class="px-2 py-2 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 {{ $rowBgClass }} z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                         @if ($loop->first)
-                                            <div class="font-mono text-sm">{{ $projectData['key'] }}</div>
+                                            <div class="font-mono text-xs">{{ $projectData['key'] }}</div>
                                         @endif
                                     </td>
                                     <td
-                                        class="px-6 py-4 align-top border-r dark:border-gray-600 sticky left-12 bg-white dark:bg-gray-800 z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} project-name-cell">
+                                        class="px-4 py-2 align-top border-r dark:border-gray-600 sticky left-12 {{ $rowBgClass }} z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }} project-name-cell">
                                         @if ($loop->first)
-                                            <div class="font-bold text-sm">{{ $projectData['title'] }}</div>
-                                            <div class="text-xs text-gray-500">{{ $projectData['status'] }}</div>
+                                            <div class="font-bold text-xs">{{ $projectData['title'] }}</div>
+                                            <div class="text-xs text-gray-500 mt-0.5">{{ $projectData['status'] }}</div>
                                         @endif
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
-                                        @php
-                                            $config = $metricConfig[$key] ?? [];
-                                            $colorClasses = $this->getMetricColorClasses($key);
-                                        @endphp
-                                        <div class="flex items-center space-x-2">
+                                        class="px-4 py-2 whitespace-nowrap {{ $colorClasses['bg'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        <div class="flex items-center space-x-1.5">
                                             @if(isset($config['icon']))
                                                 <x-dynamic-component 
                                                     :component="$config['icon']" 
-                                                    class="w-4 h-4 {{ $colorClasses['text'] }}" 
+                                                    class="w-3.5 h-3.5 {{ $colorClasses['text'] }}" 
                                                 />
                                             @endif
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium metric-badge {{ $colorClasses['badge'] }}">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium metric-badge {{ $colorClasses['badge'] }}">
                                                 {{ $config['label'] ?? $label }}
                                             </span>
                                         </div>
                                         @if(isset($config['description']))
-                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                                 {{ $config['description'] }}
                                             </div>
                                         @endif
                                     </td>
                                     <td
-                                        class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
-                                        ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
+                                        class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $colorClasses['bg'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                        <span class="text-sm {{ $colorClasses['text'] }}">
+                                            ${{ number_format($projectData['totals'][$key] ?? 0, 2) }}
+                                        </span>
                                     </td>
                                     @foreach ($allMonths as $month)
                                         <td
-                                            class="px-6 py-4 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
+                                            class="px-3 py-2 whitespace-nowrap text-right {{ $colorClasses['bg'] }} {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                             @if ($key === 'value_correction')
                                                 @livewire(
                                                     'quick-value-correction-edit',
@@ -123,11 +127,13 @@
                                                     key($projectData['key'] . '-' . $month . '-correction')
                                                 )
                                             @elseif ($key === 'evaluation_asset')
-                                                <span class="font-medium text-gray-700 dark:text-gray-300">
+                                                <span class="font-medium text-xs {{ $colorClasses['text'] }}">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                                 </span>
                                             @else
-                                                ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
+                                                <span class="text-xs {{ $colorClasses['text'] }}">
+                                                    ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
+                                                </span>
                                             @endif
                                         </td>
                                     @endforeach
@@ -191,9 +197,20 @@
             background: #a0aec0;
         }
 
+        /* Compact table styling */
+        .compact-table {
+            line-height: 1.2;
+        }
+
+        .compact-table td {
+            padding: 0.375rem 0.75rem;
+        }
+
         /* Metric badge hover effects */
         .metric-badge {
             transition: all 0.2s ease-in-out;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
         }
 
         .metric-badge:hover {
@@ -202,12 +219,37 @@
         }
 
         /* Metric row hover effects */
+        .metric-row {
+            transition: all 0.15s ease-in-out;
+        }
+
         .metric-row:hover {
-            background-color: rgba(0, 0, 0, 0.02);
+            transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .dark .metric-row:hover {
-            background-color: rgba(255, 255, 255, 0.02);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Enhanced border colors */
+        .border-l-4 {
+            border-left-width: 4px;
+        }
+
+        /* Alternating row colors with subtle gradients */
+        .metric-row.bg-gray-50 {
+            background: linear-gradient(90deg, rgba(249, 250, 251, 0.8) 0%, rgba(249, 250, 251, 0.4) 100%);
+        }
+
+        .dark .metric-row.bg-gray-900 {
+            background: linear-gradient(90deg, rgba(17, 24, 39, 0.8) 0%, rgba(17, 24, 39, 0.4) 100%);
+        }
+
+        /* Compact text sizing */
+        .text-compact {
+            font-size: 0.75rem;
+            line-height: 1rem;
         }
 
         /* Responsive adjustments */
