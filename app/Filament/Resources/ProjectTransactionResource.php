@@ -312,15 +312,28 @@ class ProjectTransactionResource extends Resource
                 Tables\Actions\CreateAction::make()
                     ->label('Add New Row')
                     ->keyBindings(['ctrl+n', 'cmd+n']),
+                Tables\Actions\Action::make('clear_today')
+                    ->label('Clear today\'s Imports')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function () {
+                        $deleted = ProjectTransaction::whereDate('created_at', today())->delete();
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cleared Successfully')
+                            ->body("Deleted {$deleted} transactions imported today.")
+                            ->success()
+                            ->send();
+                    }),
+                    
                 Tables\Actions\Action::make('import')
                     ->label('Import Excel')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->form([
                         Forms\Components\FileUpload::make('file')
-                            ->label('Excel File')
-                            ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])
                             ->required()
-                            ->helperText('Upload an Excel file with columns: project_key, type, category, amount, transaction_date, description')
+                            ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'])
+                            ->directory('imports')
                     ])
                     ->action(function (array $data) {
                         try {

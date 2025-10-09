@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 class ProjectTransactionImport implements ToModel, WithHeadingRow
 {
     private $currentRow = 1; // Track current row number
+    private $processedRows = 0; // Track how many rows we actually process
     /**
      * Clean header names by removing descriptive text in parentheses
      */
@@ -58,7 +59,8 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
 
         $projectKey = $this->getRowValue($row, 'project_key');
         $financialType = $this->getRowValue($row, 'financial_type');
-        $amount = $this->parseAmount($this->getRowValue($row, 'amount'));
+        $rawAmount = $this->getRowValue($row, 'amount');
+        $amount = $this->parseAmount($rawAmount);
         
         // Debug: Log what we're processing
         Log::info("Row {$this->currentRow}: Processing Excel row", [
@@ -66,7 +68,7 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
             'project_key' => $projectKey,
             'financial_type' => $financialType,
             'amount' => $amount,
-            'raw_amount' => $this->getRowValue($row, 'amount'),
+            'raw_amount' => $rawAmount,
             'all_row_data' => $row
         ]);
         
@@ -76,9 +78,15 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
             return null;
         }
 
-        // Skip if amount is still invalid
+        // Skip if no amount was provided in Excel (empty cell)
+        if (empty($rawAmount) || $rawAmount === null || $rawAmount === '') {
+            Log::warning("Row {$this->currentRow}: Skipping row - no amount provided in Excel", ['project_key' => $projectKey, 'raw_amount' => $rawAmount]);
+            return null;
+        }
+
+        // Skip if amount is still invalid after parsing
         if ($amount <= 0) {
-            Log::warning("Row {$this->currentRow}: Skipping row - invalid amount", ['amount' => $amount, 'project_key' => $projectKey]);
+            Log::warning("Row {$this->currentRow}: Skipping row - invalid amount after parsing", ['amount' => $amount, 'project_key' => $projectKey, 'raw_amount' => $rawAmount]);
             return null;
         }
 
@@ -97,10 +105,13 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
             'note' => $this->getRowValue($row, 'note'),
         ]);
 
+        $this->processedRows++;
+        
         Log::info("Row {$this->currentRow}: Creating transaction", [
             'project_key' => $projectKey,
             'financial_type' => $financialType ?? 'expense',
-            'amount' => $amount
+            'amount' => $amount,
+            'total_processed' => $this->processedRows
         ]);
 
         return $transaction;
@@ -112,7 +123,7 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
     private function parseAmount($amount)
     {
         if (empty($amount) || $amount === null || $amount === '') {
-            return 1; // Default to 1 instead of 0 to pass validation
+            return 0; // Return 0 for empty amounts so we can catch them
         }
 
         // Convert to string first
