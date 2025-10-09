@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProjectTransactionResource\Pages;
 use App\Models\ProjectTransaction;
-use App\Imports\ProjectTransactionImport;
+use App\Imports\ProjectTransactionSheetImport;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -338,7 +338,7 @@ class ProjectTransactionResource extends Resource
                     ->action(function (array $data) {
                         try {
                             $filePath = storage_path('app/public/' . $data['file']);
-                            Excel::import(new ProjectTransactionImport, $filePath);
+                            Excel::import(new ProjectTransactionSheetImport, $filePath);
                             \Filament\Notifications\Notification::make()
                                 ->title('Import Successful')
                                 ->body('Project transactions have been imported successfully from "project transactions" sheet.')

@@ -6,23 +6,13 @@ use App\Models\ProjectTransaction;
 use App\Models\Project;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\FromSheet;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 
-class ProjectTransactionImport implements ToModel, WithHeadingRow, FromSheet
+class ProjectTransactionImport implements ToModel, WithHeadingRow
 {
     private $currentRow = 1; // Track current row number
     private $processedRows = 0; // Track how many rows we actually process
-    
-    /**
-     * Specify which sheet to import from
-     * This will look for sheets named "project transactions" (case insensitive)
-     */
-    public function sheet(): string
-    {
-        return 'project transactions';
-    }
     
     /**
      * Clean header names by removing descriptive text in parentheses
@@ -62,9 +52,9 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow, FromSheet
     {
         $this->currentRow++; // Increment row counter
         
-        // Log that we're processing from the correct sheet
+        // Log that we're starting to process data
         if ($this->currentRow === 2) { // First data row (after headers)
-            Log::info("Starting import from 'project transactions' sheet");
+            Log::info("Starting project transaction import processing");
         }
         
         // Skip empty rows
