@@ -13,6 +13,7 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
 {
     private $currentRow = 1; // Track current row number
     private $processedRows = 0; // Track how many rows we actually process
+    public $debugInfo = []; // Store debug information to show on website
     
     /**
      * Clean header names by removing descriptive text in parentheses
@@ -52,14 +53,14 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
     {
         $this->currentRow++; // Increment row counter
         
-        // Log that we're starting to process data
+        // Collect debug info for website display
         if ($this->currentRow === 2) { // First data row (after headers)
-            Log::info("Starting project transaction import processing");
+            $this->debugInfo[] = "Starting project transaction import processing";
         }
         
         // Skip empty rows
         if (empty(array_filter($row))) {
-            Log::info("Row {$this->currentRow}: Skipping empty row");
+            $this->debugInfo[] = "Row {$this->currentRow}: Skipping empty row";
             return null;
         }
 
@@ -68,31 +69,25 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
         $rawAmount = $this->getRowValue($row, 'amount');
         $amount = $this->parseAmount($rawAmount);
         
-        // Debug: Log what we're processing
-        Log::info("Row {$this->currentRow}: Processing Excel row", [
-            'row_number' => $this->currentRow,
-            'project_key' => $projectKey,
-            'financial_type' => $financialType,
-            'amount' => $amount,
-            'raw_amount' => $rawAmount,
-            'all_row_data' => $row
-        ]);
+        // Collect debug info for website display
+        $this->debugInfo[] = "Row {$this->currentRow}: Found data - Project: {$projectKey}, Type: {$financialType}, Amount: {$rawAmount} -> {$amount}";
+        $this->debugInfo[] = "Row {$this->currentRow}: Available columns: " . implode(', ', array_keys($row));
         
         // Skip if no project key found
         if (empty($projectKey)) {
-            Log::warning("Row {$this->currentRow}: Skipping row - no project key found", ['row' => $row]);
+            $this->debugInfo[] = "Row {$this->currentRow}: ❌ SKIPPED - No project key found";
             return null;
         }
 
         // Skip if no amount was provided in Excel (empty cell)
         if (empty($rawAmount) || $rawAmount === null || $rawAmount === '') {
-            Log::warning("Row {$this->currentRow}: Skipping row - no amount provided in Excel", ['project_key' => $projectKey, 'raw_amount' => $rawAmount]);
+            $this->debugInfo[] = "Row {$this->currentRow}: ❌ SKIPPED - No amount provided (project: {$projectKey})";
             return null;
         }
 
         // Skip if amount is still invalid after parsing
         if ($amount <= 0) {
-            Log::warning("Row {$this->currentRow}: Skipping row - invalid amount after parsing", ['amount' => $amount, 'project_key' => $projectKey, 'raw_amount' => $rawAmount]);
+            $this->debugInfo[] = "Row {$this->currentRow}: ❌ SKIPPED - Invalid amount after parsing (project: {$projectKey}, raw: {$rawAmount}, parsed: {$amount})";
             return null;
         }
 
@@ -113,17 +108,8 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
 
         $this->processedRows++;
         
-        Log::info("Row {$this->currentRow}: Creating transaction", [
-            'project_key' => $projectKey,
-            'financial_type' => $financialType ?? 'expense',
-            'amount' => $amount,
-            'total_processed' => $this->processedRows
-        ]);
-
-        // Log summary every 5 transactions or if it's the first one
-        if ($this->processedRows === 1 || $this->processedRows % 5 === 0) {
-            Log::info("Import progress: {$this->processedRows} transactions processed so far");
-        }
+        $this->debugInfo[] = "Row {$this->currentRow}: ✅ SUCCESS - Creating transaction (project: {$projectKey}, type: " . ($financialType ?? 'expense') . ", amount: {$amount})";
+        $this->debugInfo[] = "Total transactions processed so far: {$this->processedRows}";
 
         return $transaction;
     }
