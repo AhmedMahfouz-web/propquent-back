@@ -46,15 +46,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                             return null;
                         }
                         return $state;
-                    })
-                    ->filterForm([
-                        Forms\Components\Select::make('project_id')
-                            ->relationship('project', 'title')
-                            ->searchable()
-                            ->preload()
-                    ])
-                    ->filter(function (Builder $query, array $data): Builder {
-                        return $query->when($data['project_id'], fn ($q) => $q->where('project_key', Project::find($data['project_id'])?->key));
                     }),
 
                 Tables\Columns\TextColumn::make('project_key')
@@ -75,14 +66,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                         'success' => 'revenue',
                         'danger' => 'expense',
                     ])
-                    ->sortable()
-                    ->filterForm([
-                        Forms\Components\Select::make('financial_type')
-                            ->options(ProjectTransaction::getAvailableFinancialTypes())
-                    ])
-                    ->filter(function (Builder $query, array $data): Builder {
-                        return $query->when($data['financial_type'], fn ($q) => $q->where('financial_type', $data['financial_type']));
-                    }),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('serving')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableServingTypes()[$state] ?? $state) : '-')
@@ -97,20 +81,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->money('EGP')
                     ->sortable()
                     ->alignEnd()
-                    ->weight('bold')
-                    ->filterForm([
-                        Forms\Components\TextInput::make('amount_min')
-                            ->label('Min Amount')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('amount_max')
-                            ->label('Max Amount')
-                            ->numeric(),
-                    ])
-                    ->filter(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['amount_min'], fn ($q) => $q->where('amount', '>=', $data['amount_min']))
-                            ->when($data['amount_max'], fn ($q) => $q->where('amount', '<=', $data['amount_max']));
-                    }),
+                    ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('method')
                     ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
@@ -129,14 +100,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                         'warning' => 'pending',
                         'danger' => 'cancelled',
                     ])
-                    ->sortable()
-                    ->filterForm([
-                        Forms\Components\Select::make('status')
-                            ->options(ProjectTransaction::getAvailableStatuses())
-                    ])
-                    ->filter(function (Builder $query, array $data): Builder {
-                        return $query->when($data['status'], fn ($q) => $q->where('status', $data['status']));
-                    }),
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
@@ -189,7 +153,51 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
                 Tables\Filters\SelectFilter::make('method')
                     ->options(fn() => ProjectTransaction::getAvailableTransactionMethods()),
+
+                Tables\Filters\Filter::make('amount_range')
+                    ->form([
+                        Forms\Components\TextInput::make('amount_from')
+                            ->label('Min Amount')
+                            ->numeric()
+                            ->placeholder('0.00'),
+                        Forms\Components\TextInput::make('amount_to')
+                            ->label('Max Amount')
+                            ->numeric()
+                            ->placeholder('1000.00'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['amount_from'],
+                                fn(Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
+                            )
+                            ->when(
+                                $data['amount_to'],
+                                fn(Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
+                            );
+                    }),
+
+                Tables\Filters\Filter::make('date_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('date_from')
+                            ->label('From Date'),
+                        Forms\Components\DatePicker::make('date_to')
+                            ->label('To Date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['date_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['date_to'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
+                            );
+                    }),
             ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->persistFiltersInSession()
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Add New Row')
