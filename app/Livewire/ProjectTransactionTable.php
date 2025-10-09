@@ -25,10 +25,6 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     
     public $selectedRecords = [];
     public $showSummary = true;
-    
-    // Reactive properties for table state
-    public $tableSearch = '';
-    public $tableColumnSearches = [];
     public $selectedTableRecords = [];
     
     protected $listeners = [
@@ -453,20 +449,8 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     protected function getTableQueryForSummary()
     {
         try {
-            // Get the base query from the table
-            $table = $this->getTable();
-            $query = $table->getQuery();
-            
-            // Apply table filters
-            $query = $table->applyFiltersToTableQuery($query);
-            
-            // Apply search
-            $query = $table->applySearchToTableQuery($query);
-            
-            // Apply column searches  
-            $query = $table->applyColumnSearchesToTableQuery($query);
-            
-            return $query;
+            // Use Filament's built-in method to get filtered query
+            return $this->getFilteredTableQuery();
         } catch (\Exception $e) {
             // Fallback to base query if table methods fail
             return ProjectTransaction::query()->with('project.developer');
@@ -506,17 +490,21 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getSelectedSummary(): array
     {
         try {
-            // Get selected records from Filament table
+            // Get selected records using Filament's built-in methods
             $selectedRecords = collect();
             
-            // Check if we have table selection
-            if (property_exists($this, 'selectedTableRecords') && !empty($this->selectedTableRecords)) {
+            // Try multiple approaches to get selected records
+            if (!empty($this->selectedTableRecords)) {
                 $selectedRecords = ProjectTransaction::whereIn('id', $this->selectedTableRecords)->get();
             } else {
-                // Try to get from table component state
-                $table = $this->getTable();
-                if ($table && method_exists($table, 'getSelectedRecords')) {
-                    $selectedRecords = $table->getSelectedRecords();
+                // Try to get selected records from table
+                try {
+                    $selectedRecords = $this->getSelectedTableRecords();
+                    if (is_array($selectedRecords)) {
+                        $selectedRecords = ProjectTransaction::whereIn('id', $selectedRecords)->get();
+                    }
+                } catch (\Exception $e) {
+                    $selectedRecords = collect();
                 }
             }
             
