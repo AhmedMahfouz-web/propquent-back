@@ -47,7 +47,6 @@
 
         /* Normal button styling */
         table tbody td button {
-            height: 26px !important;
             width: 26px !important;
             padding: 4px !important;
             border-radius: 4px !important;
@@ -76,7 +75,8 @@
         }
 
         .py-4 {
-            padding: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
         }
     </style>
 
