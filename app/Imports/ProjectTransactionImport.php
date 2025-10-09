@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class ProjectTransactionImport implements ToModel, WithHeadingRow
 {
+    private $currentRow = 1; // Track current row number
     /**
      * Clean header names by removing descriptive text in parentheses
      */
@@ -24,37 +25,17 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
      */
     private function getRowValue(array $row, string $fieldName)
     {
-        // Log what we're looking for and what's available
-        if ($fieldName === 'amount') {
-            Log::info('Looking for amount field', [
-                'field_name' => $fieldName,
-                'available_keys' => array_keys($row),
-                'row_data' => $row
-            ]);
-        }
-        
         // Try exact match first
         if (isset($row[$fieldName])) {
-            $value = $row[$fieldName];
-            if ($fieldName === 'amount') {
-                Log::info('Found exact match for amount', ['value' => $value]);
-            }
-            return $value;
+            return $row[$fieldName];
         }
         
         // Try to find header that starts with the field name
         foreach ($row as $key => $value) {
             $cleanKey = $this->cleanHeaderName($key);
             if ($cleanKey === $fieldName) {
-                if ($fieldName === 'amount') {
-                    Log::info('Found cleaned match for amount', ['key' => $key, 'clean_key' => $cleanKey, 'value' => $value]);
-                }
                 return $value;
             }
-        }
-        
-        if ($fieldName === 'amount') {
-            Log::warning('No match found for amount field');
         }
         
         return null;
@@ -67,27 +48,43 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
+        $this->currentRow++; // Increment row counter
+        
         // Skip empty rows
         if (empty(array_filter($row))) {
+            Log::info("Row {$this->currentRow}: Skipping empty row");
             return null;
         }
 
         $projectKey = $this->getRowValue($row, 'project_key');
+        $financialType = $this->getRowValue($row, 'financial_type');
         $amount = $this->parseAmount($this->getRowValue($row, 'amount'));
+        
+        // Debug: Log what we're processing
+        Log::info("Row {$this->currentRow}: Processing Excel row", [
+            'row_number' => $this->currentRow,
+            'project_key' => $projectKey,
+            'financial_type' => $financialType,
+            'amount' => $amount,
+            'raw_amount' => $this->getRowValue($row, 'amount'),
+            'all_row_data' => $row
+        ]);
         
         // Skip if no project key found
         if (empty($projectKey)) {
+            Log::warning("Row {$this->currentRow}: Skipping row - no project key found", ['row' => $row]);
             return null;
         }
 
         // Skip if amount is still invalid
         if ($amount <= 0) {
+            Log::warning("Row {$this->currentRow}: Skipping row - invalid amount", ['amount' => $amount, 'project_key' => $projectKey]);
             return null;
         }
 
-        return new ProjectTransaction([
+        $transaction = new ProjectTransaction([
             'project_key' => $projectKey,
-            'financial_type' => $this->getRowValue($row, 'financial_type') ?? 'expense',
+            'financial_type' => $financialType ?? 'expense',
             'serving' => $this->getRowValue($row, 'serving'),
             'what' => $this->getRowValue($row, 'what'),
             'amount' => $amount,
@@ -98,8 +95,15 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
             'reference_no' => $this->getRowValue($row, 'reference_no'),
             'status' => $this->getRowValue($row, 'status') ?? 'pending',
             'note' => $this->getRowValue($row, 'note'),
-            'transaction_category' => $this->getRowValue($row, 'transaction_category'),
         ]);
+
+        Log::info("Row {$this->currentRow}: Creating transaction", [
+            'project_key' => $projectKey,
+            'financial_type' => $financialType ?? 'expense',
+            'amount' => $amount
+        ]);
+
+        return $transaction;
     }
 
     /**
@@ -107,11 +111,7 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
      */
     private function parseAmount($amount)
     {
-        // Log the original amount for debugging
-        \Log::info('Parsing amount', ['original' => $amount, 'type' => gettype($amount)]);
-        
         if (empty($amount) || $amount === null || $amount === '') {
-            \Log::info('Amount is empty, returning 1');
             return 1; // Default to 1 instead of 0 to pass validation
         }
 
@@ -124,15 +124,8 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow
         // Convert to float
         $parsedAmount = (float) $cleanAmount;
         
-        \Log::info('Amount parsing result', [
-            'original' => $amount,
-            'cleaned' => $cleanAmount,
-            'parsed' => $parsedAmount
-        ]);
-        
         // If still 0 or negative after parsing, return 1
         if ($parsedAmount <= 0) {
-            \Log::warning('Parsed amount is <= 0, returning 1', ['parsed' => $parsedAmount]);
             return 1;
         }
         

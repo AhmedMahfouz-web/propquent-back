@@ -100,7 +100,6 @@ class ProjectTransaction extends Model
         'serving',
         'what',
         'amount',
-        'transaction_category',
         'due_date',
         'actual_date',
         'transaction_date',
