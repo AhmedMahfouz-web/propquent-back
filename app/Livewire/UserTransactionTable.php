@@ -79,10 +79,8 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                     ->sortable()
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'salary' => 'success',
-                        'bonus' => 'info',
-                        'deduction' => 'danger',
-                        'advance' => 'warning',
+                        'deposit' => 'success',
+                        'withdraw' => 'danger',
                         default => 'gray',
                     }),
                     
@@ -91,7 +89,7 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                     ->money('EGP')
                     ->sortable()
                     ->alignEnd()
-                    ->color(fn ($record): string => $record->transaction_type === 'deduction' ? 'danger' : 'success'),
+                    ->color(fn ($record): string => $record->transaction_type === 'withdraw' ? 'danger' : 'success'),
                     
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->label('Transaction Date')
@@ -265,28 +263,22 @@ class UserTransactionTable extends Component implements HasTable, HasForms
             // Calculate from current page records only
             $recordCount = $records->count();
             $totalAmount = $records->sum('amount');
-            $totalSalary = $records->where('transaction_type', 'salary')->sum('amount');
-            $totalBonus = $records->where('transaction_type', 'bonus')->sum('amount');
-            $totalDeduction = $records->where('transaction_type', 'deduction')->sum('amount');
-            $totalAdvance = $records->where('transaction_type', 'advance')->sum('amount');
+            $totalDeposit = $records->where('transaction_type', 'deposit')->sum('amount');
+            $totalWithdraw = $records->where('transaction_type', 'withdraw')->sum('amount');
             
             return [
                 'total_records' => $recordCount,
                 'total_amount' => $totalAmount,
-                'total_salary' => $totalSalary,
-                'total_bonus' => $totalBonus,
-                'total_deduction' => $totalDeduction,
-                'total_advance' => $totalAdvance,
-                'net_amount' => $totalSalary + $totalBonus - $totalDeduction - $totalAdvance,
+                'total_deposit' => $totalDeposit,
+                'total_withdraw' => $totalWithdraw,
+                'net_amount' => $totalDeposit - $totalWithdraw,
             ];
         } catch (\Exception $e) {
             return [
                 'total_records' => 0,
                 'total_amount' => 0,
-                'total_salary' => 0,
-                'total_bonus' => 0,
-                'total_deduction' => 0,
-                'total_advance' => 0,
+                'total_deposit' => 0,
+                'total_withdraw' => 0,
                 'net_amount' => 0,
             ];
         }
@@ -317,10 +309,8 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                 return [
                     'selected_records' => 0,
                     'selected_amount' => 0,
-                    'selected_salary' => 0,
-                    'selected_bonus' => 0,
-                    'selected_deduction' => 0,
-                    'selected_advance' => 0,
+                    'selected_deposit' => 0,
+                    'selected_withdraw' => 0,
                     'selected_net' => 0,
                 ];
             }
@@ -329,28 +319,22 @@ class UserTransactionTable extends Component implements HasTable, HasForms
             $query = UserTransaction::whereIn('id', $selectedIds);
             $selectedCount = $query->count();
             $selectedAmount = $query->sum('amount');
-            $selectedSalary = $query->where('transaction_type', 'salary')->sum('amount');
-            $selectedBonus = $query->where('transaction_type', 'bonus')->sum('amount');
-            $selectedDeduction = $query->where('transaction_type', 'deduction')->sum('amount');
-            $selectedAdvance = $query->where('transaction_type', 'advance')->sum('amount');
+            $selectedDeposit = $query->where('transaction_type', 'deposit')->sum('amount');
+            $selectedWithdraw = $query->where('transaction_type', 'withdraw')->sum('amount');
             
             return [
                 'selected_records' => $selectedCount,
                 'selected_amount' => $selectedAmount,
-                'selected_salary' => $selectedSalary,
-                'selected_bonus' => $selectedBonus,
-                'selected_deduction' => $selectedDeduction,
-                'selected_advance' => $selectedAdvance,
-                'selected_net' => $selectedSalary + $selectedBonus - $selectedDeduction - $selectedAdvance,
+                'selected_deposit' => $selectedDeposit,
+                'selected_withdraw' => $selectedWithdraw,
+                'selected_net' => $selectedDeposit - $selectedWithdraw,
             ];
         } catch (\Exception $e) {
             return [
                 'selected_records' => 0,
                 'selected_amount' => 0,
-                'selected_salary' => 0,
-                'selected_bonus' => 0,
-                'selected_deduction' => 0,
-                'selected_advance' => 0,
+                'selected_deposit' => 0,
+                'selected_withdraw' => 0,
                 'selected_net' => 0,
             ];
         }

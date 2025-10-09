@@ -144,20 +144,12 @@
                         <span class="font-semibold text-gray-900 dark:text-white font-mono">{{ number_format($tableSummary['total_amount'], 2) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-green-600 dark:text-green-400">Total Salary:</span>
-                        <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($tableSummary['total_salary'], 2) }}</span>
+                        <span class="text-green-600 dark:text-green-400">Total Deposit:</span>
+                        <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($tableSummary['total_deposit'], 2) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-blue-600 dark:text-blue-400">Total Bonus:</span>
-                        <span class="font-semibold text-blue-600 dark:text-blue-400 font-mono">{{ number_format($tableSummary['total_bonus'], 2) }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-red-600 dark:text-red-400">Total Deduction:</span>
-                        <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($tableSummary['total_deduction'], 2) }})</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-yellow-600 dark:text-yellow-400">Total Advance:</span>
-                        <span class="font-semibold text-yellow-600 dark:text-yellow-400 font-mono">({{ number_format($tableSummary['total_advance'], 2) }})</span>
+                        <span class="text-red-600 dark:text-red-400">Total Withdraw:</span>
+                        <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($tableSummary['total_withdraw'], 2) }})</span>
                     </div>
                     <hr class="border-gray-200 dark:border-gray-600 my-2">
                     <div class="flex justify-between">
@@ -185,20 +177,12 @@
                             <span class="font-semibold text-gray-900 dark:text-white font-mono">{{ number_format($selectedSummary['selected_amount'], 2) }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-green-600 dark:text-green-400">Selected Salary:</span>
-                            <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($selectedSummary['selected_salary'], 2) }}</span>
+                            <span class="text-green-600 dark:text-green-400">Selected Deposit:</span>
+                            <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($selectedSummary['selected_deposit'], 2) }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-blue-600 dark:text-blue-400">Selected Bonus:</span>
-                            <span class="font-semibold text-blue-600 dark:text-blue-400 font-mono">{{ number_format($selectedSummary['selected_bonus'], 2) }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-red-600 dark:text-red-400">Selected Deduction:</span>
-                            <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($selectedSummary['selected_deduction'], 2) }})</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-yellow-600 dark:text-yellow-400">Selected Advance:</span>
-                            <span class="font-semibold text-yellow-600 dark:text-yellow-400 font-mono">({{ number_format($selectedSummary['selected_advance'], 2) }})</span>
+                            <span class="text-red-600 dark:text-red-400">Selected Withdraw:</span>
+                            <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($selectedSummary['selected_withdraw'], 2) }})</span>
                         </div>
                         <hr class="border-gray-200 dark:border-gray-600 my-2">
                         <div class="flex justify-between">
