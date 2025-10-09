@@ -1,69 +1,91 @@
 <div>
     <style>
-        /* Compact table rows with reduced padding */
+        /* Ultra compact table rows */
         .fi-ta-row {
-            padding: 0.25rem 0.5rem !important;
+            padding: 0.125rem 0.25rem !important;
             height: auto !important;
-            min-height: 2rem !important;
+            min-height: 1.5rem !important;
         }
 
         .fi-ta-cell {
-            padding: 0.25rem 0.5rem !important;
-            font-size: 0.875rem !important;
-            line-height: 1.25rem !important;
+            padding: 0.125rem 0.25rem !important;
+            font-size: 0.8125rem !important;
+            line-height: 1.125rem !important;
+            vertical-align: middle !important;
         }
 
         .fi-ta-header-cell {
-            padding: 0.5rem !important;
-            font-size: 0.875rem !important;
+            padding: 0.25rem !important;
+            font-size: 0.8125rem !important;
+            font-weight: 600 !important;
         }
 
-        /* Compact input fields in table */
+        /* Ultra compact input fields */
         .fi-ta-cell input,
         .fi-ta-cell select {
-            padding: 0.25rem 0.5rem !important;
-            font-size: 0.875rem !important;
-            min-height: 1.75rem !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 0.375rem !important;
+            padding: 0.125rem 0.25rem !important;
+            font-size: 0.8125rem !important;
+            min-height: 1.25rem !important;
+            height: 1.25rem !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 0.25rem !important;
+            line-height: 1 !important;
         }
 
         .fi-ta-cell input:focus,
         .fi-ta-cell select:focus {
             border-color: #3b82f6 !important;
             box-shadow: 0 0 0 1px #3b82f6 !important;
+            outline: none !important;
         }
 
-        /* Amount column styling - Accounting format */
+        /* Amount column - clean sans-serif font */
         .fi-ta-col-amount input {
             font-weight: 600 !important;
             text-align: right !important;
-            font-family: 'Courier New', monospace !important;
-            background-color: #f9fafb !important;
-            border: 1px solid #d1d5db !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background-color: #f8fafc !important;
+            border: 1px solid #e5e7eb !important;
         }
 
         .fi-ta-col-amount input:focus {
             background-color: #ffffff !important;
             border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 1px #3b82f6 !important;
         }
 
-        /* Monospace font for all amounts */
+        /* Clean sans-serif font for amounts in summary */
         .font-mono {
-            font-family: 'Courier New', monospace !important;
-            letter-spacing: 0.025em !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-weight: 600 !important;
+            letter-spacing: 0 !important;
         }
 
-        /* Compact action buttons */
+        /* Ultra compact action buttons */
         .fi-ta-actions {
-            padding: 0.25rem !important;
+            padding: 0.125rem !important;
         }
 
         .fi-ta-actions .fi-ac-btn-action {
-            padding: 0.25rem !important;
-            min-height: 1.5rem !important;
-            width: 1.5rem !important;
+            padding: 0.125rem !important;
+            min-height: 1.25rem !important;
+            width: 1.25rem !important;
+        }
+
+        /* Status select styling */
+        .fi-ta-col-status select {
+            font-size: 0.75rem !important;
+            padding: 0.125rem 0.25rem !important;
+            height: 1.25rem !important;
+        }
+
+        /* Checkbox styling */
+        .fi-ta-checkbox {
+            transform: scale(0.8) !important;
+        }
+
+        /* Remove extra spacing */
+        .fi-ta-content {
+            padding: 0 !important;
         }
     </style>
     
