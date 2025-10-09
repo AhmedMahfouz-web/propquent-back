@@ -4,11 +4,13 @@ namespace App\Filament\Resources\UserTransactionResource\Pages;
 
 use App\Filament\Resources\UserTransactionResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\Page;
 
-class ListUserTransactions extends ListRecords
+class ListUserTransactions extends Page
 {
     protected static string $resource = UserTransactionResource::class;
+    
+    protected static string $view = 'filament.resources.user-transaction-resource.pages.list-user-transactions';
 
     protected function getHeaderActions(): array
     {
