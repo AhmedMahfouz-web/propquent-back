@@ -288,8 +288,19 @@ class GenerateProjectTransactionTemplate extends Command
             $projectsSheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        // Auto-fill formulas will be added in a future update
-        // For now, users can manually reference the Projects Reference sheet
+        // Add auto-fill formulas to the main sheet
+        try {
+            // Add formulas for rows 2-500 (sufficient for most use cases)
+            for ($i = 2; $i <= 500; $i++) {
+                $sheet->setCellValue('B' . $i, '=IF(A' . $i . '="","",VLOOKUP(A' . $i . ',\'Projects Reference\'.A:C,2,0))');
+                $sheet->setCellValue('C' . $i, '=IF(A' . $i . '="","",VLOOKUP(A' . $i . ',\'Projects Reference\'.A:C,3,0))');
+            }
+            
+            $this->info('Auto-fill formulas added successfully for rows 2-500');
+        } catch (\Exception $e) {
+            $this->warn('Could not add auto-fill formulas: ' . $e->getMessage());
+            $this->info('Template will work without auto-fill - users can manually reference Projects Reference sheet');
+        }
 
         // Add a third sheet with dropdown options
         $optionsSheet = $spreadsheet->createSheet();
