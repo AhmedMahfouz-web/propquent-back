@@ -6,11 +6,39 @@ use App\Models\ProjectTransaction;
 use App\Models\Project;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Validation\Rule;
 
-class ProjectTransactionImport implements ToModel, WithHeadingRow, WithValidation
+class ProjectTransactionImport implements ToModel, WithHeadingRow
 {
+    /**
+     * Clean header names by removing descriptive text in parentheses
+     */
+    private function cleanHeaderName($header): string
+    {
+        return trim(explode('(', $header)[0]);
+    }
+
+    /**
+     * Get value from row using flexible header matching
+     */
+    private function getRowValue(array $row, string $fieldName)
+    {
+        // Try exact match first
+        if (isset($row[$fieldName])) {
+            return $row[$fieldName];
+        }
+        
+        // Try to find header that starts with the field name
+        foreach ($row as $key => $value) {
+            $cleanKey = $this->cleanHeaderName($key);
+            if ($cleanKey === $fieldName) {
+                return $value;
+            }
+        }
+        
+        return null;
+    }
+
     /**
      * @param array $row
      *
@@ -18,40 +46,33 @@ class ProjectTransactionImport implements ToModel, WithHeadingRow, WithValidatio
      */
     public function model(array $row)
     {
-        return new ProjectTransaction([
-            'project_key' => $row['project_key'],
-            'financial_type' => $row['financial_type'],
-            'serving' => $row['serving'] ?? null,
-            'what' => $row['what'] ?? null,
-            'amount' => !empty($row['amount']) ? (float) $row['amount'] : 0,
-            'due_date' => !empty($row['due_date']) ? $this->parseDate($row['due_date']) : null,
-            'actual_date' => !empty($row['actual_date']) ? $this->parseDate($row['actual_date']) : null,
-            'transaction_date' => $this->parseDate($row['transaction_date']),
-            'method' => $row['method'] ?? null,
-            'reference_no' => $row['reference_no'] ?? null,
-            'status' => $row['status'] ?? 'pending',
-            'note' => $row['note'] ?? null,
-            'transaction_category' => $row['transaction_category'] ?? null,
-        ]);
-    }
+        // Skip empty rows
+        if (empty(array_filter($row))) {
+            return null;
+        }
 
-    public function rules(): array
-    {
-        return [
-            'project_key' => ['required', 'string', Rule::exists('projects', 'key')],
-            'financial_type' => ['required', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableFinancialTypes()))],
-            'serving' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableServingTypes()))],
-            'what' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableWhatTypes()))],
-            'amount' => ['required', 'numeric', 'min:0'],
-            'due_date' => ['nullable', 'date'],
-            'actual_date' => ['nullable', 'date'],
-            'transaction_date' => ['required'],
-            'method' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableTransactionMethods()))],
-            'reference_no' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', 'string', Rule::in(array_keys(ProjectTransaction::getAvailableStatuses()))],
-            'note' => ['nullable', 'string'],
-            'transaction_category' => ['nullable', 'string', 'max:255'],
-        ];
+        $projectKey = $this->getRowValue($row, 'project_key');
+        
+        // Skip if no project key found
+        if (empty($projectKey)) {
+            return null;
+        }
+
+        return new ProjectTransaction([
+            'project_key' => $projectKey,
+            'financial_type' => $this->getRowValue($row, 'financial_type') ?? 'expense',
+            'serving' => $this->getRowValue($row, 'serving'),
+            'what' => $this->getRowValue($row, 'what'),
+            'amount' => !empty($this->getRowValue($row, 'amount')) ? (float) $this->getRowValue($row, 'amount') : 0,
+            'due_date' => !empty($this->getRowValue($row, 'due_date')) ? $this->parseDate($this->getRowValue($row, 'due_date')) : null,
+            'actual_date' => !empty($this->getRowValue($row, 'actual_date')) ? $this->parseDate($this->getRowValue($row, 'actual_date')) : null,
+            'transaction_date' => $this->parseDate($this->getRowValue($row, 'transaction_date') ?? now()),
+            'method' => $this->getRowValue($row, 'method'),
+            'reference_no' => $this->getRowValue($row, 'reference_no'),
+            'status' => $this->getRowValue($row, 'status') ?? 'pending',
+            'note' => $this->getRowValue($row, 'note'),
+            'transaction_category' => $this->getRowValue($row, 'transaction_category'),
+        ]);
     }
 
     /**
