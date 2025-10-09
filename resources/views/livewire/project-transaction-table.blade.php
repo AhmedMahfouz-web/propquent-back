@@ -138,6 +138,7 @@
             </h1>
             <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Manage project transactions with inline editing, filtering, and bulk import capabilities.
+            </p>
         </div>
 
         <!-- Full page scroll - no height restriction -->
@@ -209,6 +210,7 @@
                         </div>
                     </div>
                 @else
+                    <div class="text-center py-2">
                         <div class="text-gray-400 dark:text-gray-500 mb-2">
                             <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
