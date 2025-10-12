@@ -468,7 +468,7 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->whereIn('pt.status', ['done', 'pending'])
             ->whereBetween(DB::raw('COALESCE(pt.actual_date, pt.transaction_date)'), [
-                end($monthsToShow),
+                Carbon::parse(end($monthsToShow))->startOfMonth(),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ])
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
@@ -640,7 +640,7 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->whereIn('status', ['done', 'pending'])
             ->whereBetween(DB::raw('COALESCE(actual_date, transaction_date)'), [
-                end($monthsToShow),
+                Carbon::parse(end($monthsToShow))->startOfMonth(),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ])
             ->groupBy('month_date')
