@@ -1197,17 +1197,20 @@
         }
 
         .details-grid,
-        .contract-grid,
-        .expenses-grid,
-        .revenue-grid,
-        .equity-grid,
-        .status-grid {
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+        .contract-grid {
+            grid-template-columns: repeat(4, 1fr);
             min-width: 400px;
+        }
+
+        .expenses-grid,
+        .revenue-grid {
+            grid-template-columns: repeat(3, 1fr);
+            min-width: 300px;
         }
 
         .section-subheader[data-state="expanded"] .sub-header-grid {
             display: grid;
+{{ ... }}
         }
 
         /* Section Content */
