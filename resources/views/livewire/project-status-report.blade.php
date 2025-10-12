@@ -133,7 +133,7 @@
                                 </th>
 
                                 <!-- Expenses Section Header -->
-                                <th class="section-header expenses-header financial-section-width" data-state="{{ $sectionStates['expenses'] }}"
+                                <th class="section-header expenses-header" data-state="{{ $sectionStates['expenses'] }}"
                                     wire:click.prevent="toggleSectionState('expenses')">
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
@@ -147,7 +147,7 @@
                                 </th>
 
                                 <!-- Revenue Section Header -->
-                                <th class="section-header revenue-header financial-section-width" data-state="{{ $sectionStates['revenue'] }}"
+                                <th class="section-header revenue-header" data-state="{{ $sectionStates['revenue'] }}"
                                     wire:click.prevent="toggleSectionState('revenue')">
                                     <div class="header-content">
                                         <span class="section-title-full">Revenue</span>
@@ -175,7 +175,7 @@
                                 </th>
 
                                 <!-- Status Section Header -->
-                                <th class="section-header status-header" data-state="{{ $sectionStates['status'] }}"
+                                <th class="section-header status-header status-section-width" data-state="{{ $sectionStates['status'] }}"
                                     wire:click.prevent="toggleSectionState('status')">
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
@@ -467,7 +467,7 @@
                                 </th>
 
                                 <!-- Expenses Sub-headers -->
-                                <th class="section-subheader expenses-section financial-section-width"
+                                <th class="section-subheader expenses-section"
                                     data-state="{{ $sectionStates['expenses'] }}" wire:key="subheader-expenses">
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
@@ -505,7 +505,7 @@
                                 </th>
 
                                 <!-- Revenue Sub-headers -->
-                                <th class="section-subheader revenue-section financial-section-width"
+                                <th class="section-subheader revenue-section"
                                     data-state="{{ $sectionStates['revenue'] }}" wire:key="subheader-revenue">
                                     <div class="sub-header-grid revenue-grid">
                                         <span>Asset</span>
@@ -581,7 +581,7 @@
                                 </th>
 
                                 <!-- Status Sub-headers -->
-                                <th class="section-subheader status-section"
+                                <th class="section-subheader status-section status-section-width"
                                     data-state="{{ $sectionStates['status'] }}" wire:key="subheader-status">
                                     <div class="sub-header-grid status-grid">
                                         <!-- Status Column -->
@@ -776,19 +776,26 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section financial-section-width"
+                                    <td class="section-content expenses-section"
                                         data-state="{{ $sectionStates['expenses'] }}"
                                         wire:key="content-expenses-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="content-grid expenses-grid">
-                                                <span class="content-value text-red-600 dark:text-red-400 font-medium">
-                                                    ${{ number_format($assetExpenses, 0) }}
-                                                </span>
-                                                <span class="content-value text-red-600 dark:text-red-400 font-medium">
-                                                    ${{ number_format($operationExpenses, 0) }}
-                                                </span>
-                                                <div class="excel-column-header">
-                                                    <span class="content-value text-red-600 dark:text-red-400 font-bold">
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                        ${{ number_format($assetExpenses, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                        ${{ number_format($operationExpenses, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-red-600 dark:text-red-400 font-bold">
                                                         ${{ number_format($totalExpenses, 0) }}
                                                     </span>
                                                 </div>
@@ -797,20 +804,27 @@
                                     </td>
 
                                     <!-- Revenue Section -->
-                                    <td class="section-content revenue-section financial-section-width"
+                                    <td class="section-content revenue-section"
                                         data-state="{{ $sectionStates['revenue'] }}"
                                         wire:key="content-revenue-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="content-grid revenue-grid">
-                                                <span class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                    ${{ number_format($projectData['asset_revenue'] ?? 0, 0) }}
-                                                </span>
-                                                <span class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                    ${{ number_format($projectData['operation_revenue'] ?? 0, 0) }}
-                                                </span>
-                                                <div class="excel-column-header">
-                                                    <span class="content-value text-green-600 dark:text-green-400 font-bold">
-                                                        ${{ number_format(($projectData['asset_revenue'] ?? 0) + ($projectData['operation_revenue'] ?? 0), 0) }}
+                                            <div class="expanded-content-wrapper">
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                        ${{ number_format($projectData['asset_revenue'] ?? 0, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                        ${{ number_format($projectData['operation_revenue'] ?? 0, 0) }}
+                                                    </span>
+                                                </div>
+                                                <div class="content-row">
+                                                    <span
+                                                        class="content-value text-green-600 dark:text-green-400 font-bold">
+                                                        ${{ number_format(($projectData['asset_revenue'] ?? 0) + ($projectData['operation_revenue'] ?? 0) + ($projectData['serving_revenue'] ?? 0), 0) }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -852,7 +866,7 @@
                                     </td>
 
                                     <!-- Status Section -->
-                                    <td class="section-content status-section"
+                                    <td class="section-content status-section status-section-width"
                                         data-state="{{ $sectionStates['status'] }}"
                                         wire:key="content-status-{{ $project->id }}">
                                         <div class="section-expanded-content">
@@ -1190,17 +1204,19 @@
             min-width: 400px;
         }
 
+        .status-section-width {
+            min-width: 400px !important;
+        }
+
         .expenses-grid,
         .revenue-grid {
             grid-template-columns: repeat(3, 1fr);
             min-width: 300px;
         }
 
-        .financial-section-width {
-            min-width: 350px !important;
+        .section-subheader[data-state="expanded"] .sub-header-grid {
+            display: grid;
         }
-
-
 
         /* Section Content */
         .section-content {
@@ -1540,23 +1556,19 @@
             overflow-y: auto;
         }
 
-        .sub-header-grid,
-        .content-grid {
-            display: grid;
+        .filter-option {
+            display: flex;
             align-items: center;
-            text-align: center;
             gap: 8px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            transition: background-color 0.2s ease;
         }
 
-        .sub-header-grid {
-            padding: 4px 0;
-            color: #6b7280;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .dark .sub-header-grid {
-            color: #9ca3af;
+        .filter-option:hover {
+            background-color: #f3f4f6;
         }
 
         .dark .filter-option:hover {
