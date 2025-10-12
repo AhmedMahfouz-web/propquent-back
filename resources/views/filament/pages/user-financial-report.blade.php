@@ -49,6 +49,69 @@
                             </div>
                         @endif
                         
+                        @if (isset($debugInfo['debug_test']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Debug Test:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['debug_test'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['all_months']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">All Months:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['all_months'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['total_done_project_transactions_main']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Total Done Project Transactions:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['total_done_project_transactions_main'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['sample_done_transaction_dates']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Sample Done Transaction Dates:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['sample_done_transaction_dates'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['project_transactions_query']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Project Transactions Query:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['project_transactions_query'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['project_transactions_found']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Project Transactions Found:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['project_transactions_found'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['project_transactions_count']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Project Transactions Count:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['project_transactions_count'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['user_transactions_for_company']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">User Transactions for Company:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['user_transactions_for_company'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['cash_calculations']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Cash Calculations:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['cash_calculations'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
                         @if (isset($debugInfo['equity_calculations']))
                             <div>
                                 <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Equity Calculations:</h4>

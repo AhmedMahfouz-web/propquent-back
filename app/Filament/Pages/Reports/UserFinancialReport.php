@@ -370,6 +370,25 @@ class UserFinancialReport extends Page implements HasForms
         }
 
         $allMonths = $this->getMonthsInRange();
+        
+        // Debug: Add simple debug info here to test
+        $this->debugInfo['debug_test'] = 'Debug is working';
+        $this->debugInfo['all_months'] = $allMonths;
+        
+        // Debug: Test simple query to see if any done project transactions exist
+        $totalDoneProjectTransactions = DB::table('project_transactions')
+            ->where('status', 'done')
+            ->count();
+        $this->debugInfo['total_done_project_transactions_main'] = $totalDoneProjectTransactions;
+        
+        // Debug: Check sample transaction dates from done transactions
+        $sampleDates = DB::table('project_transactions')
+            ->where('status', 'done')
+            ->select('transaction_date', 'financial_type', 'serving')
+            ->limit(5)
+            ->get();
+        $this->debugInfo['sample_done_transaction_dates'] = $sampleDates->toArray();
+        
         $companyData = $this->calculateCompanyFinancialData($allMonths);
 
         // Optimized user query - separate search from financial data calculation
