@@ -175,7 +175,8 @@
                                 </th>
 
                                 <!-- Status Section Header -->
-                                <th class="section-header status-header status-section-width" data-state="{{ $sectionStates['status'] }}"
+                                <th class="section-header status-header status-section-width"
+                                    data-state="{{ $sectionStates['status'] }}"
                                     wire:click.prevent="toggleSectionState('status')">
                                     <div class="header-content">
                                         <span class="section-title-full">Status & Dates</span>
@@ -549,9 +550,11 @@
                                         <span>Asset Evaluation</span>
                                         <span>Value Corrections</span>
                                         <span>Cash</span>
+                                        <span>Profit Operation</span>
+                                        <span>Profit Asset</span>
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('net_profit')" class="column-sort-btn">
-                                                Net Profit
+                                                Total Profit
                                                 @if ($sortBy === 'net_profit')
                                                     <span
                                                         class="sort-indicator">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -683,6 +686,12 @@
                                     $totalExpenses = $projectData['total_expenses'] ?? 0;
                                     $totalRevenues = $projectData['total_revenues'] ?? 0;
                                     $netProfit = $totalRevenues - $totalExpenses;
+                                    
+                                    // Calculate individual profit components
+                                    $assetRevenue = $projectData['asset_revenue'] ?? 0;
+                                    $operationRevenue = $projectData['operation_revenue'] ?? 0;
+                                    $profitAsset = $assetRevenue - $assetExpenses;
+                                    $profitOperation = $operationRevenue - $operationExpenses;
                                 @endphp
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <!-- Fixed Project Column -->
@@ -836,31 +845,25 @@
                                         data-state="{{ $sectionStates['equity'] }}"
                                         wire:key="content-equity-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="expanded-content-wrapper">
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-purple-600 dark:text-purple-400 font-medium">
-                                                        ${{ number_format($assetExpenses - ($projectData['asset_revenue'] ?? 0), 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-blue-600 dark:text-blue-400 font-medium">
-                                                        ${{ number_format($projectData['value_corrections'] ?? 0, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                        ${{ number_format($projectData['cash'] ?? 0, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                                        ${{ number_format($netProfit, 0) }}
-                                                    </span>
-                                                </div>
+                                            <div class="sub-header-grid equity-grid">
+                                                <span class="content-value text-purple-600 dark:text-purple-400 font-medium">
+                                                    ${{ number_format($assetExpenses - ($projectData['asset_revenue'] ?? 0), 0) }}
+                                                </span>
+                                                <span class="content-value text-blue-600 dark:text-blue-400 font-medium">
+                                                    ${{ number_format($projectData['value_corrections'] ?? 0, 0) }}
+                                                </span>
+                                                <span class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                    ${{ number_format($projectData['cash'] ?? 0, 0) }}
+                                                </span>
+                                                <span class="content-value font-medium {{ $profitOperation >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                                    ${{ number_format($profitOperation, 0) }}
+                                                </span>
+                                                <span class="content-value font-medium {{ $profitAsset >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                                    ${{ number_format($profitAsset, 0) }}
+                                                </span>
+                                                <span class="content-value font-bold {{ $netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                                    ${{ number_format($netProfit, 0) }}
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -879,7 +882,8 @@
                                                     @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
                                                     {{ $project->status === 'exited' ? 'Sold' : ($project->status === 'active' ? 'On Hold' : ucfirst($project->status)) }}
                                                 </span>
-                                                <span class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
+                                                <span
+                                                    class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
                                                 <span class="content-value">
                                                     @if (isset($projectData['entry_date']) && $projectData['entry_date'])
                                                         {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
@@ -1189,11 +1193,15 @@
 
         .details-grid,
         .contract-grid,
-        .equity-grid,
         .status-dates-grid,
         .status-grid {
             grid-template-columns: repeat(4, 1fr);
             min-width: 400px;
+        }
+
+        .equity-grid {
+            grid-template-columns: repeat(6, 1fr);
+            min-width: 600px;
         }
 
         .status-section-width {
