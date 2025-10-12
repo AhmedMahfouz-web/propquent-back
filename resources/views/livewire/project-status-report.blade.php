@@ -914,15 +914,12 @@
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <textarea
-                                                        wire:model.lazy="project_notes.{{ $project->id }}"
-                                                        wire:key="notes-{{ $project->id }}"
-                                                        placeholder="Add notes for this project..."
-                                                        style="width: auto; height: 50px"
+                                                    <textarea wire:model.lazy="project_notes.{{ $project->id }}" wire:key="notes-{{ $project->id }}"
+                                                        placeholder="Add notes for this project..." style="width: auto; height: 50px"
                                                         class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
                                                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                                                                focus:border-blue-500 focus:ring-1 focus:ring-blue-500
-                                                               resize-none min-h-[60px] max-h-[120px]"
+                                                               resize-none min-h-[30px] max-h-[120px]"
                                                         rows="3"></textarea>
                                                 </div>
                                             </div>
@@ -1006,7 +1003,7 @@
         }
 
         .project-column {
-            padding: 16px 16px 0;
+            padding: 4px 16px 0;
             vertical-align: top;
         }
 
@@ -1247,7 +1244,7 @@
         .section-content[data-state="expanded"] {
             width: auto !important;
             min-width: 200px !important;
-            padding: 16px 12px 4px !important;
+            padding: 4px 12px 4px !important;
         }
 
         .section-content[data-state="expanded"] .expanded-content-wrapper {
