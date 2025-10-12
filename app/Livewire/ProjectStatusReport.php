@@ -645,24 +645,20 @@ class ProjectStatusReport extends Component
 
     private function calculateAssetEvaluation($project)
     {
-        // Asset Evaluation = Total Asset Expenses - Total Asset Revenues + Asset Correction
+        // Asset Evaluation = "Paid in asset" (asset expenses) + Asset Corrections
         $assetExpenses = 0;
-        $assetRevenues = 0;
 
-        // Calculate asset expenses and revenues using the same logic as the main calculation
+        // Calculate asset expenses
         foreach ($project->transactions()->where('serving', 'asset')->where('status', 'done')->get() as $transaction) {
-            $amount = (float) $transaction->amount;
-
-            if ($this->determineTransactionType($transaction)) {
-                $assetRevenues += $amount;
-            } else {
-                $assetExpenses += $amount;
+            // We only consider expenses for "Paid in asset"
+            if (!$this->determineTransactionType($transaction)) {
+                $assetExpenses += (float) $transaction->amount;
             }
         }
 
         $assetCorrection = $this->calculateAssetCorrection($project);
 
-        return $assetExpenses - $assetRevenues + $assetCorrection;
+        return $assetExpenses + $assetCorrection;
     }
 
     private function calculateAssetCorrection($project)

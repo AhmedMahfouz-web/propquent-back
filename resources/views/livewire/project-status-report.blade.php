@@ -1210,7 +1210,6 @@
 
         .section-subheader[data-state="expanded"] .sub-header-grid {
             display: grid;
-{{ ... }}
         }
 
         /* Section Content */
