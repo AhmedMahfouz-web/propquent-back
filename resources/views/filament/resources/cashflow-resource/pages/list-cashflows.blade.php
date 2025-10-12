@@ -190,14 +190,14 @@
                             @foreach ($projects as $project)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <td style="width: 7.8125%;"
-                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
+                                        class="px-6 border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $project->key }}
                                         </span>
                                     </td>
                                     <td style="width: 11.71875%;"
-                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
+                                        class="px-6 border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $project->title }}
                                         </div>
@@ -206,7 +206,7 @@
                                         </div>
                                     </td>
                                     <td style="width: 5.46875%;"
-                                        class="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
+                                        class="px-6 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
                                         {{ $project->status === 'on-going' ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' }}">
@@ -269,7 +269,7 @@
                                                 ->get();
                                         @endphp
                                         <td style="width: 6.25%;"
-                                            class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
+                                            class="px-2 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
@@ -385,14 +385,14 @@
                             @foreach ($users as $user)
                                 <tr class="dark:hover:bg-gray-700">
                                     <td style="width: 7.8125%;"
-                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
+                                        class="px-6 border-r border-gray-200 dark:border-gray-600">
                                         <span
                                             class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                                             {{ $user->custom_id ?? 'N/A' }}
                                         </span>
                                     </td>
                                     <td style="width: 11.71875%;"
-                                        class="px-6 py-4 border-r border-gray-200 dark:border-gray-600">
+                                        class="px-6 border-r border-gray-200 dark:border-gray-600">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $user->full_name }}
                                         </div>
@@ -456,7 +456,7 @@
                                                 ->get();
                                         @endphp
                                         <td style="width: 6.25%;"
-                                            class="px-2 py-4 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
+                                            class="px-2 text-center border-r border-gray-200 dark:border-gray-600 min-h-[80px]">
                                             @if ($transactions->isEmpty())
                                                 <div class="text-gray-400 dark:text-gray-500 text-xs">-</div>
                                             @else
