@@ -469,8 +469,8 @@ class UserFinancialReport extends Page implements HasForms
         $this->debugInfo['project_transactions_query'] = [
             'months_to_show' => $monthsToShow,
             'date_range' => [
-                'start' => end($monthsToShow),
-                'end' => Carbon::parse($monthsToShow[0])->endOfMonth()->format('Y-m-d'),
+                'start' => $monthsToShow[count($monthsToShow) - 1], // Oldest month (last in array)
+                'end' => Carbon::parse($monthsToShow[0])->endOfMonth()->format('Y-m-d'), // Newest month (first in array)
             ]
         ];
 
@@ -497,8 +497,8 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->where('pt.status', 'done')
             ->whereBetween('pt.transaction_date', [
-                end($monthsToShow),
-                Carbon::parse($monthsToShow[0])->endOfMonth(),
+                $monthsToShow[count($monthsToShow) - 1], // Oldest month (last in array)
+                Carbon::parse($monthsToShow[0])->endOfMonth(), // Newest month (first in array)
             ])
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
             ->orderBy('month_date', 'desc')
@@ -665,8 +665,8 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->where('status', UserTransaction::STATUS_DONE)
             ->whereBetween('transaction_date', [
-                end($monthsToShow),
-                Carbon::parse($monthsToShow[0])->endOfMonth(),
+                $monthsToShow[count($monthsToShow) - 1], // Oldest month (last in array)
+                Carbon::parse($monthsToShow[0])->endOfMonth(), // Newest month (first in array)
             ])
             ->groupBy('month_date')
             ->get();
