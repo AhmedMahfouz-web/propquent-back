@@ -149,12 +149,12 @@ class UserFinancialReport extends Page implements HasForms
     public function getAvailableMonthsProperty(): array
     {
         $today = now()->format('Y-m-d');
-        
+
         $projectMonths = ProjectTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(
-                CASE 
+                CASE
                     WHEN status = "done" AND (
-                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR
                         (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
                         (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
                         (actual_date IS NULL AND transaction_date > "' . $today . '")
@@ -162,9 +162,9 @@ class UserFinancialReport extends Page implements HasForms
                     WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
                     ELSE NULL
                 END, "%Y-%m-01") as month_date'))
-            ->whereNotNull(DB::raw('CASE 
+            ->whereNotNull(DB::raw('CASE
                 WHEN status = "done" AND (
-                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR
                     (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
                     (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
                     (actual_date IS NULL AND transaction_date > "' . $today . '")
@@ -176,9 +176,9 @@ class UserFinancialReport extends Page implements HasForms
 
         $userMonths = UserTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(
-                CASE 
+                CASE
                     WHEN status = "done" AND (
-                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR
                         (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
                         (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
                         (actual_date IS NULL AND transaction_date > "' . $today . '")
@@ -186,9 +186,9 @@ class UserFinancialReport extends Page implements HasForms
                     WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
                     ELSE NULL
                 END, "%Y-%m-01") as month_date'))
-            ->whereNotNull(DB::raw('CASE 
+            ->whereNotNull(DB::raw('CASE
                 WHEN status = "done" AND (
-                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
+                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR
                     (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
                     (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
                     (actual_date IS NULL AND transaction_date > "' . $today . '")
@@ -246,12 +246,6 @@ class UserFinancialReport extends Page implements HasForms
                 'icon' => 'heroicon-o-chart-pie',
                 'description' => 'Percentage of total equity'
             ],
-            'total_profit' => [
-                'label' => 'Total Profit',
-                'color' => 'amber',
-                'icon' => 'heroicon-o-trophy',
-                'description' => 'Total profit earned'
-            ],
             'profit_asset' => [
                 'label' => 'Profit Asset',
                 'color' => 'cyan',
@@ -264,6 +258,12 @@ class UserFinancialReport extends Page implements HasForms
                 'icon' => 'heroicon-o-cog-6-tooth',
                 'description' => 'Profit from operations'
             ],
+            'total_profit' => [
+                'label' => 'Total Profit',
+                'color' => 'amber',
+                'icon' => 'heroicon-o-trophy',
+                'description' => 'Total profit earned'
+            ],
         ];
     }
 
@@ -271,7 +271,7 @@ class UserFinancialReport extends Page implements HasForms
     {
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
-        
+
         // Use explicit color mappings to ensure Tailwind generates the classes
         $colorMap = [
             'green' => [
@@ -317,7 +317,7 @@ class UserFinancialReport extends Page implements HasForms
                 'badge' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
             ],
         ];
-        
+
         return $colorMap[$color] ?? [
             'bg' => 'bg-gray-100 dark:bg-gray-900',
             'text' => 'text-gray-800 dark:text-gray-200',
@@ -330,7 +330,7 @@ class UserFinancialReport extends Page implements HasForms
     {
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
-        
+
         // Darker colors for totals
         $colorMap = [
             'green' => [
@@ -362,7 +362,7 @@ class UserFinancialReport extends Page implements HasForms
                 'text' => 'text-indigo-900 dark:text-indigo-100',
             ],
         ];
-        
+
         return $colorMap[$color] ?? [
             'bg' => 'bg-gray-200 dark:bg-gray-800',
             'text' => 'text-gray-900 dark:text-gray-100',
@@ -471,7 +471,7 @@ class UserFinancialReport extends Page implements HasForms
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
                 DB::raw("DATE_FORMAT(
-                    CASE 
+                    CASE
                         WHEN pt.status = 'done' THEN COALESCE(pt.actual_date, pt.transaction_date)
                         WHEN pt.status = 'pending' THEN pt.transaction_date
                     END, '%Y-%m-01') as month_date"),
@@ -480,7 +480,7 @@ class UserFinancialReport extends Page implements HasForms
                 DB::raw('SUM(pt.amount) as total_amount'),
             )
             ->whereIn('pt.status', ['done', 'pending'])
-            ->whereBetween(DB::raw('CASE 
+            ->whereBetween(DB::raw('CASE
                 WHEN pt.status = "done" THEN COALESCE(pt.actual_date, pt.transaction_date)
                 WHEN pt.status = "pending" THEN pt.transaction_date
             END'), [
@@ -526,9 +526,9 @@ class UserFinancialReport extends Page implements HasForms
             'withdrawals' => [],
             'equity' => [],
             'equity_percentage' => [],
-            'total_profit' => [],
             'profit_asset' => [],
             'profit_operation' => [],
+            'total_profit' => [],
         ];
 
         // Initialize all months
@@ -537,16 +537,16 @@ class UserFinancialReport extends Page implements HasForms
             $userData['withdrawals'][$month] = 0;
             $userData['equity'][$month] = 0;
             $userData['equity_percentage'][$month] = 0;
-            $userData['total_profit'][$month] = 0;
             $userData['profit_asset'][$month] = 0;
             $userData['profit_operation'][$month] = 0;
+            $userData['total_profit'][$month] = 0;
         }
 
         // Get user transactions - simplified approach matching company report
         $userTransactionsData = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(
-                    CASE 
+                    CASE
                         WHEN status = 'done' THEN COALESCE(actual_date, transaction_date)
                         WHEN status = 'pending' THEN transaction_date
                     END, '%Y-%m-01') as month_date"),
@@ -612,21 +612,21 @@ class UserFinancialReport extends Page implements HasForms
     {
         $reportData = $companyData['reportData'];
         $monthlyTotals = $companyData['monthlyTotals'];
-        
+
         // Calculate user financials (deposits/withdrawals)
         $userFinancials = ['deposits' => [], 'withdrawals' => [], 'net' => []];
-        
+
         // Initialize all months with zero
         foreach ($monthsToShow as $month) {
             $userFinancials['deposits'][$month] = 0;
             $userFinancials['withdrawals'][$month] = 0;
             $userFinancials['net'][$month] = 0;
         }
-        
+
         $userTransactions = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(
-                    CASE 
+                    CASE
                         WHEN status = 'done' THEN COALESCE(actual_date, transaction_date)
                         WHEN status = 'pending' THEN transaction_date
                     END, '%Y-%m-01') as month_date"),
@@ -634,7 +634,7 @@ class UserFinancialReport extends Page implements HasForms
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
             )
             ->whereIn('status', ['done', 'pending'])
-            ->whereBetween(DB::raw('CASE 
+            ->whereBetween(DB::raw('CASE
                 WHEN status = "done" THEN COALESCE(actual_date, transaction_date)
                 WHEN status = "pending" THEN transaction_date
             END'), [
@@ -655,7 +655,7 @@ class UserFinancialReport extends Page implements HasForms
 
         // Calculate Evaluation (Expense - Revenue for each serving)
         $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
-        
+
         // Initialize evaluation arrays
         foreach ($monthsToShow as $month) {
             $evaluation['asset'][$month] = 0;

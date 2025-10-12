@@ -578,69 +578,69 @@ class ProjectFinancialReport extends Page implements HasForms
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
         
-        // Darker colors for totals
+        // Only text colors for totals (no background)
         $colorMap = [
             'green' => [
-                'bg' => 'bg-green-200 dark:bg-green-800',
-                'text' => 'text-green-900 dark:text-green-100',
+                'bg' => '',
+                'text' => 'text-green-700 dark:text-green-400',
             ],
             'emerald' => [
-                'bg' => 'bg-emerald-200 dark:bg-emerald-800',
-                'text' => 'text-emerald-900 dark:text-emerald-100',
+                'bg' => '',
+                'text' => 'text-emerald-700 dark:text-emerald-400',
             ],
             'teal' => [
-                'bg' => 'bg-teal-200 dark:bg-teal-800',
-                'text' => 'text-teal-900 dark:text-teal-100',
+                'bg' => '',
+                'text' => 'text-teal-700 dark:text-teal-400',
             ],
             'red' => [
-                'bg' => 'bg-red-200 dark:bg-red-800',
-                'text' => 'text-red-900 dark:text-red-100',
+                'bg' => '',
+                'text' => 'text-red-700 dark:text-red-400',
             ],
             'rose' => [
-                'bg' => 'bg-rose-200 dark:bg-rose-800',
-                'text' => 'text-rose-900 dark:text-rose-100',
+                'bg' => '',
+                'text' => 'text-rose-700 dark:text-rose-400',
             ],
             'pink' => [
-                'bg' => 'bg-pink-200 dark:bg-pink-800',
-                'text' => 'text-pink-900 dark:text-pink-100',
+                'bg' => '',
+                'text' => 'text-pink-700 dark:text-pink-400',
             ],
             'blue' => [
-                'bg' => 'bg-blue-200 dark:bg-blue-800',
-                'text' => 'text-blue-900 dark:text-blue-100',
+                'bg' => '',
+                'text' => 'text-blue-700 dark:text-blue-400',
             ],
             'cyan' => [
-                'bg' => 'bg-cyan-200 dark:bg-cyan-800',
-                'text' => 'text-cyan-900 dark:text-cyan-100',
+                'bg' => '',
+                'text' => 'text-cyan-700 dark:text-cyan-400',
             ],
             'amber' => [
-                'bg' => 'bg-amber-200 dark:bg-amber-800',
-                'text' => 'text-amber-900 dark:text-amber-100',
+                'bg' => '',
+                'text' => 'text-amber-700 dark:text-amber-400',
             ],
             'orange' => [
-                'bg' => 'bg-orange-200 dark:bg-orange-800',
-                'text' => 'text-orange-900 dark:text-orange-100',
+                'bg' => '',
+                'text' => 'text-orange-700 dark:text-orange-400',
             ],
             'lime' => [
-                'bg' => 'bg-lime-200 dark:bg-lime-800',
-                'text' => 'text-lime-900 dark:text-lime-100',
+                'bg' => '',
+                'text' => 'text-lime-700 dark:text-lime-400',
             ],
             'violet' => [
-                'bg' => 'bg-violet-200 dark:bg-violet-800',
-                'text' => 'text-violet-900 dark:text-violet-100',
+                'bg' => '',
+                'text' => 'text-violet-700 dark:text-violet-400',
             ],
             'purple' => [
-                'bg' => 'bg-purple-200 dark:bg-purple-800',
-                'text' => 'text-purple-900 dark:text-purple-100',
+                'bg' => '',
+                'text' => 'text-purple-700 dark:text-purple-400',
             ],
             'indigo' => [
-                'bg' => 'bg-indigo-200 dark:bg-indigo-800',
-                'text' => 'text-indigo-900 dark:text-indigo-100',
+                'bg' => '',
+                'text' => 'text-indigo-700 dark:text-indigo-400',
             ],
         ];
         
         return $colorMap[$color] ?? [
-            'bg' => 'bg-gray-200 dark:bg-gray-800',
-            'text' => 'text-gray-900 dark:text-gray-100',
+            'bg' => '',
+            'text' => 'text-gray-700 dark:text-gray-400',
         ];
     }
 }
