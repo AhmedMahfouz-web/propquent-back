@@ -150,12 +150,24 @@ class UserFinancialReport extends Page implements HasForms
     {
         $today = now()->format('Y-m-d');
 
-        $projectMonths = ProjectTransaction::where('status', 'done')
+        // Debug: Check what transactions exist
+        $allProjectTransactions = ProjectTransaction::select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status')
+            ->get();
+        $this->debugInfo['project_transactions_by_status'] = $allProjectTransactions->toArray();
+
+        $allUserTransactions = UserTransaction::select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status')
+            ->get();
+        $this->debugInfo['user_transactions_by_status'] = $allUserTransactions->toArray();
+
+        // Temporarily include both done and pending for testing
+        $projectMonths = ProjectTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
             ->whereNotNull(DB::raw('COALESCE(actual_date, transaction_date)'))
             ->distinct();
 
-        $userMonths = UserTransaction::where('status', 'done')
+        $userMonths = UserTransaction::whereIn('status', ['done', 'pending'])
             ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
             ->whereNotNull(DB::raw('COALESCE(actual_date, transaction_date)'))
             ->distinct();
@@ -342,6 +354,8 @@ class UserFinancialReport extends Page implements HasForms
         $this->resetPage();
     }
 
+    public $debugInfo = [];
+
     #[Computed]
     public function reportData(): array
     {
@@ -351,6 +365,7 @@ class UserFinancialReport extends Page implements HasForms
                 'userFinancialData' => [],
                 'allMonths' => [],
                 'companyData' => [],
+                'debugInfo' => [],
             ];
         }
 
@@ -390,6 +405,7 @@ class UserFinancialReport extends Page implements HasForms
             'userFinancialData' => $userFinancialData,
             'allMonths' => $allMonths,
             'companyData' => $companyData,
+            'debugInfo' => $this->debugInfo,
         ];
     }
 
@@ -441,7 +457,7 @@ class UserFinancialReport extends Page implements HasForms
                 'pt.serving as serving_name',
                 DB::raw('SUM(pt.amount) as total_amount'),
             )
-            ->where('pt.status', 'done')
+            ->whereIn('pt.status', ['done', 'pending'])
             ->whereBetween(DB::raw('COALESCE(pt.actual_date, pt.transaction_date)'), [
                 end($monthsToShow),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
@@ -513,7 +529,7 @@ class UserFinancialReport extends Page implements HasForms
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals"),
             )
             ->where('user_id', $user->id)
-            ->where('status', 'done')
+            ->whereIn('status', ['done', 'pending'])
             ->groupBy('month_date')
             ->get()
             ->keyBy('month_date');
@@ -558,6 +574,15 @@ class UserFinancialReport extends Page implements HasForms
                 $userData['equity_percentage'][$month] = 0;
             }
 
+            // Debug logging
+            $this->debugInfo['equity_calculations'][$month] = [
+                'user_equity' => $userData['equity'][$month],
+                'total_equity' => $totalEquity,
+                'equity_percentage' => $userData['equity_percentage'][$month],
+                'deposits' => $deposits,
+                'withdrawals' => $withdrawals
+            ];
+
             $previousEquity = $userData['equity'][$month];
         }
 
@@ -592,7 +617,7 @@ class UserFinancialReport extends Page implements HasForms
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as total_deposits"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
             )
-            ->where('status', 'done')
+            ->whereIn('status', ['done', 'pending'])
             ->whereBetween(DB::raw('COALESCE(actual_date, transaction_date)'), [
                 end($monthsToShow),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
@@ -647,6 +672,13 @@ class UserFinancialReport extends Page implements HasForms
         $equityTotal = [];
         foreach ($monthsToShow as $month) {
             $equityTotal[$month] = ($evaluation['total'][$month] ?? 0) + ($cash[$month] ?? 0);
+            
+            // Debug logging
+            $this->debugInfo['company_equity_calculations'][$month] = [
+                'evaluation' => $evaluation['total'][$month] ?? 0,
+                'cash' => $cash[$month] ?? 0,
+                'total_equity' => $equityTotal[$month]
+            ];
         }
 
         return $equityTotal;

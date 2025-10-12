@@ -15,6 +15,7 @@
                 $users = $reportData['users'];
                 $userFinancialData = $reportData['userFinancialData'];
                 $allMonths = $reportData['allMonths'];
+                $debugInfo = $reportData['debugInfo'] ?? [];
                 $selectedMetrics = $this->selectedMetrics;
 
                 // Get metric configuration with colors and labels
@@ -28,6 +29,42 @@
                     }
                 }
             @endphp
+
+            {{-- Debug Information --}}
+            @if (!empty($debugInfo))
+                <div class="mt-6 mb-6 p-4 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                    <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-3">Debug Information</h3>
+                    <div class="space-y-4">
+                        @if (isset($debugInfo['project_transactions_by_status']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Project Transactions by Status:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['project_transactions_by_status'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['user_transactions_by_status']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">User Transactions by Status:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['user_transactions_by_status'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['equity_calculations']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Equity Calculations:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['equity_calculations'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['company_equity_calculations']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Company Equity Calculations:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['company_equity_calculations'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 compact-table">
