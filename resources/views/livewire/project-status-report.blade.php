@@ -870,39 +870,30 @@
                                         data-state="{{ $sectionStates['status'] }}"
                                         wire:key="content-status-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="expanded-content-wrapper">
-                                                <div class="content-row">
-                                                    <span
-                                                        class="status-badge
-                                                        @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                                        @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
-                                                        @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
-                                                        @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
-                                                        {{ $project->status === 'exited' ? 'Sold' : ($project->status === 'active' ? 'On Hold' : ucfirst($project->status)) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span class="content-value">
-                                                        @if (isset($projectData['entry_date']) && $projectData['entry_date'])
-                                                            {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
-                                                        @else
-                                                            <span class="text-gray-400">N/A</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span class="content-value">
-                                                        @if (isset($projectData['exit_date']) && $projectData['exit_date'])
-                                                            {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
-                                                        @else
-                                                            <span class="text-gray-400">-</span>
-                                                        @endif
-                                                    </span>
-                                                </div>
+                                            <div class="sub-header-grid status-grid">
+                                                <span
+                                                    class="status-badge
+                                                    @if ($project->status === 'active') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                                    @elseif($project->status === 'exited') bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
+                                                    @elseif($project->status === 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                                    @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 @endif">
+                                                    {{ $project->status === 'exited' ? 'Sold' : ($project->status === 'active' ? 'On Hold' : ucfirst($project->status)) }}
+                                                </span>
+                                                <span class="content-value">{{ ucfirst($project->stage ?? 'N/A') }}</span>
+                                                <span class="content-value">
+                                                    @if (isset($projectData['entry_date']) && $projectData['entry_date'])
+                                                        {{ \Carbon\Carbon::parse($projectData['entry_date'])->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-gray-400">N/A</span>
+                                                    @endif
+                                                </span>
+                                                <span class="content-value">
+                                                    @if (isset($projectData['exit_date']) && $projectData['exit_date'])
+                                                        {{ \Carbon\Carbon::parse($projectData['exit_date'])->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-gray-400">-</span>
+                                                    @endif
+                                                </span>
                                             </div>
                                         </div>
                                     </td>
@@ -1199,7 +1190,8 @@
         .details-grid,
         .contract-grid,
         .equity-grid,
-        .status-dates-grid {
+        .status-dates-grid,
+        .status-grid {
             grid-template-columns: repeat(4, 1fr);
             min-width: 400px;
         }
