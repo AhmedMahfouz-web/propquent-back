@@ -446,6 +446,15 @@ class UserFinancialReport extends Page implements HasForms
             $monthlyTotals['expense'][$month] = 0;
         }
 
+        // Debug: Add logging for project transactions query
+        $this->debugInfo['project_transactions_query'] = [
+            'months_to_show' => $monthsToShow,
+            'date_range' => [
+                'start' => end($monthsToShow),
+                'end' => Carbon::parse($monthsToShow[0])->endOfMonth()->format('Y-m-d'),
+            ]
+        ];
+
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
                 DB::raw("DATE_FORMAT(
@@ -465,6 +474,18 @@ class UserFinancialReport extends Page implements HasForms
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
             ->orderBy('month_date', 'desc')
             ->cursor();
+
+        // Debug: Count how many project transactions were found
+        $projectTransactionsArray = [];
+        foreach ($projectTransactions as $transaction) {
+            $projectTransactionsArray[] = [
+                'month_date' => $transaction->month_date,
+                'type' => $transaction->type,
+                'serving_name' => $transaction->serving_name,
+                'total_amount' => $transaction->total_amount,
+            ];
+        }
+        $this->debugInfo['project_transactions_found'] = $projectTransactionsArray;
 
         foreach ($projectTransactions as $transaction) {
             $type = strtolower($transaction->type);
@@ -625,6 +646,9 @@ class UserFinancialReport extends Page implements HasForms
             ->groupBy('month_date')
             ->get();
 
+        // Debug: Log user transactions found for company calculation
+        $this->debugInfo['user_transactions_for_company'] = $userTransactions->toArray();
+
         foreach ($userTransactions as $transaction) {
             $month = $transaction->month_date;
             if (in_array($month, $monthsToShow)) {
@@ -665,6 +689,17 @@ class UserFinancialReport extends Page implements HasForms
             $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
 
             $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+            
+            // Debug: Log cash calculation for each month
+            $this->debugInfo['cash_calculations'][$month] = [
+                'previous_month_cash' => $previousMonthCash,
+                'deposits' => $deposits,
+                'revenue' => $revenue,
+                'withdrawals' => $withdrawals,
+                'expense' => $expense,
+                'calculated_cash' => $cash[$month]
+            ];
+            
             $previousMonthCash = $cash[$month];
         }
 
