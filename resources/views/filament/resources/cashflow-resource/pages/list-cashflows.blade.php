@@ -47,7 +47,7 @@
                     @php
                         $monthsToShow = $this->monthsFilter ?? 3;
                         $baseWidth = 1600; // Base width for 3 months
-                        $dynamicWidth = $baseWidth + (($monthsToShow - 3) * 400); // Add 400px per additional month
+                        $dynamicWidth = $baseWidth + ($monthsToShow - 3) * 400; // Add 400px per additional month
                         $minWidth = max($dynamicWidth, $baseWidth); // Ensure minimum width
                     @endphp
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
@@ -220,39 +220,51 @@
 
                                             // Get transactions using smart date logic
                                             $today = now()->startOfDay();
-                                            
-                                            $transactions = $project->transactions()
+
+                                            $transactions = $project
+                                                ->transactions()
                                                 ->where(function ($query) use ($today, $weekStart, $weekEnd) {
-                                                    $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions with actual_date in past/present (already completed)
-                                                        $q->where('status', 'done')
-                                                          ->whereNotNull('actual_date')
-                                                          ->where('actual_date', '<=', $today)
-                                                          ->whereBetween('actual_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions without actual_date but transaction_date in past/present
-                                                        $q->where('status', 'done')
-                                                          ->whereNull('actual_date')
-                                                          ->where('transaction_date', '<=', $today)
-                                                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions with future actual_date (scheduled)
-                                                        $q->where('status', 'done')
-                                                          ->whereNotNull('actual_date')
-                                                          ->where('actual_date', '>', $today)
-                                                          ->whereBetween('actual_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions with future transaction_date (no actual_date)
-                                                        $q->where('status', 'done')
-                                                          ->whereNull('actual_date')
-                                                          ->where('transaction_date', '>', $today)
-                                                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Pending transactions with future due_date
-                                                        $q->where('status', 'pending')
-                                                          ->where('due_date', '>', $today)
-                                                          ->whereBetween('due_date', [$weekStart, $weekEnd]);
-                                                    });
+                                                    $query
+                                                        ->where(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions with actual_date in past/present (already completed)
+                                                            $q->where('status', 'done')
+                                                                ->whereNotNull('actual_date')
+                                                                ->where('actual_date', '<=', $today)
+                                                                ->whereBetween('actual_date', [$weekStart, $weekEnd]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions without actual_date but transaction_date in past/present
+                                                            $q->where('status', 'done')
+                                                                ->whereNull('actual_date')
+                                                                ->where('transaction_date', '<=', $today)
+                                                                ->whereBetween('transaction_date', [
+                                                                    $weekStart,
+                                                                    $weekEnd,
+                                                                ]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions with future actual_date (scheduled)
+                                                            $q->where('status', 'done')
+                                                                ->whereNotNull('actual_date')
+                                                                ->where('actual_date', '>', $today)
+                                                                ->whereBetween('actual_date', [$weekStart, $weekEnd]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions with future transaction_date (no actual_date)
+                                                            $q->where('status', 'done')
+                                                                ->whereNull('actual_date')
+                                                                ->where('transaction_date', '>', $today)
+                                                                ->whereBetween('transaction_date', [
+                                                                    $weekStart,
+                                                                    $weekEnd,
+                                                                ]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Pending transactions with future due_date
+                                                            $q->where('status', 'pending')
+                                                                ->where('due_date', '>', $today)
+                                                                ->whereBetween('due_date', [$weekStart, $weekEnd]);
+                                                        });
                                                 })
                                                 ->get();
                                         @endphp
@@ -265,9 +277,7 @@
                                                     <div class="mb-1 p-1 rounded text-xs cursor-help"
                                                         style="{{ $transaction->financial_type === 'revenue' ? 'background-color: #dcfce7; border: 1px solid #86efac; color: #166534; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' : 'background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' }}"
                                                         title="{{ ucfirst($transaction->financial_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ $transaction->status === 'done' ? \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') : \Carbon\Carbon::parse($transaction->due_date)->format('M j') }}">
-                                                        <div style="font-size: 10px; font-weight: 500; margin-bottom: 2px;">
-                                                            {{ $transaction->financial_type === 'revenue' ? 'REV' : 'EXP' }}
-                                                        </div>
+
                                                         <div style="font-size: 11px;">
                                                             {{ number_format($transaction->amount, 0) }}
                                                         </div>
@@ -394,39 +404,54 @@
                                             $weekEnd = $weekStart->copy()->endOfWeek();
                                             // Get user transactions using smart date logic
                                             $today = now()->startOfDay();
-                                            
-                                            $transactions = $user->transactions()
+
+                                            $transactions = $user
+                                                ->transactions()
                                                 ->where(function ($query) use ($today, $weekStart, $weekEnd) {
-                                                    $query->where(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions with actual_date in past/present
-                                                        $q->where('status', 'done')
-                                                          ->whereNotNull('actual_date')
-                                                          ->where('actual_date', '<=', $today)
-                                                          ->whereBetween('actual_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions without actual_date but transaction_date in past/present
-                                                        $q->where('status', 'done')
-                                                          ->whereNull('actual_date')
-                                                          ->where('transaction_date', '<=', $today)
-                                                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions with future actual_date (scheduled)
-                                                        $q->where('status', 'done')
-                                                          ->whereNotNull('actual_date')
-                                                          ->where('actual_date', '>', $today)
-                                                          ->whereBetween('actual_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Done transactions with future transaction_date (no actual_date)
-                                                        $q->where('status', 'done')
-                                                          ->whereNull('actual_date')
-                                                          ->where('transaction_date', '>', $today)
-                                                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                                    })->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
-                                                        // Pending transactions with future transaction_date
-                                                        $q->where('status', 'pending')
-                                                          ->where('transaction_date', '>', $today)
-                                                          ->whereBetween('transaction_date', [$weekStart, $weekEnd]);
-                                                    });
+                                                    $query
+                                                        ->where(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions with actual_date in past/present
+                                                            $q->where('status', 'done')
+                                                                ->whereNotNull('actual_date')
+                                                                ->where('actual_date', '<=', $today)
+                                                                ->whereBetween('actual_date', [$weekStart, $weekEnd]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions without actual_date but transaction_date in past/present
+                                                            $q->where('status', 'done')
+                                                                ->whereNull('actual_date')
+                                                                ->where('transaction_date', '<=', $today)
+                                                                ->whereBetween('transaction_date', [
+                                                                    $weekStart,
+                                                                    $weekEnd,
+                                                                ]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions with future actual_date (scheduled)
+                                                            $q->where('status', 'done')
+                                                                ->whereNotNull('actual_date')
+                                                                ->where('actual_date', '>', $today)
+                                                                ->whereBetween('actual_date', [$weekStart, $weekEnd]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Done transactions with future transaction_date (no actual_date)
+                                                            $q->where('status', 'done')
+                                                                ->whereNull('actual_date')
+                                                                ->where('transaction_date', '>', $today)
+                                                                ->whereBetween('transaction_date', [
+                                                                    $weekStart,
+                                                                    $weekEnd,
+                                                                ]);
+                                                        })
+                                                        ->orWhere(function ($q) use ($today, $weekStart, $weekEnd) {
+                                                            // Pending transactions with future transaction_date
+                                                            $q->where('status', 'pending')
+                                                                ->where('transaction_date', '>', $today)
+                                                                ->whereBetween('transaction_date', [
+                                                                    $weekStart,
+                                                                    $weekEnd,
+                                                                ]);
+                                                        });
                                                 })
                                                 ->get();
                                         @endphp
@@ -439,7 +464,8 @@
                                                     <div class="mb-1 p-1 rounded text-xs cursor-help"
                                                         style="{{ $transaction->transaction_type === 'deposit' ? 'background-color: #dcfce7; border: 1px solid #86efac; color: #166534; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' : 'background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' }}"
                                                         title="{{ ucfirst($transaction->transaction_type) }} ({{ ucfirst($transaction->status) }}) - Date: {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('M j') }}">
-                                                        <div style="font-size: 10px; font-weight: 500; margin-bottom: 2px;">
+                                                        <div
+                                                            style="font-size: 10px; font-weight: 500; margin-bottom: 2px;">
                                                             {{ $transaction->transaction_type === 'deposit' ? 'DEP' : 'WTH' }}
                                                         </div>
                                                         <div style="font-size: 11px;">
@@ -464,9 +490,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             const projectContainer = document.getElementById('project-table-container');
             const userContainer = document.getElementById('user-table-container');
-            
+
             let isScrolling = false;
-            
+
             // Sync horizontal scroll from project table to user table
             projectContainer.addEventListener('scroll', function() {
                 if (!isScrolling) {
@@ -477,7 +503,7 @@
                     }, 10);
                 }
             });
-            
+
             // Sync horizontal scroll from user table to project table
             userContainer.addEventListener('scroll', function() {
                 if (!isScrolling) {

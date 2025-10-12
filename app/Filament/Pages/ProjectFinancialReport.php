@@ -138,26 +138,16 @@ class ProjectFinancialReport extends Page implements HasForms
     {
         $today = now()->format('Y-m-d');
         
-        $months = ProjectTransaction::whereIn('status', ['done', 'pending'])
+        $months = ProjectTransaction::where('status', 'done')
             ->select(DB::raw('DATE_FORMAT(
                 CASE 
-                    WHEN status = "done" AND (
-                        (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
-                        (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
-                        (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
-                        (actual_date IS NULL AND transaction_date > "' . $today . '")
-                    ) THEN COALESCE(actual_date, transaction_date)
-                    WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                    WHEN actual_date IS NOT NULL AND actual_date <= "' . $today . '" THEN actual_date
+                    WHEN actual_date IS NULL AND transaction_date <= "' . $today . '" THEN transaction_date
                     ELSE NULL
                 END, "%Y-%m-01") as month_date'))
             ->whereNotNull(DB::raw('CASE 
-                WHEN status = "done" AND (
-                    (actual_date IS NOT NULL AND actual_date <= "' . $today . '") OR 
-                    (actual_date IS NULL AND transaction_date <= "' . $today . '") OR
-                    (actual_date IS NOT NULL AND actual_date > "' . $today . '") OR
-                    (actual_date IS NULL AND transaction_date > "' . $today . '")
-                ) THEN COALESCE(actual_date, transaction_date)
-                WHEN status = "pending" AND transaction_date > "' . $today . '" THEN transaction_date
+                WHEN actual_date IS NOT NULL AND actual_date <= "' . $today . '" THEN actual_date
+                WHEN actual_date IS NULL AND transaction_date <= "' . $today . '" THEN transaction_date
                 ELSE NULL
             END'))
             ->distinct()
@@ -222,7 +212,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
     private function getProjectFinancialData(Project $project, array $allMonths): array
     {
-        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash', 'current_cash', 'projected_cash'], 0)];
+        $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => [], 'totals' => array_fill_keys(['evaluation_asset', 'value_correction', 'expense_operation', 'expense_asset', 'expense_total', 'revenue_operation', 'revenue_asset', 'revenue_total', 'profit_operation', 'profit_asset', 'total_profit'], 0)];
         foreach ($allMonths as $month) {
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
@@ -233,7 +223,7 @@ class ProjectFinancialReport extends Page implements HasForms
             $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
             $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
             
-            // Determine how to handle this transaction based on status and dates
+            // Only include done transactions
             if ($transaction->status === 'done') {
                 if ($actualDate && $actualDate->lte($today)) {
                     // Done transaction with actual date in past/present - use actual_date
@@ -241,25 +231,12 @@ class ProjectFinancialReport extends Page implements HasForms
                 } elseif (!$actualDate && $transactionDate->lte($today)) {
                     // Done transaction without actual_date but transaction_date in past/present
                     $dateToUse = $transaction->transaction_date;
-                } elseif ($actualDate && $actualDate->gt($today)) {
-                    // Done transaction with future actual_date - treat as pending, use actual_date for projection
-                    $dateToUse = $transaction->actual_date;
-                } elseif (!$actualDate && $transactionDate->gt($today)) {
-                    // Done transaction with future transaction_date - treat as pending
-                    $dateToUse = $transaction->transaction_date;
                 } else {
-                    continue; // Skip if logic doesn't match
-                }
-            } elseif ($transaction->status === 'pending') {
-                if ($transactionDate->gt($today)) {
-                    // Pending transaction with future date - include in projections
-                    $dateToUse = $transaction->transaction_date;
-                } else {
-                    // Pending transaction with past date - ignore (overdue)
+                    // Skip future done transactions or other cases
                     continue;
                 }
             } else {
-                // Skip cancelled or other status transactions
+                // Skip pending, cancelled or other status transactions
                 continue;
             }
             
@@ -274,80 +251,39 @@ class ProjectFinancialReport extends Page implements HasForms
             }
         }
         foreach ($data['months'] as $month => &$monthData) {
-            // Calculate derived metrics
-            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
-            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
-            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
-            
-            // Calculate new total fields
-            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
-            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
-            
             // Get Value Correction from database
             $monthData['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
             
             // Calculate Evaluation Asset = Total Asset Expenses - Total Asset Revenues + Value Correction
             $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
             
+            // Calculate total fields
+            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
+            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
+            
+            // Calculate derived profit metrics
+            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
+            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
+            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            
             foreach ($data['totals'] as $key => &$total) {
                 $total += $monthData[$key];
             }
         }
         
-        // Calculate cumulative cashflow for each month
-        $this->calculateCumulativeCashflow($data, $allMonths);
-        
         return $data;
     }
 
-    private function calculateCumulativeCashflow(array &$data, array $allMonths): void
-    {
-        $cumulativeCash = 0;
-        $today = now()->startOfDay();
-        
-        // Sort months chronologically
-        $sortedMonths = $allMonths;
-        sort($sortedMonths);
-        
-        // First pass: Calculate cumulative cash including all transactions (done + future done + pending future)
-        foreach ($sortedMonths as $month) {
-            if (isset($data['months'][$month])) {
-                // Calculate net cash flow for this month (revenue - expense)
-                $monthlyNetCash = $data['months'][$month]['revenue_total'] - $data['months'][$month]['expense_total'];
-                
-                // Add to cumulative cash
-                $cumulativeCash += $monthlyNetCash;
-                
-                // Store cumulative cash for this month
-                $data['months'][$month]['cumulative_cash'] = $cumulativeCash;
-                
-                // Also store current cash (what we have today including future done transactions)
-                $monthDate = \Carbon\Carbon::parse($month)->startOfDay();
-                if ($monthDate->lte($today)) {
-                    // This month is current or past - include in current cash
-                    $data['months'][$month]['current_cash'] = $cumulativeCash;
-                } else {
-                    // This month is future - show projected cash
-                    $data['months'][$month]['current_cash'] = $cumulativeCash;
-                    $data['months'][$month]['projected_cash'] = $cumulativeCash;
-                }
-            }
-        }
-        
-        // Add cumulative_cash to totals structure (this includes all transactions)
-        $data['totals']['cumulative_cash'] = $cumulativeCash;
-        $data['totals']['current_cash'] = $cumulativeCash; // Show total including future done transactions
-    }
 
     private function calculateFinancialSummary($projectsQuery, array $allMonths): array
     {
-        $summary = ['totals' => array_fill_keys(['revenue_operation', 'revenue_asset', 'revenue_total', 'expense_operation', 'expense_asset', 'expense_total', 'profit_operation', 'profit_asset', 'total_profit', 'value_correction', 'evaluation_asset', 'cumulative_cash', 'current_cash', 'projected_cash'], 0), 'months' => []];
+        $summary = ['totals' => array_fill_keys(['evaluation_asset', 'value_correction', 'expense_operation', 'expense_asset', 'expense_total', 'revenue_operation', 'revenue_asset', 'revenue_total', 'profit_operation', 'profit_asset', 'total_profit'], 0), 'months' => []];
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
         $projectKeys = (clone $projectsQuery)->pluck('key');
         $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)
-            ->whereIn('status', ['done', 'pending'])
+            ->where('status', 'done')
             ->get();
         $today = now()->startOfDay();
         
@@ -356,7 +292,7 @@ class ProjectFinancialReport extends Page implements HasForms
             $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
             $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
             
-            // Determine how to handle this transaction based on status and dates
+            // Only include done transactions
             if ($transaction->status === 'done') {
                 if ($actualDate && $actualDate->lte($today)) {
                     // Done transaction with actual date in past/present - use actual_date
@@ -364,25 +300,12 @@ class ProjectFinancialReport extends Page implements HasForms
                 } elseif (!$actualDate && $transactionDate->lte($today)) {
                     // Done transaction without actual_date but transaction_date in past/present
                     $dateToUse = $transaction->transaction_date;
-                } elseif ($actualDate && $actualDate->gt($today)) {
-                    // Done transaction with future actual_date - treat as pending, use actual_date for projection
-                    $dateToUse = $transaction->actual_date;
-                } elseif (!$actualDate && $transactionDate->gt($today)) {
-                    // Done transaction with future transaction_date - treat as pending
-                    $dateToUse = $transaction->transaction_date;
                 } else {
-                    continue; // Skip if logic doesn't match
-                }
-            } elseif ($transaction->status === 'pending') {
-                if ($transactionDate->gt($today)) {
-                    // Pending transaction with future date - include in projections
-                    $dateToUse = $transaction->transaction_date;
-                } else {
-                    // Pending transaction with past date - ignore (overdue)
+                    // Skip future done transactions or other cases
                     continue;
                 }
             } else {
-                // Skip cancelled or other status transactions
+                // Skip non-done transactions
                 continue;
             }
             
@@ -397,15 +320,6 @@ class ProjectFinancialReport extends Page implements HasForms
             }
         }
         foreach ($summary['months'] as $month => &$monthData) {
-            // Calculate derived metrics
-            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
-            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
-            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
-            
-            // Calculate new total fields
-            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
-            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
-            
             // Calculate total value correction for all projects in this month
             $monthData['value_correction'] = 0;
             foreach ($projectKeys as $projectKey) {
@@ -415,54 +329,23 @@ class ProjectFinancialReport extends Page implements HasForms
             // Calculate total evaluation asset for all projects in this month
             $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
             
+            // Calculate total fields
+            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
+            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
+            
+            // Calculate derived profit metrics
+            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
+            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
+            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            
             foreach ($summary['totals'] as $key => &$total) {
                 $total += $monthData[$key];
             }
         }
         
-        // Calculate cumulative cashflow for summary
-        $this->calculateCumulativeCashflowSummary($summary, $allMonths);
-        
         return $summary;
     }
 
-    private function calculateCumulativeCashflowSummary(array &$summary, array $allMonths): void
-    {
-        $cumulativeCash = 0;
-        $today = now()->startOfDay();
-        
-        // Sort months chronologically
-        $sortedMonths = $allMonths;
-        sort($sortedMonths);
-        
-        foreach ($sortedMonths as $month) {
-            if (isset($summary['months'][$month])) {
-                // Calculate net cash flow for this month (revenue - expense)
-                $monthlyNetCash = $summary['months'][$month]['revenue_total'] - $summary['months'][$month]['expense_total'];
-                
-                // Add to cumulative cash
-                $cumulativeCash += $monthlyNetCash;
-                
-                // Store cumulative cash for this month
-                $summary['months'][$month]['cumulative_cash'] = $cumulativeCash;
-                
-                // Also store current cash (what we have today including future done transactions)
-                $monthDate = \Carbon\Carbon::parse($month)->startOfDay();
-                if ($monthDate->lte($today)) {
-                    // This month is current or past - include in current cash
-                    $summary['months'][$month]['current_cash'] = $cumulativeCash;
-                } else {
-                    // This month is future - show projected cash
-                    $summary['months'][$month]['current_cash'] = $cumulativeCash;
-                    $summary['months'][$month]['projected_cash'] = $cumulativeCash;
-                }
-            }
-        }
-        
-        // Add cumulative_cash to totals structure (this includes all transactions)
-        $summary['totals']['cumulative_cash'] = $cumulativeCash;
-        $summary['totals']['current_cash'] = $cumulativeCash; // Show total including future done transactions
-    }
 
     public function sortBy($field): void
     {
@@ -503,37 +386,34 @@ class ProjectFinancialReport extends Page implements HasForms
     private function getAvailableMetrics(): array
     {
         return [
-            'value_correction' => 'Value Correction',
-            'evaluation_asset' => 'Evaluation Asset',
-            'revenue_operation' => 'Revenue Operation',
-            'revenue_asset' => 'Revenue Asset',
-            'revenue_total' => 'Revenue Total',
+            'evaluation_asset' => 'Asset Evaluation',
+            'value_correction' => 'Correction',
             'expense_operation' => 'Expense Operation',
             'expense_asset' => 'Expense Asset',
             'expense_total' => 'Expense Total',
+            'revenue_operation' => 'Revenue Operation',
+            'revenue_asset' => 'Revenue Asset',
+            'revenue_total' => 'Revenue Total',
             'profit_operation' => 'Profit Operation',
             'profit_asset' => 'Profit Asset',
             'total_profit' => 'Total Profit',
-            'cumulative_cash' => 'Cumulative Cashflow',
-            'current_cash' => 'Current Cash Position',
-            'projected_cash' => 'Projected Cash',
         ];
     }
 
     public function getMetricConfig(): array
     {
         return [
-            'value_correction' => [
-                'label' => 'Value Correction',
-                'color' => 'purple',
-                'icon' => 'heroicon-o-adjustments-horizontal',
-                'description' => 'Manual value adjustments'
-            ],
             'evaluation_asset' => [
-                'label' => 'Evaluation Asset',
+                'label' => 'Asset Evaluation',
                 'color' => 'indigo',
                 'icon' => 'heroicon-o-building-office',
                 'description' => 'Asset evaluation value'
+            ],
+            'value_correction' => [
+                'label' => 'Correction',
+                'color' => 'purple',
+                'icon' => 'heroicon-o-adjustments-horizontal',
+                'description' => 'Manual value adjustments'
             ],
             'revenue_operation' => [
                 'label' => 'Revenue Operation',
@@ -588,24 +468,6 @@ class ProjectFinancialReport extends Page implements HasForms
                 'color' => 'amber',
                 'icon' => 'heroicon-o-trophy',
                 'description' => 'Total profit (Operation + Asset)'
-            ],
-            'cumulative_cash' => [
-                'label' => 'Cumulative Cashflow',
-                'color' => 'orange',
-                'icon' => 'heroicon-o-arrow-path',
-                'description' => 'Running cash balance'
-            ],
-            'current_cash' => [
-                'label' => 'Current Cash Position',
-                'color' => 'lime',
-                'icon' => 'heroicon-o-wallet',
-                'description' => 'Current cash available'
-            ],
-            'projected_cash' => [
-                'label' => 'Projected Cash',
-                'color' => 'violet',
-                'icon' => 'heroicon-o-eye',
-                'description' => 'Future cash projection'
             ],
         ];
     }
