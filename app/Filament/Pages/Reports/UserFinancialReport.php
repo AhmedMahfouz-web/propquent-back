@@ -161,15 +161,15 @@ class UserFinancialReport extends Page implements HasForms
             ->get();
         $this->debugInfo['user_transactions_by_status'] = $allUserTransactions->toArray();
 
-        // Temporarily include both done and pending for testing
-        $projectMonths = ProjectTransaction::whereIn('status', ['done', 'pending'])
-            ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
-            ->whereNotNull(DB::raw('COALESCE(actual_date, transaction_date)'))
+        // Use same logic as CompanyFinancialReport - only done transactions with transaction_date
+        $projectMonths = ProjectTransaction::where('status', 'done')
+            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+            ->whereNotNull('transaction_date')
             ->distinct();
 
-        $userMonths = UserTransaction::whereIn('status', ['done', 'pending'])
-            ->select(DB::raw('DATE_FORMAT(COALESCE(actual_date, transaction_date), "%Y-%m-01") as month_date'))
-            ->whereNotNull(DB::raw('COALESCE(actual_date, transaction_date)'))
+        $userMonths = UserTransaction::where('status', UserTransaction::STATUS_DONE)
+            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+            ->whereNotNull('transaction_date')
             ->distinct();
 
         $months = $projectMonths->union($userMonths)
@@ -457,18 +457,14 @@ class UserFinancialReport extends Page implements HasForms
 
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
-                DB::raw("DATE_FORMAT(
-                    CASE
-                        WHEN pt.status = 'done' THEN COALESCE(pt.actual_date, pt.transaction_date)
-                        WHEN pt.status = 'pending' THEN pt.transaction_date
-                    END, '%Y-%m-01') as month_date"),
+                DB::raw("DATE_FORMAT(pt.transaction_date, '%Y-%m-01') as month_date"),
                 'pt.financial_type as type',
                 'pt.serving as serving_name',
                 DB::raw('SUM(pt.amount) as total_amount'),
             )
-            ->whereIn('pt.status', ['done', 'pending'])
-            ->whereBetween(DB::raw('COALESCE(pt.actual_date, pt.transaction_date)'), [
-                Carbon::parse(end($monthsToShow))->startOfMonth(),
+            ->where('pt.status', 'done')
+            ->whereBetween('pt.transaction_date', [
+                end($monthsToShow),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ])
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
@@ -541,16 +537,12 @@ class UserFinancialReport extends Page implements HasForms
         // Get user transactions - simplified approach matching company report
         $userTransactionsData = UserTransaction::query()
             ->select(
-                DB::raw("DATE_FORMAT(
-                    CASE
-                        WHEN status = 'done' THEN COALESCE(actual_date, transaction_date)
-                        WHEN status = 'pending' THEN transaction_date
-                    END, '%Y-%m-01') as month_date"),
+                DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals"),
             )
             ->where('user_id', $user->id)
-            ->whereIn('status', ['done', 'pending'])
+            ->where('status', UserTransaction::STATUS_DONE)
             ->groupBy('month_date')
             ->get()
             ->keyBy('month_date');
@@ -630,17 +622,13 @@ class UserFinancialReport extends Page implements HasForms
 
         $userTransactions = UserTransaction::query()
             ->select(
-                DB::raw("DATE_FORMAT(
-                    CASE
-                        WHEN status = 'done' THEN COALESCE(actual_date, transaction_date)
-                        WHEN status = 'pending' THEN transaction_date
-                    END, '%Y-%m-01') as month_date"),
+                DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as total_deposits"),
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
             )
-            ->whereIn('status', ['done', 'pending'])
-            ->whereBetween(DB::raw('COALESCE(actual_date, transaction_date)'), [
-                Carbon::parse(end($monthsToShow))->startOfMonth(),
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->whereBetween('transaction_date', [
+                end($monthsToShow),
                 Carbon::parse($monthsToShow[0])->endOfMonth(),
             ])
             ->groupBy('month_date')
