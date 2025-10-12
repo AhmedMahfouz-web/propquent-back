@@ -163,7 +163,7 @@ class ProjectStatusReport extends Component
         } elseif ($type === 'range') {
             $this->columnFilters[$column] = $value;
         }
-        
+
         $this->resetPage();
     }
 
@@ -210,7 +210,7 @@ class ProjectStatusReport extends Component
         try {
             $project = Project::findOrFail($projectId);
             $project->update(['notes' => $notes]);
-            
+
             $this->dispatch('note-updated', [
                 'message' => 'Note saved automatically',
                 'projectId' => $projectId
@@ -262,7 +262,7 @@ class ProjectStatusReport extends Component
         if (in_array($this->sortBy, ['total_expenses', 'total_revenues', 'net_profit'])) {
             // Get all projects without pagination first
             $allProjects = $query->get();
-            
+
             // Calculate data for all projects and sort
             $projectsWithData = [];
             foreach ($allProjects as $project) {
@@ -274,27 +274,27 @@ class ProjectStatusReport extends Component
             }
 
             // Sort by the calculated field
-            usort($projectsWithData, function($a, $b) {
+            usort($projectsWithData, function ($a, $b) {
                 $aValue = $a['data'][$this->sortBy] ?? 0;
                 $bValue = $b['data'][$this->sortBy] ?? 0;
-                
+
                 if ($this->sortBy === 'net_profit') {
                     $aValue = $a['data']['total_revenues'] - $a['data']['total_expenses'];
                     $bValue = $b['data']['total_revenues'] - $b['data']['total_expenses'];
                 }
-                
+
                 return $this->sortDirection === 'asc' ? $aValue <=> $bValue : $bValue <=> $aValue;
             });
 
             // Get sorted projects and paginate
             $sortedProjects = collect($projectsWithData)->pluck('project');
-            
+
             $currentPage = $this->getPage();
             $perPage = $this->perPage;
             $total = $sortedProjects->count();
-            
+
             $paginatedProjects = $sortedProjects->forPage($currentPage, $perPage);
-            
+
             return new \Illuminate\Pagination\LengthAwarePaginator(
                 $paginatedProjects,
                 $total,
@@ -348,7 +348,7 @@ class ProjectStatusReport extends Component
 
         // Compound filter
         if (!empty($this->columnFilters['compound'])) {
-            $query->whereHas('compound', function($q) {
+            $query->whereHas('compound', function ($q) {
                 $q->whereIn('name', $this->columnFilters['compound']);
             });
         }
@@ -454,8 +454,8 @@ class ProjectStatusReport extends Component
                 break;
             case 'compound':
                 $query->leftJoin('compounds', 'projects.compound_id', '=', 'compounds.id')
-                     ->orderBy('compounds.name', $this->sortDirection)
-                     ->select('projects.*');
+                    ->orderBy('compounds.name', $this->sortDirection)
+                    ->select('projects.*');
                 break;
             case 'total_expenses':
             case 'total_revenues':
@@ -493,13 +493,15 @@ class ProjectStatusReport extends Component
         }
 
         // Apply financial filters after calculation (for calculated fields)
-        if (!empty($this->columnFilters['expenses_range']['min']) || !empty($this->columnFilters['expenses_range']['max']) ||
-            !empty($this->columnFilters['net_profit_range']['min']) || !empty($this->columnFilters['net_profit_range']['max'])) {
-            
+        if (
+            !empty($this->columnFilters['expenses_range']['min']) || !empty($this->columnFilters['expenses_range']['max']) ||
+            !empty($this->columnFilters['net_profit_range']['min']) || !empty($this->columnFilters['net_profit_range']['max'])
+        ) {
+
             $filteredData = [];
             foreach ($data as $key => $projectData) {
                 $include = true;
-                
+
                 // Expenses range filter
                 if (!empty($this->columnFilters['expenses_range']['min']) && $projectData['total_expenses'] < $this->columnFilters['expenses_range']['min']) {
                     $include = false;
@@ -507,7 +509,7 @@ class ProjectStatusReport extends Component
                 if (!empty($this->columnFilters['expenses_range']['max']) && $projectData['total_expenses'] > $this->columnFilters['expenses_range']['max']) {
                     $include = false;
                 }
-                
+
                 // Net profit range filter
                 $netProfit = $projectData['total_revenues'] - $projectData['total_expenses'];
                 if (!empty($this->columnFilters['net_profit_range']['min']) && $netProfit < $this->columnFilters['net_profit_range']['min']) {
@@ -516,7 +518,7 @@ class ProjectStatusReport extends Component
                 if (!empty($this->columnFilters['net_profit_range']['max']) && $netProfit > $this->columnFilters['net_profit_range']['max']) {
                     $include = false;
                 }
-                
+
                 if ($include) {
                     $filteredData[$key] = $projectData;
                 }
@@ -645,20 +647,24 @@ class ProjectStatusReport extends Component
 
     private function calculateAssetEvaluation($project)
     {
-        // Asset Evaluation = "Paid in asset" (asset expenses) + Asset Corrections
+        // Asset Evaluation = Total Asset Expenses - Total Asset Revenues + Asset Correction
         $assetExpenses = 0;
+        $assetRevenues = 0;
 
-        // Calculate asset expenses
+        // Calculate asset expenses and revenues using the same logic as the main calculation
         foreach ($project->transactions()->where('serving', 'asset')->where('status', 'done')->get() as $transaction) {
-            // We only consider expenses for "Paid in asset"
-            if (!$this->determineTransactionType($transaction)) {
-                $assetExpenses += (float) $transaction->amount;
+            $amount = (float) $transaction->amount;
+
+            if ($this->determineTransactionType($transaction)) {
+                $assetRevenues += $amount;
+            } else {
+                $assetExpenses += $amount;
             }
         }
 
         $assetCorrection = $this->calculateAssetCorrection($project);
 
-        return $assetExpenses + $assetCorrection;
+        return $assetExpenses - $assetRevenues + $assetCorrection;
     }
 
     private function calculateAssetCorrection($project)

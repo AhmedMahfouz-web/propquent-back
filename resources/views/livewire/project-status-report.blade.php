@@ -1197,7 +1197,9 @@
         }
 
         .details-grid,
-        .contract-grid {
+        .contract-grid,
+        .equity-grid,
+        .status-dates-grid {
             grid-template-columns: repeat(4, 1fr);
             min-width: 400px;
         }
