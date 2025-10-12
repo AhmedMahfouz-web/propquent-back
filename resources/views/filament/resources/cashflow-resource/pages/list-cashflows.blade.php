@@ -43,7 +43,7 @@
                 </div>
 
                 <!-- Table Container with Fixed Height and Scrolling -->
-                <div class="min-h-96 max-h-144 overflow-y-auto overflow-x-auto" id="project-table-container">
+                <div class="h-112 overflow-y-auto overflow-x-auto" id="project-table-container">
                     @php
                         $monthsToShow = $this->monthsFilter ?? 3;
                         $baseWidth = 1600; // Base width for 3 months
@@ -302,7 +302,7 @@
                 </div>
 
                 <!-- Table Container with Fixed Height and Scrolling -->
-                <div class="min-h-96 max-h-112 overflow-y-auto overflow-x-auto" id="user-table-container">
+                <div class="h-112 overflow-y-auto overflow-x-auto" id="user-table-container">
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700"
                         style="min-width: {{ $minWidth }}px; table-layout: fixed;">
                         <!-- Month Header Row -->
