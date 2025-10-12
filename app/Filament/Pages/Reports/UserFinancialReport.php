@@ -466,11 +466,19 @@ class UserFinancialReport extends Page implements HasForms
         }
 
         // Debug: Add logging for project transactions query
+        $startDate = $monthsToShow[0]; // Oldest month (first in array)
+        $endDate = end($monthsToShow); // Newest month (last in array)
+        
         $this->debugInfo['project_transactions_query'] = [
             'months_to_show' => $monthsToShow,
             'date_range' => [
-                'start' => $monthsToShow[count($monthsToShow) - 1], // Oldest month (last in array)
-                'end' => Carbon::parse($monthsToShow[0])->endOfMonth()->format('Y-m-d'), // Newest month (first in array)
+                'start' => $startDate,
+                'end' => Carbon::parse($endDate)->endOfMonth()->format('Y-m-d'),
+            ],
+            'debug_array_info' => [
+                'first_element' => $monthsToShow[0],
+                'last_element' => end($monthsToShow),
+                'array_count' => count($monthsToShow)
             ]
         ];
 
@@ -497,8 +505,8 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->where('pt.status', 'done')
             ->whereBetween('pt.transaction_date', [
-                $monthsToShow[count($monthsToShow) - 1], // Oldest month (last in array)
-                Carbon::parse($monthsToShow[0])->endOfMonth(), // Newest month (first in array)
+                $monthsToShow[0], // Oldest month (first in array)
+                Carbon::parse(end($monthsToShow))->endOfMonth(), // Newest month (last in array)
             ])
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
             ->orderBy('month_date', 'desc')
@@ -665,8 +673,8 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->where('status', UserTransaction::STATUS_DONE)
             ->whereBetween('transaction_date', [
-                $monthsToShow[count($monthsToShow) - 1], // Oldest month (last in array)
-                Carbon::parse($monthsToShow[0])->endOfMonth(), // Newest month (first in array)
+                $monthsToShow[0], // Oldest month (first in array)
+                Carbon::parse(end($monthsToShow))->endOfMonth(), // Newest month (last in array)
             ])
             ->groupBy('month_date')
             ->get();
