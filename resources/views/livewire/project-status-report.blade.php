@@ -780,22 +780,15 @@
                                         data-state="{{ $sectionStates['expenses'] }}"
                                         wire:key="content-expenses-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="expanded-content-wrapper">
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
-                                                        ${{ number_format($assetExpenses, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
-                                                        ${{ number_format($operationExpenses, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-red-600 dark:text-red-400 font-bold">
+                                            <div class="content-grid expenses-grid">
+                                                <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                    ${{ number_format($assetExpenses, 0) }}
+                                                </span>
+                                                <span class="content-value text-red-600 dark:text-red-400 font-medium">
+                                                    ${{ number_format($operationExpenses, 0) }}
+                                                </span>
+                                                <div class="excel-column-header">
+                                                    <span class="content-value text-red-600 dark:text-red-400 font-bold">
                                                         ${{ number_format($totalExpenses, 0) }}
                                                     </span>
                                                 </div>
@@ -808,23 +801,16 @@
                                         data-state="{{ $sectionStates['revenue'] }}"
                                         wire:key="content-revenue-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="expanded-content-wrapper">
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                        ${{ number_format($projectData['asset_revenue'] ?? 0, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                        ${{ number_format($projectData['operation_revenue'] ?? 0, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-green-600 dark:text-green-400 font-bold">
-                                                        ${{ number_format(($projectData['asset_revenue'] ?? 0) + ($projectData['operation_revenue'] ?? 0) + ($projectData['serving_revenue'] ?? 0), 0) }}
+                                            <div class="content-grid revenue-grid">
+                                                <span class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                    ${{ number_format($projectData['asset_revenue'] ?? 0, 0) }}
+                                                </span>
+                                                <span class="content-value text-green-600 dark:text-green-400 font-medium">
+                                                    ${{ number_format($projectData['operation_revenue'] ?? 0, 0) }}
+                                                </span>
+                                                <div class="excel-column-header">
+                                                    <span class="content-value text-green-600 dark:text-green-400 font-bold">
+                                                        ${{ number_format(($projectData['asset_revenue'] ?? 0) + ($projectData['operation_revenue'] ?? 0), 0) }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1214,9 +1200,7 @@
             min-width: 350px !important;
         }
 
-        .section-subheader[data-state="expanded"] .sub-header-grid {
-            display: grid;
-        }
+
 
         /* Section Content */
         .section-content {
@@ -1556,19 +1540,23 @@
             overflow-y: auto;
         }
 
-        .filter-option {
-            display: flex;
+        .sub-header-grid,
+        .content-grid {
+            display: grid;
             align-items: center;
+            text-align: center;
             gap: 8px;
-            padding: 6px 8px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            transition: background-color 0.2s ease;
         }
 
-        .filter-option:hover {
-            background-color: #f3f4f6;
+        .sub-header-grid {
+            padding: 4px 0;
+            color: #6b7280;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .dark .sub-header-grid {
+            color: #9ca3af;
         }
 
         .dark .filter-option:hover {
