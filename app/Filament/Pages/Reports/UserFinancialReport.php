@@ -736,10 +736,12 @@ class UserFinancialReport extends Page implements HasForms
             $previousMonthCash = $cash[$month];
         }
 
-        // Calculate Total Equity (Cash + Evaluation)
+        // Calculate Total Equity (Just Cash - no double counting of expenses)
+        // Note: evaluation = expense - revenue, which is already subtracted from cash
+        // So company equity = cash position only (expenses already deducted)
         $equityTotal = [];
         foreach ($monthsToShow as $month) {
-            $equityTotal[$month] = ($evaluation['total'][$month] ?? 0) + ($cash[$month] ?? 0);
+            $equityTotal[$month] = $cash[$month] ?? 0;
             
             // Debug logging
             $this->debugInfo['company_equity_calculations'][$month] = [
