@@ -331,41 +331,41 @@ class UserFinancialReport extends Page implements HasForms
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
 
-        // Darker colors for totals
+        // Only text colors for totals (no background)
         $colorMap = [
             'green' => [
-                'bg' => 'bg-green-200 dark:bg-green-800',
-                'text' => 'text-green-900 dark:text-green-100',
+                'bg' => '',
+                'text' => 'text-green-700 dark:text-green-400',
             ],
             'red' => [
-                'bg' => 'bg-red-200 dark:bg-red-800',
-                'text' => 'text-red-900 dark:text-red-100',
+                'bg' => '',
+                'text' => 'text-red-700 dark:text-red-400',
             ],
             'blue' => [
-                'bg' => 'bg-blue-200 dark:bg-blue-800',
-                'text' => 'text-blue-900 dark:text-blue-100',
+                'bg' => '',
+                'text' => 'text-blue-700 dark:text-blue-400',
             ],
             'purple' => [
-                'bg' => 'bg-purple-200 dark:bg-purple-800',
-                'text' => 'text-purple-900 dark:text-purple-100',
+                'bg' => '',
+                'text' => 'text-purple-700 dark:text-purple-400',
             ],
             'amber' => [
-                'bg' => 'bg-amber-200 dark:bg-amber-800',
-                'text' => 'text-amber-900 dark:text-amber-100',
+                'bg' => '',
+                'text' => 'text-amber-700 dark:text-amber-400',
             ],
             'cyan' => [
-                'bg' => 'bg-cyan-200 dark:bg-cyan-800',
-                'text' => 'text-cyan-900 dark:text-cyan-100',
+                'bg' => '',
+                'text' => 'text-cyan-700 dark:text-cyan-400',
             ],
             'indigo' => [
-                'bg' => 'bg-indigo-200 dark:bg-indigo-800',
-                'text' => 'text-indigo-900 dark:text-indigo-100',
+                'bg' => '',
+                'text' => 'text-indigo-700 dark:text-indigo-400',
             ],
         ];
 
         return $colorMap[$color] ?? [
-            'bg' => 'bg-gray-200 dark:bg-gray-800',
-            'text' => 'text-gray-900 dark:text-gray-100',
+            'bg' => '',
+            'text' => 'text-gray-700 dark:text-gray-400',
         ];
     }
 
