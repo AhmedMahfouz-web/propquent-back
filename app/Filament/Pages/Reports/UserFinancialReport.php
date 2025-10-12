@@ -150,16 +150,6 @@ class UserFinancialReport extends Page implements HasForms
     {
         $today = now()->format('Y-m-d');
 
-        // Debug: Check what transactions exist
-        $allProjectTransactions = ProjectTransaction::select('status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status')
-            ->get();
-        $this->debugInfo['project_transactions_by_status'] = $allProjectTransactions->toArray();
-
-        $allUserTransactions = UserTransaction::select('status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status')
-            ->get();
-        $this->debugInfo['user_transactions_by_status'] = $allUserTransactions->toArray();
 
         // Use same logic as CompanyFinancialReport - only done transactions with transaction_date
         $projectMonths = ProjectTransaction::where('status', 'done')
@@ -365,30 +355,10 @@ class UserFinancialReport extends Page implements HasForms
                 'userFinancialData' => [],
                 'allMonths' => [],
                 'companyData' => [],
-                'debugInfo' => [],
             ];
         }
 
         $allMonths = $this->getMonthsInRange();
-        
-        // Debug: Add simple debug info here to test
-        $this->debugInfo['debug_test'] = 'Debug is working';
-        $this->debugInfo['all_months'] = $allMonths;
-        
-        // Debug: Test simple query to see if any done project transactions exist
-        $totalDoneProjectTransactions = DB::table('project_transactions')
-            ->where('status', 'done')
-            ->count();
-        $this->debugInfo['total_done_project_transactions_main'] = $totalDoneProjectTransactions;
-        
-        // Debug: Check sample transaction dates from done transactions
-        $sampleDates = DB::table('project_transactions')
-            ->where('status', 'done')
-            ->select('transaction_date', 'financial_type', 'serving')
-            ->limit(5)
-            ->get();
-        $this->debugInfo['sample_done_transaction_dates'] = $sampleDates->toArray();
-        
         $companyData = $this->calculateCompanyFinancialData($allMonths);
 
         // Optimized user query - separate search from financial data calculation
@@ -424,7 +394,6 @@ class UserFinancialReport extends Page implements HasForms
             'userFinancialData' => $userFinancialData,
             'allMonths' => $allMonths,
             'companyData' => $companyData,
-            'debugInfo' => $this->debugInfo,
         ];
     }
 
@@ -465,36 +434,6 @@ class UserFinancialReport extends Page implements HasForms
             $monthlyTotals['expense'][$month] = 0;
         }
 
-        // Debug: Add logging for project transactions query
-        $startDate = $monthsToShow[0]; // Oldest month (first in array)
-        $endDate = end($monthsToShow); // Newest month (last in array)
-        
-        $this->debugInfo['project_transactions_query'] = [
-            'months_to_show' => $monthsToShow,
-            'date_range' => [
-                'start' => $startDate,
-                'end' => Carbon::parse($endDate)->endOfMonth()->format('Y-m-d'),
-            ],
-            'debug_array_info' => [
-                'first_element' => $monthsToShow[0],
-                'last_element' => end($monthsToShow),
-                'array_count' => count($monthsToShow)
-            ]
-        ];
-
-        // Debug: Test simple query to see if any done project transactions exist
-        $totalDoneProjectTransactions = DB::table('project_transactions')
-            ->where('status', 'done')
-            ->count();
-        $this->debugInfo['total_done_project_transactions'] = $totalDoneProjectTransactions;
-
-        // Debug: Check what financial_type values exist in done transactions
-        $financialTypes = DB::table('project_transactions')
-            ->where('status', 'done')
-            ->select('financial_type', DB::raw('COUNT(*) as count'))
-            ->groupBy('financial_type')
-            ->get();
-        $this->debugInfo['done_project_financial_types'] = $financialTypes->toArray();
 
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
@@ -512,19 +451,7 @@ class UserFinancialReport extends Page implements HasForms
             ->orderBy('month_date', 'desc')
             ->cursor();
 
-        // Debug: Count how many project transactions were found and process them
-        $projectTransactionsArray = [];
-        $transactionCount = 0;
         foreach ($projectTransactions as $transaction) {
-            $transactionCount++;
-            $projectTransactionsArray[] = [
-                'month_date' => $transaction->month_date,
-                'type' => $transaction->type,
-                'serving_name' => $transaction->serving_name,
-                'total_amount' => $transaction->total_amount,
-            ];
-
-            // Process the transaction immediately since cursor can only be iterated once
             $type = strtolower($transaction->type);
             if ($type !== 'revenue' && $type !== 'expense') {
                 continue;
@@ -547,9 +474,6 @@ class UserFinancialReport extends Page implements HasForms
             $monthlyTotals[$type][$month] += $transaction->total_amount;
         }
 
-        // Add debug info after processing
-        $this->debugInfo['project_transactions_found'] = $projectTransactionsArray;
-        $this->debugInfo['project_transactions_count'] = $transactionCount;
 
         return compact('reportData', 'monthlyTotals');
     }
@@ -679,8 +603,6 @@ class UserFinancialReport extends Page implements HasForms
             ->groupBy('month_date')
             ->get();
 
-        // Debug: Log user transactions found for company calculation
-        $this->debugInfo['user_transactions_for_company'] = $userTransactions->toArray();
 
         foreach ($userTransactions as $transaction) {
             $month = $transaction->month_date;
