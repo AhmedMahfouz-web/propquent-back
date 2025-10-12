@@ -133,7 +133,7 @@
                                 </th>
 
                                 <!-- Expenses Section Header -->
-                                <th class="section-header expenses-header" data-state="{{ $sectionStates['expenses'] }}"
+                                <th class="section-header expenses-header financial-section-width" data-state="{{ $sectionStates['expenses'] }}"
                                     wire:click.prevent="toggleSectionState('expenses')">
                                     <div class="header-content">
                                         <span class="section-title-full">Expenses</span>
@@ -147,7 +147,7 @@
                                 </th>
 
                                 <!-- Revenue Section Header -->
-                                <th class="section-header revenue-header" data-state="{{ $sectionStates['revenue'] }}"
+                                <th class="section-header revenue-header financial-section-width" data-state="{{ $sectionStates['revenue'] }}"
                                     wire:click.prevent="toggleSectionState('revenue')">
                                     <div class="header-content">
                                         <span class="section-title-full">Revenue</span>
@@ -467,7 +467,7 @@
                                 </th>
 
                                 <!-- Expenses Sub-headers -->
-                                <th class="section-subheader expenses-section"
+                                <th class="section-subheader expenses-section financial-section-width"
                                     data-state="{{ $sectionStates['expenses'] }}" wire:key="subheader-expenses">
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
@@ -505,7 +505,7 @@
                                 </th>
 
                                 <!-- Revenue Sub-headers -->
-                                <th class="section-subheader revenue-section"
+                                <th class="section-subheader revenue-section financial-section-width"
                                     data-state="{{ $sectionStates['revenue'] }}" wire:key="subheader-revenue">
                                     <div class="sub-header-grid revenue-grid">
                                         <span>Asset</span>
@@ -776,7 +776,7 @@
                                     </td>
 
                                     <!-- Expenses Section -->
-                                    <td class="section-content expenses-section"
+                                    <td class="section-content expenses-section financial-section-width"
                                         data-state="{{ $sectionStates['expenses'] }}"
                                         wire:key="content-expenses-{{ $project->id }}">
                                         <div class="section-expanded-content">
@@ -804,7 +804,7 @@
                                     </td>
 
                                     <!-- Revenue Section -->
-                                    <td class="section-content revenue-section"
+                                    <td class="section-content revenue-section financial-section-width"
                                         data-state="{{ $sectionStates['revenue'] }}"
                                         wire:key="content-revenue-{{ $project->id }}">
                                         <div class="section-expanded-content">
@@ -1208,6 +1208,10 @@
         .revenue-grid {
             grid-template-columns: repeat(3, 1fr);
             min-width: 300px;
+        }
+
+        .financial-section-width {
+            min-width: 350px !important;
         }
 
         .section-subheader[data-state="expanded"] .sub-header-grid {
