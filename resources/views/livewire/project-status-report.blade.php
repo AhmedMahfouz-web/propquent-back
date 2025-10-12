@@ -780,7 +780,7 @@
                                         data-state="{{ $sectionStates['expenses'] }}"
                                         wire:key="content-expenses-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="expanded-content-wrapper">
+                                            <div class="expanded-content-wrapper expense-wrapper">
                                                 <div class="content-row">
                                                     <span
                                                         class="content-value text-red-600 dark:text-red-400 font-medium">
@@ -808,7 +808,7 @@
                                         data-state="{{ $sectionStates['revenue'] }}"
                                         wire:key="content-revenue-{{ $project->id }}">
                                         <div class="section-expanded-content">
-                                            <div class="expanded-content-wrapper">
+                                            <div class="expanded-content-wrapper revenue-wrapper">
                                                 <div class="content-row">
                                                     <span
                                                         class="content-value text-green-600 dark:text-green-400 font-medium">
@@ -1253,6 +1253,14 @@
             gap: 8px;
             align-items: start;
             width: 100%;
+        }
+
+        .section-content[data-state="expanded"] .expense-wrapper {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .section-content[data-state="expanded"] .revenue-wrapper {
+            grid-template-columns: 1fr 1fr 1fr;
         }
 
         .section-content[data-state="expanded"] .content-row {
