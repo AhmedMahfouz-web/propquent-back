@@ -455,6 +455,20 @@ class UserFinancialReport extends Page implements HasForms
             ]
         ];
 
+        // Debug: Test simple query to see if any done project transactions exist
+        $totalDoneProjectTransactions = DB::table('project_transactions')
+            ->where('status', 'done')
+            ->count();
+        $this->debugInfo['total_done_project_transactions'] = $totalDoneProjectTransactions;
+
+        // Debug: Check what financial_type values exist in done transactions
+        $financialTypes = DB::table('project_transactions')
+            ->where('status', 'done')
+            ->select('financial_type', DB::raw('COUNT(*) as count'))
+            ->groupBy('financial_type')
+            ->get();
+        $this->debugInfo['done_project_financial_types'] = $financialTypes->toArray();
+
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
                 DB::raw("DATE_FORMAT(pt.transaction_date, '%Y-%m-01') as month_date"),
@@ -471,19 +485,19 @@ class UserFinancialReport extends Page implements HasForms
             ->orderBy('month_date', 'desc')
             ->cursor();
 
-        // Debug: Count how many project transactions were found
+        // Debug: Count how many project transactions were found and process them
         $projectTransactionsArray = [];
+        $transactionCount = 0;
         foreach ($projectTransactions as $transaction) {
+            $transactionCount++;
             $projectTransactionsArray[] = [
                 'month_date' => $transaction->month_date,
                 'type' => $transaction->type,
                 'serving_name' => $transaction->serving_name,
                 'total_amount' => $transaction->total_amount,
             ];
-        }
-        $this->debugInfo['project_transactions_found'] = $projectTransactionsArray;
 
-        foreach ($projectTransactions as $transaction) {
+            // Process the transaction immediately since cursor can only be iterated once
             $type = strtolower($transaction->type);
             if ($type !== 'revenue' && $type !== 'expense') {
                 continue;
@@ -505,6 +519,10 @@ class UserFinancialReport extends Page implements HasForms
             $reportData[$type][$servingName][$month] = $transaction->total_amount;
             $monthlyTotals[$type][$month] += $transaction->total_amount;
         }
+
+        // Add debug info after processing
+        $this->debugInfo['project_transactions_found'] = $projectTransactionsArray;
+        $this->debugInfo['project_transactions_count'] = $transactionCount;
 
         return compact('reportData', 'monthlyTotals');
     }
