@@ -472,7 +472,6 @@
                                     <div class="sub-header-grid expenses-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
-                                        <span>Serving</span>
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('total_expenses')"
                                                 class="column-sort-btn">
@@ -511,7 +510,6 @@
                                     <div class="sub-header-grid revenue-grid">
                                         <span>Asset</span>
                                         <span>Operation</span>
-                                        <span>Serving</span>
                                         <div class="excel-column-header">
                                             <button wire:click="sortByColumn('total_revenue')"
                                                 class="column-sort-btn">
@@ -797,12 +795,6 @@
                                                 </div>
                                                 <div class="content-row">
                                                     <span
-                                                        class="content-value text-red-600 dark:text-red-400 font-medium">
-                                                        ${{ number_format($projectData['serving_expenses'] ?? 0, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
                                                         class="content-value text-red-600 dark:text-red-400 font-bold">
                                                         ${{ number_format($totalExpenses, 0) }}
                                                     </span>
@@ -827,12 +819,6 @@
                                                     <span
                                                         class="content-value text-green-600 dark:text-green-400 font-medium">
                                                         ${{ number_format($projectData['operation_revenue'] ?? 0, 0) }}
-                                                    </span>
-                                                </div>
-                                                <div class="content-row">
-                                                    <span
-                                                        class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                        ${{ number_format($projectData['serving_revenue'] ?? 0, 0) }}
                                                     </span>
                                                 </div>
                                                 <div class="content-row">
@@ -928,10 +914,10 @@
                                         <div class="section-expanded-content">
                                             <div class="expanded-content-wrapper">
                                                 <div class="content-row">
-                                                    <textarea 
+                                                    <textarea
                                                         wire:model.lazy="project_notes.{{ $project->id }}"
                                                         wire:key="notes-{{ $project->id }}"
-                                                        placeholder="Add notes for this project..." 
+                                                        placeholder="Add notes for this project..."
                                                         style="width: auto; height: 50px"
                                                         class="w-full p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md
                                                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
