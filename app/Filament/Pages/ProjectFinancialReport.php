@@ -64,9 +64,13 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function mount(): void
     {
-        $availableMonths = $this->getAvailableMonthsProperty();
-        $this->startMonth = !empty($this->startMonth) ? $this->startMonth : ($availableMonths[0] ?? '');
-        $this->endMonth = !empty($this->endMonth) ? $this->endMonth : (end($availableMonths) ?: '');
+        // Set default date range: current month to 12 months ago
+        if (empty($this->startMonth)) {
+            $this->startMonth = now()->subMonths(11)->format('Y-m-01'); // 12 months ago (including current)
+        }
+        if (empty($this->endMonth)) {
+            $this->endMonth = now()->format('Y-m-01'); // Current month
+        }
 
         // Default to all metrics if none selected
         if (empty($this->selectedMetrics)) {
@@ -207,7 +211,8 @@ class ProjectFinancialReport extends Page implements HasForms
         foreach ($period as $dt) {
             $months[] = $dt->format('Y-m-01');
         }
-        return $months;
+        // Return months in reverse order (newer months on the left)
+        return array_reverse($months);
     }
 
     private function getProjectFinancialData(Project $project, array $allMonths): array
@@ -267,7 +272,12 @@ class ProjectFinancialReport extends Page implements HasForms
             $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
             
             foreach ($data['totals'] as $key => &$total) {
-                $total += $monthData[$key];
+                if ($key === 'evaluation_asset') {
+                    // For Asset Evaluation, use the most recent month's value instead of sum
+                    $total = $monthData[$key];
+                } else {
+                    $total += $monthData[$key];
+                }
             }
         }
         
@@ -339,7 +349,12 @@ class ProjectFinancialReport extends Page implements HasForms
             $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
             
             foreach ($summary['totals'] as $key => &$total) {
-                $total += $monthData[$key];
+                if ($key === 'evaluation_asset') {
+                    // For Asset Evaluation, use the most recent month's value instead of sum
+                    $total = $monthData[$key];
+                } else {
+                    $total += $monthData[$key];
+                }
             }
         }
         

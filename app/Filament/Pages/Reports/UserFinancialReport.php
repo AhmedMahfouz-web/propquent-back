@@ -68,9 +68,13 @@ class UserFinancialReport extends Page implements HasForms
 
     public function mount(): void
     {
-        $availableMonths = $this->getAvailableMonthsProperty();
-        $this->startMonth = !empty($this->startMonth) ? $this->startMonth : ($availableMonths[0] ?? '');
-        $this->endMonth = !empty($this->endMonth) ? $this->endMonth : (end($availableMonths) ?: '');
+        // Set default date range: current month to 12 months ago
+        if (empty($this->startMonth)) {
+            $this->startMonth = now()->subMonths(11)->format('Y-m-01'); // 12 months ago (including current)
+        }
+        if (empty($this->endMonth)) {
+            $this->endMonth = now()->format('Y-m-01'); // Current month
+        }
 
         // Default to all metrics if none selected
         if (empty($this->selectedMetrics)) {
