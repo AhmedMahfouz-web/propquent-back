@@ -255,6 +255,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 $data['months'][$month][$key] += $transaction->amount;
             }
         }
+        $isFirstMonth = true; // Track if this is the first (most recent) month
         foreach ($data['months'] as $month => &$monthData) {
             // Get Value Correction from database
             $monthData['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
@@ -273,12 +274,15 @@ class ProjectFinancialReport extends Page implements HasForms
             
             foreach ($data['totals'] as $key => &$total) {
                 if ($key === 'evaluation_asset') {
-                    // For Asset Evaluation, use the most recent month's value instead of sum
-                    $total = $monthData[$key];
+                    // For Asset Evaluation, use only the most recent month's value (first iteration)
+                    if ($isFirstMonth) {
+                        $total = $monthData[$key];
+                    }
                 } else {
                     $total += $monthData[$key];
                 }
             }
+            $isFirstMonth = false; // After first iteration, set to false
         }
         
         return $data;
@@ -329,6 +333,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 $summary['months'][$month][$key] += $transaction->amount;
             }
         }
+        $isFirstMonth = true; // Track if this is the first (most recent) month
         foreach ($summary['months'] as $month => &$monthData) {
             // Calculate total value correction for all projects in this month
             $monthData['value_correction'] = 0;
@@ -350,12 +355,15 @@ class ProjectFinancialReport extends Page implements HasForms
             
             foreach ($summary['totals'] as $key => &$total) {
                 if ($key === 'evaluation_asset') {
-                    // For Asset Evaluation, use the most recent month's value instead of sum
-                    $total = $monthData[$key];
+                    // For Asset Evaluation, use only the most recent month's value (first iteration)
+                    if ($isFirstMonth) {
+                        $total = $monthData[$key];
+                    }
                 } else {
                     $total += $monthData[$key];
                 }
             }
+            $isFirstMonth = false; // After first iteration, set to false
         }
         
         return $summary;
