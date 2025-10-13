@@ -21,21 +21,21 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 {
     use InteractsWithTable;
     use InteractsWithForms;
-    
+
     public $showSummary = true;
     public $customSelectedRecords = [];
-    
+
     protected $listeners = [
         'updateSelectedSummary' => '$refresh',
         'tableSelectionChanged' => 'updateSelectedRecords'
     ];
-    
+
     #[On('updateSelectedSummary')]
     public function refreshSelectedSummary()
     {
         $this->dispatch('$refresh');
     }
-    
+
     public function confirmAmountChange($recordId, $newAmount, $oldAmount)
     {
         $this->dispatch('openAmountConfirmModal', [
@@ -44,19 +44,19 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             'oldAmount' => $oldAmount
         ]);
     }
-    
+
     public function updateAmount($recordId, $newAmount)
     {
         try {
             $transaction = ProjectTransaction::findOrFail($recordId);
             $transaction->update(['amount' => $newAmount]);
-            
+
             \Filament\Notifications\Notification::make()
                 ->title('Amount Updated')
                 ->body("Amount updated to " . number_format($newAmount, 2))
                 ->success()
                 ->send();
-                
+
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
             \Filament\Notifications\Notification::make()
@@ -66,18 +66,18 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 ->send();
         }
     }
-    
+
     public function updateSelectedRecords($selectedIds)
     {
         $this->customSelectedRecords = $selectedIds;
     }
-    
+
     // Make summaries computed properties that react to changes
     public function getTableSummaryProperty()
     {
         return $this->getTableSummary();
     }
-    
+
     public function getSelectedSummaryProperty()
     {
         return $this->getSelectedSummary();
@@ -119,7 +119,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
 
                 Tables\Columns\BadgeColumn::make('financial_type')
                     ->label('Financial Type')
-                    ->formatStateUsing(fn (string $state): string => ProjectTransaction::getAvailableFinancialTypes()[$state] ?? $state)
+                    ->formatStateUsing(fn(string $state): string => ProjectTransaction::getAvailableFinancialTypes()[$state] ?? $state)
                     ->colors([
                         'success' => 'revenue',
                         'danger' => 'expense',
@@ -127,31 +127,22 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('serving')
-                    ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableServingTypes()[$state] ?? $state) : '-')
+                    ->formatStateUsing(fn(?string $state): string => $state ? (ProjectTransaction::getAvailableServingTypes()[$state] ?? $state) : '-')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('what')
                     ->label('What')
-                    ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableWhatTypes()[$state] ?? $state) : '-')
+                    ->formatStateUsing(fn(?string $state): string => $state ? (ProjectTransaction::getAvailableWhatTypes()[$state] ?? $state) : '-')
                     ->sortable(),
 
-                Tables\Columns\TextInputColumn::make('amount')
-                    ->type('number')
-                    ->step(0.01)
+                Tables\Columns\TextColumn::make('amount')
                     ->sortable()
                     ->alignEnd()
-                    ->rules(['required', 'numeric', 'min:0.01'])
-                    ->extraInputAttributes(function ($record) {
-                        return [
-                            'class' => 'text-sm py-1 text-right font-mono',
-                            'style' => 'font-family: monospace; text-align: right;',
-                            'data-original-value' => $record->amount ?? '',
-                            'data-record-id' => $record->id ?? '',
-                        ];
-                    }),
+                    ->money('EGP')
+                    ->extraAttributes(['class' => 'font-mono']),
 
                 Tables\Columns\TextColumn::make('method')
-                    ->formatStateUsing(fn (?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
+                    ->formatStateUsing(fn(?string $state): string => $state ? (ProjectTransaction::getAvailableTransactionMethods()[$state] ?? $state) : '-')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('reference_no')
@@ -160,10 +151,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->copyable()
                     ->placeholder('-'),
 
-                Tables\Columns\SelectColumn::make('status')
-                    ->options(fn() => ProjectTransaction::getAvailableStatuses())
-                    ->sortable()
-                    ->extraAttributes(['class' => 'text-sm']),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->formatStateUsing(fn(string $state): string => ProjectTransaction::getAvailableStatuses()[$state] ?? $state)
+                    ->colors([
+                        'success' => 'done',
+                        'warning' => 'pending',
+                        'danger' => 'cancelled',
+                    ])
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
@@ -337,28 +332,17 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                         try {
                             $filePath = storage_path('app/public/' . $data['file']);
                             $import = new \App\Imports\ProjectTransactionSheetImport;
-                            
-                            // Add debug marker to confirm this code is running
-                            \Filament\Notifications\Notification::make()
-                                ->title('🔍 DEBUG: Starting Import (Livewire)')
-                                ->body('File: ' . basename($filePath) . '\nSheet target: "Project Transactions"')
-                                ->info()
-                                ->send();
-                            
+
                             \Maatwebsite\Excel\Facades\Excel::import($import, $filePath);
-                            
-                            $debugInfo = $import->getDebugInfo();
-                            $debugText = empty($debugInfo) ? 'No debug information available.' : implode("\n", $debugInfo);
-                            
+
                             \Filament\Notifications\Notification::make()
-                                ->title('🔍 DEBUG: Import Process Complete')
-                                ->body("Debug Information:\n\n" . $debugText)
+                                ->title('Import Process Complete')
                                 ->success()
                                 ->persistent()
                                 ->send();
                         } catch (\Exception $e) {
                             \Filament\Notifications\Notification::make()
-                                ->title('🔍 DEBUG: Import Failed')
+                                ->title('Import Failed')
                                 ->body('Error: ' . $e->getMessage())
                                 ->danger()
                                 ->persistent()
@@ -371,10 +355,10 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->action(function () {
                         // Generate fresh template with current data
                         Artisan::call('template:project-transactions');
-                        
+
                         // Return the generated file for download
                         $templatePath = public_path('templates/project-transactions-template.xlsx');
-                        
+
                         if (file_exists($templatePath)) {
                             return response()->download($templatePath, 'project-transactions-template-' . date('Y-m-d') . '.xlsx');
                         } else {
@@ -476,13 +460,13 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             // Get the current page records from the table
             $table = $this->getTable();
             $records = $table->getRecords();
-            
+
             // Calculate from current page records only
             $recordCount = $records->count();
             $totalAmount = $records->sum('amount');
             $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
             $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
-            
+
             return [
                 'total_records' => $recordCount,
                 'total_amount' => $totalAmount,
@@ -500,13 +484,13 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ];
         }
     }
-    
+
     public function getSelectedSummary(): array
     {
         try {
             // Get selected records using efficient database queries
             $selectedIds = [];
-            
+
             // Try multiple approaches to get selected record IDs
             if (!empty($this->customSelectedRecords)) {
                 $selectedIds = $this->customSelectedRecords;
@@ -521,7 +505,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     $selectedIds = [];
                 }
             }
-            
+
             if (empty($selectedIds)) {
                 return [
                     'selected_records' => 0,
@@ -531,14 +515,14 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     'selected_net' => 0,
                 ];
             }
-            
+
             // Use database aggregation for better performance
             $query = ProjectTransaction::whereIn('id', $selectedIds);
             $selectedCount = $query->count();
             $selectedAmount = $query->sum('amount');
             $selectedRevenue = $query->where('financial_type', 'revenue')->sum('amount');
             $selectedExpense = $query->where('financial_type', 'expense')->sum('amount');
-            
+
             return [
                 'selected_records' => $selectedCount,
                 'selected_amount' => $selectedAmount,
