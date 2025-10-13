@@ -478,6 +478,27 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 ->where('serving', 'operation')->sum('amount');
             $expenseAssetTotal = $query->where('financial_type', 'expense')
                 ->where('serving', 'asset')->sum('amount');
+            
+            // Calculate status breakdown
+            $doneTotalAmount = $query->where('status', 'done')->sum('amount');
+            $pendingTotalAmount = $query->where('status', 'pending')->sum('amount');
+            $cancelledTotalAmount = $query->where('status', 'cancelled')->sum('amount');
+            
+            // Revenue by status
+            $revenueStatusDone = $query->where('financial_type', 'revenue')
+                ->where('status', 'done')->sum('amount');
+            $revenueStatusPending = $query->where('financial_type', 'revenue')
+                ->where('status', 'pending')->sum('amount');
+            $revenueStatusCancelled = $query->where('financial_type', 'revenue')
+                ->where('status', 'cancelled')->sum('amount');
+            
+            // Expense by status
+            $expenseStatusDone = $query->where('financial_type', 'expense')
+                ->where('status', 'done')->sum('amount');
+            $expenseStatusPending = $query->where('financial_type', 'expense')
+                ->where('status', 'pending')->sum('amount');
+            $expenseStatusCancelled = $query->where('financial_type', 'expense')
+                ->where('status', 'cancelled')->sum('amount');
 
             return [
                 'total_records' => $recordCount,
@@ -494,6 +515,22 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 // Net by serving
                 'net_operation' => $revenueOperationTotal - $expenseOperationTotal,
                 'net_asset' => $revenueAssetTotal - $expenseAssetTotal,
+                // Status breakdown - totals
+                'done_total' => $doneTotalAmount,
+                'pending_total' => $pendingTotalAmount,
+                'cancelled_total' => $cancelledTotalAmount,
+                // Revenue by status
+                'revenue_done' => $revenueStatusDone,
+                'revenue_pending' => $revenueStatusPending,
+                'revenue_cancelled' => $revenueStatusCancelled,
+                // Expense by status
+                'expense_done' => $expenseStatusDone,
+                'expense_pending' => $expenseStatusPending,
+                'expense_cancelled' => $expenseStatusCancelled,
+                // Net by status
+                'net_done' => $revenueStatusDone - $expenseStatusDone,
+                'net_pending' => $revenueStatusPending - $expenseStatusPending,
+                'net_cancelled' => $revenueStatusCancelled - $expenseStatusCancelled,
             ];
         } catch (\Exception $e) {
             return [
@@ -508,6 +545,18 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 'expense_asset' => 0,
                 'net_operation' => 0,
                 'net_asset' => 0,
+                'done_total' => 0,
+                'pending_total' => 0,
+                'cancelled_total' => 0,
+                'revenue_done' => 0,
+                'revenue_pending' => 0,
+                'revenue_cancelled' => 0,
+                'expense_done' => 0,
+                'expense_pending' => 0,
+                'expense_cancelled' => 0,
+                'net_done' => 0,
+                'net_pending' => 0,
+                'net_cancelled' => 0,
             ];
         }
     }
