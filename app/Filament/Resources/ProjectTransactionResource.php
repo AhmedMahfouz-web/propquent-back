@@ -249,7 +249,7 @@ class ProjectTransactionResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('project')
-                    ->relationship('project', 'project_key')
+                    ->relationship('project', 'title')
                     ->searchable()
                     ->preload(),
 
@@ -340,27 +340,15 @@ class ProjectTransactionResource extends Resource
                             $filePath = storage_path('app/public/' . $data['file']);
                             $import = new ProjectTransactionSheetImport;
 
-                            // Add debug marker to confirm this code is running
-                            \Filament\Notifications\Notification::make()
-                                ->title('DEBUG: Starting Import')
-                                ->body('File path: ' . $filePath . '\nImport class: ' . get_class($import))
-                                ->info()
-                                ->send();
-
                             Excel::import($import, $filePath);
 
-                            $debugInfo = $import->getDebugInfo();
-                            $debugText = empty($debugInfo) ? 'No debug information available. Import object: ' . get_class($import) : implode("\n", $debugInfo);
-
                             \Filament\Notifications\Notification::make()
-                                ->title('DEBUG: Import Process Complete')
-                                ->body("Debug Information:\n\n" . $debugText)
+                                ->title('Import Process Complete')
                                 ->success()
-                                ->persistent() // Keep notification open so user can read debug info
                                 ->send();
                         } catch (\Exception $e) {
                             \Filament\Notifications\Notification::make()
-                                ->title('DEBUG: Import Failed')
+                                ->title('Import Failed')
                                 ->body('Error: ' . $e->getMessage() . '\nFile: ' . ($filePath ?? 'unknown'))
                                 ->danger()
                                 ->persistent()
@@ -412,7 +400,39 @@ class ProjectTransactionResource extends Resource
                         'status' => $record->status,
                         'amount' => $record->amount,
                     ])
+                    ->requiresConfirmation()
+                    ->modalHeading('Confirm Transaction Update')
+                    ->modalDescription(function ($record, array $data) {
+                        $originalStatus = $record->status;
+                        $originalAmount = $record->amount;
+                        $newStatus = $data['status'] ?? $originalStatus;
+                        $newAmount = $data['amount'] ?? $originalAmount;
+                        
+                        return "Please review the changes for transaction in project: {$record->project_key}\n\n" .
+                               "Transaction Date: " . \Carbon\Carbon::parse($record->transaction_date)->format('M d, Y') . "\n" .
+                               "Note: " . ($record->note ?: 'No note') . "\n\n" .
+                               "CHANGES:\n" .
+                               "Status: {$originalStatus} → {$newStatus}\n" .
+                               "Amount: EGP " . number_format($originalAmount, 2) . " → EGP " . number_format($newAmount, 2);
+                    })
+                    ->modalSubmitActionLabel('Confirm Update')
+                    ->modalCancelActionLabel('Cancel')
                     ->action(function ($record, array $data) {
+                        // Store original values for notification
+                        $originalStatus = $record->status;
+                        $originalAmount = $record->amount;
+                        
+                        // Check if there are any changes
+                        if ($originalStatus === $data['status'] && (float)$originalAmount === (float)$data['amount']) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No changes detected')
+                                ->body('The transaction data remains the same.')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+                        
+                        // Update the record
                         $record->update($data);
 
                         // Add a custom attribute to mark as edited
@@ -420,6 +440,7 @@ class ProjectTransactionResource extends Resource
 
                         \Filament\Notifications\Notification::make()
                             ->title('Transaction updated successfully')
+                            ->body("Status: {$originalStatus} → {$data['status']}\nAmount: EGP " . number_format($originalAmount, 2) . " → EGP " . number_format($data['amount'], 2))
                             ->success()
                             ->send();
                     })
@@ -452,6 +473,7 @@ class ProjectTransactionResource extends Resource
             ])
             ->defaultSort('transaction_date', 'desc');
     }
+
 
     public static function getRelations(): array
     {
