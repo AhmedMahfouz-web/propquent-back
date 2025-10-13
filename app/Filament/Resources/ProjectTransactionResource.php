@@ -251,7 +251,8 @@ class ProjectTransactionResource extends Resource
                 Tables\Filters\SelectFilter::make('project')
                     ->relationship('project', 'title')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->key} - {$record->title}"),
 
 
                 Tables\Filters\SelectFilter::make('financial_type')
@@ -382,84 +383,6 @@ class ProjectTransactionResource extends Resource
                     ->icon('heroicon-m-pencil-square')
                     ->color('warning'),
 
-                Tables\Actions\Action::make('quickEdit')
-                    ->label('Quick Edit')
-                    ->icon('heroicon-m-bolt')
-                    ->color('info')
-                    ->form([
-                        Forms\Components\Select::make('status')
-                            ->options(fn() => ProjectTransaction::getAvailableStatuses())
-                            ->required(),
-                        Forms\Components\TextInput::make('amount')
-                            ->numeric()
-                            ->step(0.01)
-                            ->required()
-                            ->prefix('EGP'),
-                    ])
-                    ->fillForm(fn($record) => [
-                        'status' => $record->status,
-                        'amount' => $record->amount,
-                    ])
-                    ->requiresConfirmation()
-                    ->modalHeading('Confirm Transaction Update')
-                    ->modalDescription(function ($record, array $data) {
-                        $originalStatus = $record->status;
-                        $originalAmount = $record->amount;
-                        $newStatus = $data['status'] ?? $originalStatus;
-                        $newAmount = $data['amount'] ?? $originalAmount;
-                        
-                        return "Please review the changes for transaction in project: {$record->project_key}\n\n" .
-                               "Transaction Date: " . \Carbon\Carbon::parse($record->transaction_date)->format('M d, Y') . "\n" .
-                               "Note: " . ($record->note ?: 'No note') . "\n\n" .
-                               "CHANGES:\n" .
-                               "Status: {$originalStatus} → {$newStatus}\n" .
-                               "Amount: EGP " . number_format($originalAmount, 2) . " → EGP " . number_format($newAmount, 2);
-                    })
-                    ->modalSubmitActionLabel('Confirm Update')
-                    ->modalCancelActionLabel('Cancel')
-                    ->action(function ($record, array $data) {
-                        // Store original values for notification
-                        $originalStatus = $record->status;
-                        $originalAmount = $record->amount;
-                        
-                        // Check if there are any changes
-                        if ($originalStatus === $data['status'] && (float)$originalAmount === (float)$data['amount']) {
-                            \Filament\Notifications\Notification::make()
-                                ->title('No changes detected')
-                                ->body('The transaction data remains the same.')
-                                ->warning()
-                                ->send();
-                            return;
-                        }
-                        
-                        // Update the record
-                        $record->update($data);
-
-                        // Add a custom attribute to mark as edited
-                        $record->setAttribute('recently_edited', true);
-
-                        \Filament\Notifications\Notification::make()
-                            ->title('Transaction updated successfully')
-                            ->body("Status: {$originalStatus} → {$data['status']}\nAmount: EGP " . number_format($originalAmount, 2) . " → EGP " . number_format($data['amount'], 2))
-                            ->success()
-                            ->send();
-                    })
-                    ->after(function () {
-                        // Add JavaScript to highlight edited row
-                        echo '<script>
-                            setTimeout(() => {
-                                const lastRow = document.querySelector(".fi-ta-row:last-child");
-                                if (lastRow) {
-                                    lastRow.style.border = "2px solid #10b981";
-                                    lastRow.style.backgroundColor = "rgba(16, 185, 129, 0.05)";
-                                    setTimeout(() => {
-                                        lastRow.style.border = "";
-                                        lastRow.style.backgroundColor = "";
-                                    }, 3000);
-                                }
-                            }, 100);
-                        </script>';
-                    }),
 
                 Tables\Actions\DeleteAction::make()
                     ->label('Delete')
