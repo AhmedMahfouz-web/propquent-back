@@ -249,7 +249,7 @@ class ProjectTransactionResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('project')
-                    ->relationship('project', 'title')
+                    ->relationship('project', 'title' . ' ' . 'key')
                     ->searchable()
                     ->preload(),
 
@@ -325,7 +325,7 @@ class ProjectTransactionResource extends Resource
                             ->success()
                             ->send();
                     }),
-                    
+
                 Tables\Actions\Action::make('import')
                     ->label('Import Excel')
                     ->icon('heroicon-o-arrow-up-tray')
@@ -339,19 +339,19 @@ class ProjectTransactionResource extends Resource
                         try {
                             $filePath = storage_path('app/public/' . $data['file']);
                             $import = new ProjectTransactionSheetImport;
-                            
+
                             // Add debug marker to confirm this code is running
                             \Filament\Notifications\Notification::make()
                                 ->title('DEBUG: Starting Import')
                                 ->body('File path: ' . $filePath . '\nImport class: ' . get_class($import))
                                 ->info()
                                 ->send();
-                            
+
                             Excel::import($import, $filePath);
-                            
+
                             $debugInfo = $import->getDebugInfo();
                             $debugText = empty($debugInfo) ? 'No debug information available. Import object: ' . get_class($import) : implode("\n", $debugInfo);
-                            
+
                             \Filament\Notifications\Notification::make()
                                 ->title('DEBUG: Import Process Complete')
                                 ->body("Debug Information:\n\n" . $debugText)
@@ -373,10 +373,10 @@ class ProjectTransactionResource extends Resource
                     ->action(function () {
                         // Generate fresh template with current data
                         \Artisan::call('template:project-transactions');
-                        
+
                         // Return the generated file for download
                         $templatePath = public_path('templates/project-transactions-template.xlsx');
-                        
+
                         if (file_exists($templatePath)) {
                             return response()->download($templatePath, 'project-transactions-template-' . date('Y-m-d') . '.xlsx');
                         } else {
@@ -393,7 +393,7 @@ class ProjectTransactionResource extends Resource
                     ->label('Edit')
                     ->icon('heroicon-m-pencil-square')
                     ->color('warning'),
-                    
+
                 Tables\Actions\Action::make('quickEdit')
                     ->label('Quick Edit')
                     ->icon('heroicon-m-bolt')
@@ -414,10 +414,10 @@ class ProjectTransactionResource extends Resource
                     ])
                     ->action(function ($record, array $data) {
                         $record->update($data);
-                        
+
                         // Add a custom attribute to mark as edited
                         $record->setAttribute('recently_edited', true);
-                        
+
                         \Filament\Notifications\Notification::make()
                             ->title('Transaction updated successfully')
                             ->success()
@@ -439,7 +439,7 @@ class ProjectTransactionResource extends Resource
                             }, 100);
                         </script>';
                     }),
-                    
+
                 Tables\Actions\DeleteAction::make()
                     ->label('Delete')
                     ->icon('heroicon-m-trash'),
