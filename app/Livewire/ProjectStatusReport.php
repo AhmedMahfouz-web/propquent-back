@@ -570,7 +570,7 @@ class ProjectStatusReport extends Component
         foreach ($transactions as $transaction) {
             $amount = (float) $transaction->amount;
             $serving = $transaction->serving ?? 'operation';
-            $category = $transaction->transaction_category ?? 'general';
+            $category = $transaction->financial_type ?? 'expense';
 
             // Determine if it's revenue or expense based on context
             // Since financial_type was dropped, we'll use serving and amount patterns
