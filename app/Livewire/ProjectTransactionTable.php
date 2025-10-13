@@ -194,9 +194,9 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ->filters([
                 Tables\Filters\SelectFilter::make('project')
                     ->relationship('project', 'title')
-                    ->relationship('project', 'project_key')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->key} - {$record->title}"),
 
                 Tables\Filters\SelectFilter::make('financial_type')
                     ->options(fn() => ProjectTransaction::getAvailableFinancialTypes()),
