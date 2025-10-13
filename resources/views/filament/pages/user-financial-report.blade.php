@@ -22,10 +22,11 @@
                 $metricConfig = $this->getMetricConfig();
                 $availableMetrics = $this->getAvailableMetrics();
 
+                // Maintain consistent metric order regardless of selection
                 $metricsToShow = [];
-                foreach ($selectedMetrics as $key) {
-                    if (isset($availableMetrics[$key])) {
-                        $metricsToShow[$key] = $availableMetrics[$key];
+                foreach ($availableMetrics as $key => $label) {
+                    if (in_array($key, $selectedMetrics)) {
+                        $metricsToShow[$key] = $label;
                     }
                 }
             @endphp
