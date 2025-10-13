@@ -177,9 +177,9 @@ class UserFinancialReport extends Page implements HasForms
             'withdrawals' => 'Withdrawals',
             'equity' => 'Equity',
             'equity_percentage' => 'Equity %',
-            'total_profit' => 'Total Profit',
             'profit_asset' => 'Profit Asset',
             'profit_operation' => 'Profit Operation',
+            'total_profit' => 'Total Profit',
         ];
     }
 
