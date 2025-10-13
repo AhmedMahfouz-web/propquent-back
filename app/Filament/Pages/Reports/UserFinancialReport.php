@@ -382,7 +382,9 @@ class UserFinancialReport extends Page implements HasForms
                     case 'total_deposits':
                         return array_sum($userFinancialData[$user->id]['deposits'] ?? []);
                     case 'total_equity':
-                        return array_sum($userFinancialData[$user->id]['equity'] ?? []);
+                        // For equity, use the most recent month's value instead of sum
+                        $equityData = $userFinancialData[$user->id]['equity'] ?? [];
+                        return !empty($equityData) ? reset($equityData) : 0; // First value (most recent month)
                     case 'total_profit':
                         return array_sum($userFinancialData[$user->id]['total_profit'] ?? []);
                     default:
