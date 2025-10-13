@@ -193,7 +193,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('project')
-                    ->relationship('project', 'project_key' . ' ' . 'title')
+                    ->relationship('project', ['title', 'project_key'])
                     ->searchable()
                     ->preload(),
 
