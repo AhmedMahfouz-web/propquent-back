@@ -613,10 +613,10 @@ class ProjectStatusReport extends Component
         // Logic to determine if transaction is revenue or expense based on business rules
 
         // Check transaction category patterns for revenue
-        $revenueCategories = ['rental', 'sales', 'income', 'profit', 'return', 'dividend', 'interest', 'commission'];
-        $expenseCategories = ['maintenance', 'administrative', 'purchase', 'fee', 'cost', 'repair', 'tax', 'insurance', 'management'];
+        $revenueCategories = ['revenue'];
+        $expenseCategories = ['expense'];
 
-        $category = strtolower($transaction->transaction_category ?? '');
+        $category = strtolower($transaction->financial_type ?? '');
         $note = strtolower($transaction->note ?? '');
 
         // First check explicit category matches
