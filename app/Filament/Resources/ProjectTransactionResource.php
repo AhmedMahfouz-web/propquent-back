@@ -249,7 +249,7 @@ class ProjectTransactionResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('project')
-                    ->relationship('project', 'title' . ' ' . 'project_key')
+                    ->relationship('project', 'project_key')
                     ->searchable()
                     ->preload(),
 
