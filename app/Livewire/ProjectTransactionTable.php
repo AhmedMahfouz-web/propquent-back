@@ -458,15 +458,26 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getTableSummary(): array
     {
         try {
-            // Get the current page records from the table
-            $table = $this->getTable();
-            $records = $table->getRecords();
-
-            // Calculate from current page records only
-            $recordCount = $records->count();
-            $totalAmount = $records->sum('amount');
-            $totalRevenue = $records->where('financial_type', 'revenue')->sum('amount');
-            $totalExpense = $records->where('financial_type', 'expense')->sum('amount');
+            // Get ALL filtered records (not just current page)
+            $query = $this->getFilteredTableQuery();
+            
+            // Calculate totals from all filtered records
+            $recordCount = $query->count();
+            $totalAmount = $query->sum('amount');
+            $totalRevenue = $query->where('financial_type', 'revenue')->sum('amount');
+            $totalExpense = $query->where('financial_type', 'expense')->sum('amount');
+            
+            // Calculate serving breakdown for revenue
+            $revenueOperationTotal = $query->where('financial_type', 'revenue')
+                ->where('serving', 'operation')->sum('amount');
+            $revenueAssetTotal = $query->where('financial_type', 'revenue')
+                ->where('serving', 'asset')->sum('amount');
+            
+            // Calculate serving breakdown for expense
+            $expenseOperationTotal = $query->where('financial_type', 'expense')
+                ->where('serving', 'operation')->sum('amount');
+            $expenseAssetTotal = $query->where('financial_type', 'expense')
+                ->where('serving', 'asset')->sum('amount');
 
             return [
                 'total_records' => $recordCount,
@@ -474,6 +485,15 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 'total_revenue' => $totalRevenue,
                 'total_expense' => $totalExpense,
                 'net_amount' => $totalRevenue - $totalExpense,
+                // Revenue breakdown by serving
+                'revenue_operation' => $revenueOperationTotal,
+                'revenue_asset' => $revenueAssetTotal,
+                // Expense breakdown by serving
+                'expense_operation' => $expenseOperationTotal,
+                'expense_asset' => $expenseAssetTotal,
+                // Net by serving
+                'net_operation' => $revenueOperationTotal - $expenseOperationTotal,
+                'net_asset' => $revenueAssetTotal - $expenseAssetTotal,
             ];
         } catch (\Exception $e) {
             return [
@@ -482,6 +502,12 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 'total_revenue' => 0,
                 'total_expense' => 0,
                 'net_amount' => 0,
+                'revenue_operation' => 0,
+                'revenue_asset' => 0,
+                'expense_operation' => 0,
+                'expense_asset' => 0,
+                'net_operation' => 0,
+                'net_asset' => 0,
             ];
         }
     }

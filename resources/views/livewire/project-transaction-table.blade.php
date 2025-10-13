@@ -149,7 +149,7 @@
             <!-- Table Summary -->
             <div class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                    Current Page Summary
+                    All Filtered Data Summary
                 </h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
@@ -160,19 +160,54 @@
                         <span class="text-gray-600 dark:text-gray-400">Total Amount:</span>
                         <span class="font-semibold text-gray-900 dark:text-white font-mono">{{ number_format($tableSummary['total_amount'], 2) }}</span>
                     </div>
+                    
+                    <!-- Revenue Breakdown -->
                     <div class="flex justify-between">
                         <span class="text-green-600 dark:text-green-400">Total Revenue:</span>
                         <span class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ number_format($tableSummary['total_revenue'], 2) }}</span>
                     </div>
+                    <div class="flex justify-between pl-4">
+                        <span class="text-green-500 dark:text-green-300 text-xs">• Operation:</span>
+                        <span class="font-medium text-green-500 dark:text-green-300 font-mono text-xs">{{ number_format($tableSummary['revenue_operation'], 2) }}</span>
+                    </div>
+                    <div class="flex justify-between pl-4">
+                        <span class="text-green-500 dark:text-green-300 text-xs">• Asset:</span>
+                        <span class="font-medium text-green-500 dark:text-green-300 font-mono text-xs">{{ number_format($tableSummary['revenue_asset'], 2) }}</span>
+                    </div>
+                    
+                    <!-- Expense Breakdown -->
                     <div class="flex justify-between">
                         <span class="text-red-600 dark:text-red-400">Total Expense:</span>
                         <span class="font-semibold text-red-600 dark:text-red-400 font-mono">({{ number_format($tableSummary['total_expense'], 2) }})</span>
                     </div>
+                    <div class="flex justify-between pl-4">
+                        <span class="text-red-500 dark:text-red-300 text-xs">• Operation:</span>
+                        <span class="font-medium text-red-500 dark:text-red-300 font-mono text-xs">({{ number_format($tableSummary['expense_operation'], 2) }})</span>
+                    </div>
+                    <div class="flex justify-between pl-4">
+                        <span class="text-red-500 dark:text-red-300 text-xs">• Asset:</span>
+                        <span class="font-medium text-red-500 dark:text-red-300 font-mono text-xs">({{ number_format($tableSummary['expense_asset'], 2) }})</span>
+                    </div>
+                    
                     <hr class="border-gray-200 dark:border-gray-600 my-2">
+                    
+                    <!-- Net Totals -->
                     <div class="flex justify-between">
                         <span class="text-gray-900 dark:text-white font-semibold">Net Amount:</span>
                         <span class="font-bold font-mono {{ $tableSummary['net_amount'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                             {{ $tableSummary['net_amount'] >= 0 ? number_format($tableSummary['net_amount'], 2) : '(' . number_format(abs($tableSummary['net_amount']), 2) . ')' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between pl-4">
+                        <span class="text-gray-600 dark:text-gray-400 text-xs">• Net Operation:</span>
+                        <span class="font-medium font-mono text-xs {{ $tableSummary['net_operation'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                            {{ $tableSummary['net_operation'] >= 0 ? number_format($tableSummary['net_operation'], 2) : '(' . number_format(abs($tableSummary['net_operation']), 2) . ')' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between pl-4">
+                        <span class="text-gray-600 dark:text-gray-400 text-xs">• Net Asset:</span>
+                        <span class="font-medium font-mono text-xs {{ $tableSummary['net_asset'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                            {{ $tableSummary['net_asset'] >= 0 ? number_format($tableSummary['net_asset'], 2) : '(' . number_format(abs($tableSummary['net_asset']), 2) . ')' }}
                         </span>
                     </div>
                 </div>
