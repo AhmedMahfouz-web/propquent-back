@@ -219,7 +219,7 @@
                         
                         <!-- Done Status -->
                         <div class="flex justify-between">
-                            <span class="text-green-600 dark:text-green-400 text-xs">✓ Done:</span>
+                            <span class="text-green-600 dark:text-green-400 text-xs">Done:</span>
                             <span class="font-medium text-green-600 dark:text-green-400 font-mono text-xs">{{ number_format($tableSummary['done_total'], 2) }}</span>
                         </div>
                         <div class="flex justify-between pl-4">
@@ -239,7 +239,7 @@
                         
                         <!-- Pending Status -->
                         <div class="flex justify-between mt-1">
-                            <span class="text-yellow-600 dark:text-yellow-400 text-xs">⏳ Pending:</span>
+                            <span class="text-yellow-600 dark:text-yellow-400 text-xs">Pending:</span>
                             <span class="font-medium text-yellow-600 dark:text-yellow-400 font-mono text-xs">{{ number_format($tableSummary['pending_total'], 2) }}</span>
                         </div>
                         <div class="flex justify-between pl-4">
@@ -260,7 +260,7 @@
                         <!-- Cancelled Status -->
                         @if($tableSummary['cancelled_total'] > 0)
                         <div class="flex justify-between mt-1">
-                            <span class="text-red-600 dark:text-red-400 text-xs">✗ Cancelled:</span>
+                            <span class="text-red-600 dark:text-red-400 text-xs">Cancelled:</span>
                             <span class="font-medium text-red-600 dark:text-red-400 font-mono text-xs">{{ number_format($tableSummary['cancelled_total'], 2) }}</span>
                         </div>
                         <div class="flex justify-between pl-4">

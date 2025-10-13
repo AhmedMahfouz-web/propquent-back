@@ -479,25 +479,28 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
             $expenseAssetTotal = $query->where('financial_type', 'expense')
                 ->where('serving', 'asset')->sum('amount');
             
-            // Calculate status breakdown
-            $doneTotalAmount = $query->where('status', 'done')->sum('amount');
-            $pendingTotalAmount = $query->where('status', 'pending')->sum('amount');
-            $cancelledTotalAmount = $query->where('status', 'cancelled')->sum('amount');
+            // Get all records for status calculations
+            $allRecords = $query->get();
+            
+            // Calculate status breakdown from the collection
+            $doneTotalAmount = $allRecords->where('status', 'done')->sum('amount');
+            $pendingTotalAmount = $allRecords->where('status', 'pending')->sum('amount');
+            $cancelledTotalAmount = $allRecords->where('status', 'cancelled')->sum('amount');
             
             // Revenue by status
-            $revenueStatusDone = $query->where('financial_type', 'revenue')
+            $revenueStatusDone = $allRecords->where('financial_type', 'revenue')
                 ->where('status', 'done')->sum('amount');
-            $revenueStatusPending = $query->where('financial_type', 'revenue')
+            $revenueStatusPending = $allRecords->where('financial_type', 'revenue')
                 ->where('status', 'pending')->sum('amount');
-            $revenueStatusCancelled = $query->where('financial_type', 'revenue')
+            $revenueStatusCancelled = $allRecords->where('financial_type', 'revenue')
                 ->where('status', 'cancelled')->sum('amount');
             
             // Expense by status
-            $expenseStatusDone = $query->where('financial_type', 'expense')
+            $expenseStatusDone = $allRecords->where('financial_type', 'expense')
                 ->where('status', 'done')->sum('amount');
-            $expenseStatusPending = $query->where('financial_type', 'expense')
+            $expenseStatusPending = $allRecords->where('financial_type', 'expense')
                 ->where('status', 'pending')->sum('amount');
-            $expenseStatusCancelled = $query->where('financial_type', 'expense')
+            $expenseStatusCancelled = $allRecords->where('financial_type', 'expense')
                 ->where('status', 'cancelled')->sum('amount');
 
             return [
