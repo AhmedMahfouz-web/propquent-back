@@ -255,13 +255,43 @@ class ProjectFinancialReport extends Page implements HasForms
                 $data['months'][$month][$key] += $transaction->amount;
             }
         }
+        
+        // Determine exit month if project is exited
+        $exitMonth = null;
+        if ($project->status === Project::STATUS_EXITED && $project->exit_date) {
+            $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m-01');
+        }
+        
+        // Calculate cumulative asset evaluation
+        $previousAssetEvaluation = 0;
         $isFirstMonth = true; // Track if this is the first (most recent) month
-        foreach ($data['months'] as $month => &$monthData) {
+        
+        // Process months in reverse chronological order (oldest first) for cumulative calculation
+        $monthsReversed = array_reverse($allMonths);
+        
+        foreach ($monthsReversed as $month) {
+            $monthData = &$data['months'][$month];
+            
             // Get Value Correction from database
             $monthData['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
             
-            // Calculate Evaluation Asset = Total Asset Expenses - Total Asset Revenues + Value Correction
-            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+            // Check if this month is after project exit
+            $isAfterExit = false;
+            if ($exitMonth && $month >= $exitMonth) {
+                $isAfterExit = true;
+            }
+            
+            if ($isAfterExit) {
+                // If project is exited, asset evaluation becomes 0
+                $monthData['evaluation_asset'] = 0;
+            } else {
+                // Calculate cumulative asset evaluation:
+                // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
+                $monthData['evaluation_asset'] = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+            }
+            
+            // Update previous evaluation for next iteration
+            $previousAssetEvaluation = $monthData['evaluation_asset'];
             
             // Calculate total fields
             $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
@@ -271,7 +301,10 @@ class ProjectFinancialReport extends Page implements HasForms
             $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
             $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
             $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
-            
+        }
+        
+        // Calculate totals (process in original order - newest first)
+        foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
                 if ($key === 'evaluation_asset') {
                     // For Asset Evaluation, use only the most recent month's value (first iteration)
@@ -295,64 +328,48 @@ class ProjectFinancialReport extends Page implements HasForms
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
-        $projectKeys = (clone $projectsQuery)->pluck('key');
-        $transactions = ProjectTransaction::whereIn('project_key', $projectKeys)
-            ->where('status', 'done')
-            ->get();
-        $today = now()->startOfDay();
         
-        foreach ($transactions as $transaction) {
-            $dateToUse = null;
-            $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
-            $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
-            
-            // Only include done transactions
-            if ($transaction->status === 'done') {
-                if ($actualDate && $actualDate->lte($today)) {
-                    // Done transaction with actual date in past/present - use actual_date
-                    $dateToUse = $transaction->actual_date;
-                } elseif (!$actualDate && $transactionDate->lte($today)) {
-                    // Done transaction without actual_date but transaction_date in past/present
-                    $dateToUse = $transaction->transaction_date;
-                } else {
-                    // Skip future done transactions or other cases
-                    continue;
-                }
-            } else {
-                // Skip non-done transactions
-                continue;
-            }
-            
-            $month = date('Y-m-01', strtotime($dateToUse));
-            
-            if (isset($summary['months'][$month]) && $transaction->financial_type && $transaction->serving) {
-                $key = $transaction->financial_type . '_' . $transaction->serving;
-                if (!isset($summary['months'][$month][$key])) {
-                    $summary['months'][$month][$key] = 0;
-                }
-                $summary['months'][$month][$key] += $transaction->amount;
-            }
+        // Get all projects with their data to calculate cumulative asset evaluations
+        $projects = (clone $projectsQuery)->with(['transactions', 'valueCorrections'])->get();
+        
+        // Calculate individual project data for each month
+        $projectsData = [];
+        foreach ($projects as $project) {
+            $projectsData[$project->key] = $this->getProjectFinancialData($project, $allMonths);
         }
-        $isFirstMonth = true; // Track if this is the first (most recent) month
-        foreach ($summary['months'] as $month => &$monthData) {
-            // Calculate total value correction for all projects in this month
-            $monthData['value_correction'] = 0;
-            foreach ($projectKeys as $projectKey) {
-                $monthData['value_correction'] += \App\Models\ValueCorrection::getCorrectionForMonth($projectKey, $month);
+        
+        // Aggregate all project data into summary
+        foreach ($allMonths as $month) {
+            foreach ($projectsData as $projectData) {
+                $monthData = $projectData['months'][$month];
+                
+                // Sum all metrics except asset evaluation (which needs special handling)
+                foreach ($monthData as $key => $value) {
+                    if ($key !== 'evaluation_asset') {
+                        $summary['months'][$month][$key] += $value;
+                    }
+                }
             }
             
-            // Calculate total evaluation asset for all projects in this month
-            $monthData['evaluation_asset'] = $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+            // For asset evaluation, sum the current asset evaluations of all projects
+            $summary['months'][$month]['evaluation_asset'] = 0;
+            foreach ($projectsData as $projectData) {
+                $summary['months'][$month]['evaluation_asset'] += $projectData['months'][$month]['evaluation_asset'];
+            }
             
             // Calculate total fields
-            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
-            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
+            $summary['months'][$month]['expense_total'] = $summary['months'][$month]['expense_asset'] + $summary['months'][$month]['expense_operation'];
+            $summary['months'][$month]['revenue_total'] = $summary['months'][$month]['revenue_asset'] + $summary['months'][$month]['revenue_operation'];
             
             // Calculate derived profit metrics
-            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
-            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
-            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
-            
+            $summary['months'][$month]['profit_operation'] = $summary['months'][$month]['revenue_operation'] - $summary['months'][$month]['expense_operation'];
+            $summary['months'][$month]['profit_asset'] = $summary['months'][$month]['revenue_asset'] - $summary['months'][$month]['expense_asset'];
+            $summary['months'][$month]['total_profit'] = $summary['months'][$month]['profit_operation'] + $summary['months'][$month]['profit_asset'];
+        }
+        
+        // Calculate totals (process in original order - newest first)
+        $isFirstMonth = true;
+        foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
                 if ($key === 'evaluation_asset') {
                     // For Asset Evaluation, use only the most recent month's value (first iteration)
