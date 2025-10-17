@@ -372,9 +372,9 @@ class ProjectFinancialReport extends Page implements HasForms
                 $calculatedValue = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
                 $monthData['evaluation_asset'] = $calculatedValue;
                 
-                // Debug for Q1 Villa - simple alert
-                if (strpos($project->title, 'Q1 Villa') !== false && $month === '2025-10-01') {
-                    $monthData['debug_oct'] = "Oct Calc: Prev={$previousAssetEvaluation} + Exp={$monthData['expense_asset']} - Rev={$monthData['revenue_asset']} + Corr={$monthData['value_correction']} = {$calculatedValue}";
+                // Debug for any project in Oct 2025
+                if ($month === '2025-10-01') {
+                    $monthData['debug_oct'] = "Oct: Prev={$previousAssetEvaluation} + Exp={$monthData['expense_asset']} - Rev={$monthData['revenue_asset']} + Corr={$monthData['value_correction']} = {$calculatedValue}";
                 }
                 
                 // Update previous evaluation for next iteration
