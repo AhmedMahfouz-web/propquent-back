@@ -367,6 +367,11 @@ class ProjectFinancialReport extends Page implements HasForms
                 // Calculate cumulative asset evaluation:
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
                 $monthData['evaluation_asset'] = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+                
+                // Debug for Q1 Villa project
+                if (strpos($project->title, 'Q1 Villa') !== false && $month >= '2025-09-01') {
+                    $monthData['debug_info'] = "Prev: {$previousAssetEvaluation}, Exp: {$monthData['expense_asset']}, Rev: {$monthData['revenue_asset']}, Corr: {$monthData['value_correction']}, Result: {$monthData['evaluation_asset']}";
+                }
             }
             
             

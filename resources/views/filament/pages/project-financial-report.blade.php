@@ -131,6 +131,9 @@
                                             @elseif ($key === 'evaluation_asset')
                                                 <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
+                                                    @if(isset($projectData['months'][$month]['debug_info']))
+                                                        <br><small class="text-red-500">{{ $projectData['months'][$month]['debug_info'] }}</small>
+                                                    @endif
                                                 </span>
                                             @else
                                                 <span class="text-xs text-gray-700 dark:text-gray-300">
