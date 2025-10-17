@@ -340,7 +340,7 @@ class ProjectFinancialReport extends Page implements HasForms
         
         // Calculate totals (process in original order - newest first)
         $monthKeys = array_keys($data['months']);
-        $lastMonth = end($monthKeys); // Get the last month (end month in filtered range)
+        $lastMonth = reset($monthKeys); // Get the first month in display order (which is the chronologically newest/end month)
         
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
@@ -411,7 +411,7 @@ class ProjectFinancialReport extends Page implements HasForms
         
         // Calculate totals (process in original order - newest first)
         $summaryMonthKeys = array_keys($summary['months']);
-        $lastSummaryMonth = end($summaryMonthKeys); // Get the last month (end month in filtered range)
+        $lastSummaryMonth = reset($summaryMonthKeys); // Get the first month in display order (which is the chronologically newest/end month)
         
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
