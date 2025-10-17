@@ -298,12 +298,13 @@ class ProjectFinancialReport extends Page implements HasForms
             $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
         }
         
-        // Calculate cumulative asset evaluation
+        // Calculate cumulative asset evaluation and profit asset
         // Process months in chronological order (oldest first) for cumulative calculation
         $monthsChronological = array_reverse($allMonths);
         $runningTotal = 0;
+        $previousAssetEvaluation = 0;
         
-        foreach ($monthsChronological as $month) {
+        foreach ($monthsChronological as $monthIndex => $month) {
             // Get Value Correction from database
             $data['months'][$month]['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
             
@@ -317,6 +318,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 // If project is exited, asset evaluation becomes 0
                 $data['months'][$month]['evaluation_asset'] = 0;
                 $runningTotal = 0; // Reset for future months after exit
+                $previousAssetEvaluation = 0;
             } else {
                 // Calculate cumulative asset evaluation:
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
@@ -334,8 +336,19 @@ class ProjectFinancialReport extends Page implements HasForms
             
             // Calculate derived profit metrics
             $data['months'][$month]['profit_operation'] = $data['months'][$month]['revenue_operation'] - $data['months'][$month]['expense_operation'];
-            $data['months'][$month]['profit_asset'] = $data['months'][$month]['revenue_asset'] - $data['months'][$month]['expense_asset'];
+            
+            // Calculate Profit Asset using the new formula:
+            // Profit Asset = Current month Asset Evaluation - Previous month Asset Evaluation + Current month Revenue Asset - Current month Expense Asset
+            $currentAssetEvaluation = $data['months'][$month]['evaluation_asset'];
+            $currentRevenueAsset = $data['months'][$month]['revenue_asset'] ?? 0;
+            $currentExpenseAsset = $data['months'][$month]['expense_asset'] ?? 0;
+            
+            $data['months'][$month]['profit_asset'] = $currentAssetEvaluation - $previousAssetEvaluation + $currentRevenueAsset - $currentExpenseAsset;
+            
             $data['months'][$month]['total_profit'] = $data['months'][$month]['profit_operation'] + $data['months'][$month]['profit_asset'];
+            
+            // Store current evaluation as previous for next iteration
+            $previousAssetEvaluation = $currentAssetEvaluation;
         }
         
         // Calculate totals (process in original order - newest first)
@@ -405,7 +418,13 @@ class ProjectFinancialReport extends Page implements HasForms
             
             // Calculate derived profit metrics
             $summary['months'][$month]['profit_operation'] = $summary['months'][$month]['revenue_operation'] - $summary['months'][$month]['expense_operation'];
-            $summary['months'][$month]['profit_asset'] = $summary['months'][$month]['revenue_asset'] - $summary['months'][$month]['expense_asset'];
+            
+            // For summary, profit_asset is the sum of all individual project profit_asset values (already calculated with new formula)
+            $summary['months'][$month]['profit_asset'] = 0;
+            foreach ($projectsData as $projectData) {
+                $summary['months'][$month]['profit_asset'] += $projectData['months'][$month]['profit_asset'];
+            }
+            
             $summary['months'][$month]['total_profit'] = $summary['months'][$month]['profit_operation'] + $summary['months'][$month]['profit_asset'];
         }
         
