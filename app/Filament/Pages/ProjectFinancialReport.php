@@ -331,10 +331,6 @@ class ProjectFinancialReport extends Page implements HasForms
                 $calculatedValue = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
                 $monthData['evaluation_asset'] = $calculatedValue;
                 
-                // Temporary debug for Q1 Villa - store in month data to display
-                if (strpos($project->title, 'Q1 Villa') !== false && in_array($month, ['2025-09-01', '2025-10-01'])) {
-                    $monthData['debug_calc'] = "P:{$previousAssetEvaluation} E:{$monthData['expense_asset']} R:{$monthData['revenue_asset']} = {$calculatedValue}";
-                }
                 
                 // Update previous evaluation for next iteration
                 $previousAssetEvaluation = $calculatedValue;
@@ -354,8 +350,8 @@ class ProjectFinancialReport extends Page implements HasForms
         $isFirstMonthInTotals = true;
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
-                // Skip debug keys that don't exist in month data or are debug keys
-                if (!isset($monthData[$key]) || $key === 'debug_calc') {
+                // Skip keys that don't exist in month data
+                if (!isset($monthData[$key])) {
                     continue;
                 }
                 
@@ -424,8 +420,8 @@ class ProjectFinancialReport extends Page implements HasForms
         $isFirstMonthInSummary = true;
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
-                // Skip debug keys that don't exist in month data or are debug keys
-                if (!isset($monthData[$key]) || $key === 'debug_calc') {
+                // Skip keys that don't exist in month data
+                if (!isset($monthData[$key])) {
                     continue;
                 }
                 
