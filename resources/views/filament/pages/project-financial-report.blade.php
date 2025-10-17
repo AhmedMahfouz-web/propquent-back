@@ -132,6 +132,15 @@
                                                 <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                                 </span>
+                                                @if(strpos($projectData['title'], 'Q1 Villa') !== false && in_array($month, ['2025-09-01', '2025-10-01']))
+                                                    <script>
+                                                        console.log('Q1 Villa {{ $month }}: Asset Evaluation = ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}');
+                                                        console.log('Q1 Villa {{ $month }}: Expense Asset = ${{ number_format($projectData['months'][$month]['expense_asset'] ?? 0, 2) }}');
+                                                        console.log('Q1 Villa {{ $month }}: Revenue Asset = ${{ number_format($projectData['months'][$month]['revenue_asset'] ?? 0, 2) }}');
+                                                        console.log('Q1 Villa {{ $month }}: Value Correction = ${{ number_format($projectData['months'][$month]['value_correction'] ?? 0, 2) }}');
+                                                        console.log('---');
+                                                    </script>
+                                                @endif
                                             @else
                                                 <span class="text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
