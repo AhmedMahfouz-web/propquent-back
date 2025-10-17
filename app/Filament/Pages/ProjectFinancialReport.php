@@ -322,7 +322,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 continue;
             }
             
-            $transactionMonth = date('Y-m-01', strtotime($dateToUse));
+            $transactionMonth = date('Y-m', strtotime($dateToUse));
             
             // If transaction is before the filtered period, include it in baseline
             if ($transactionMonth < $firstFilteredMonth) {
@@ -373,7 +373,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 $monthData['evaluation_asset'] = $calculatedValue;
                 
                 // Debug for any project in Oct 2025
-                if ($month === '2025-10-01') {
+                if ($month === '2025-10') {
                     $monthData['debug_oct'] = "Oct: Prev={$previousAssetEvaluation} + Exp={$monthData['expense_asset']} - Rev={$monthData['revenue_asset']} + Corr={$monthData['value_correction']} = {$calculatedValue}";
                 }
                 
