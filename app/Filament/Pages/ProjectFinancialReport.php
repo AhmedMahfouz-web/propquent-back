@@ -392,6 +392,11 @@ class ProjectFinancialReport extends Page implements HasForms
         $isFirstMonthInTotals = true;
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
+                // Skip debug keys that don't exist in month data
+                if (!isset($monthData[$key])) {
+                    continue;
+                }
+                
                 if ($key === 'evaluation_asset') {
                     // For Asset Evaluation, use only the most recent month's value (first month in display order)
                     if ($isFirstMonthInTotals) {
@@ -457,6 +462,11 @@ class ProjectFinancialReport extends Page implements HasForms
         $isFirstMonthInSummary = true;
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
+                // Skip debug keys that don't exist in month data
+                if (!isset($monthData[$key])) {
+                    continue;
+                }
+                
                 if ($key === 'evaluation_asset') {
                     // For Asset Evaluation, use only the most recent month's value (first month in display order)
                     if ($isFirstMonthInSummary) {
