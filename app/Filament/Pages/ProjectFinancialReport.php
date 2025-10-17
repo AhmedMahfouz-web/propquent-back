@@ -324,15 +324,21 @@ class ProjectFinancialReport extends Page implements HasForms
             if ($isAfterExit) {
                 // If project is exited, asset evaluation becomes 0
                 $monthData['evaluation_asset'] = 0;
+                $previousAssetEvaluation = 0; // Reset for future months after exit
             } else {
                 // Calculate cumulative asset evaluation:
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
-                $monthData['evaluation_asset'] = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+                $calculatedValue = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+                $monthData['evaluation_asset'] = $calculatedValue;
+                
+                // Temporary debug for Q1 Villa
+                if (strpos($project->title, 'Q1 Villa') !== false && in_array($month, ['2025-09-01', '2025-10-01'])) {
+                    error_log("Q1 Villa {$month}: Prev={$previousAssetEvaluation}, Exp={$monthData['expense_asset']}, Rev={$monthData['revenue_asset']}, Corr={$monthData['value_correction']}, Result={$calculatedValue}");
+                }
+                
+                // Update previous evaluation for next iteration
+                $previousAssetEvaluation = $calculatedValue;
             }
-            
-            
-            // Update previous evaluation for next iteration
-            $previousAssetEvaluation = $monthData['evaluation_asset'];
             
             // Calculate total fields
             $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
