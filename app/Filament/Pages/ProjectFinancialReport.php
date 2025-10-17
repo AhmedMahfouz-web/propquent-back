@@ -347,7 +347,9 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         
         // Calculate totals (process in original order - newest first)
-        $isFirstMonthInTotals = true;
+        $monthKeys = array_keys($data['months']);
+        $lastMonth = end($monthKeys); // Get the last month (end month in filtered range)
+        
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
                 // Skip keys that don't exist in month data
@@ -356,15 +358,14 @@ class ProjectFinancialReport extends Page implements HasForms
                 }
                 
                 if ($key === 'evaluation_asset') {
-                    // For Asset Evaluation, use only the most recent month's value (first month in display order)
-                    if ($isFirstMonthInTotals) {
+                    // For Asset Evaluation, use only the LAST month's value (end month in filtered range)
+                    if ($month === $lastMonth) {
                         $total = $monthData[$key];
                     }
                 } else {
                     $total += $monthData[$key];
                 }
             }
-            $isFirstMonthInTotals = false; // After first iteration, set to false
         }
         
         return $data;
@@ -417,7 +418,9 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         
         // Calculate totals (process in original order - newest first)
-        $isFirstMonthInSummary = true;
+        $summaryMonthKeys = array_keys($summary['months']);
+        $lastSummaryMonth = end($summaryMonthKeys); // Get the last month (end month in filtered range)
+        
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
                 // Skip keys that don't exist in month data
@@ -426,15 +429,14 @@ class ProjectFinancialReport extends Page implements HasForms
                 }
                 
                 if ($key === 'evaluation_asset') {
-                    // For Asset Evaluation, use only the most recent month's value (first month in display order)
-                    if ($isFirstMonthInSummary) {
+                    // For Asset Evaluation, use only the LAST month's value (end month in filtered range)
+                    if ($month === $lastSummaryMonth) {
                         $total = $monthData[$key];
                     }
                 } else {
                     $total += $monthData[$key];
                 }
             }
-            $isFirstMonthInSummary = false; // After first iteration, set to false
         }
         
         return $summary;

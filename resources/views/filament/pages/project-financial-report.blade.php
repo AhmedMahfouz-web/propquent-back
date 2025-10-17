@@ -132,11 +132,6 @@
                                                 <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
                                                 </span>
-                                                @if($month === '2025-10-01')
-                                                    <script>
-                                                        console.log('{{ $projectData['title'] }} Oct 2025: Asset Evaluation = ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}');
-                                                    </script>
-                                                @endif
                                             @else
                                                 <span class="text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
