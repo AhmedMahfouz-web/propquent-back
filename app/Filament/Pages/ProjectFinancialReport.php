@@ -301,15 +301,11 @@ class ProjectFinancialReport extends Page implements HasForms
         // Calculate cumulative asset evaluation
         // Process months in chronological order (oldest first) for cumulative calculation
         $monthsChronological = array_reverse($allMonths);
-        $cumulativeEvaluation = 0;
-        
-        
+        $runningTotal = 0;
         
         foreach ($monthsChronological as $month) {
-            $monthData = &$data['months'][$month];
-            
             // Get Value Correction from database
-            $monthData['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
+            $data['months'][$month]['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
             
             // Check if this month is after project exit
             $isAfterExit = false;
@@ -319,28 +315,27 @@ class ProjectFinancialReport extends Page implements HasForms
             
             if ($isAfterExit) {
                 // If project is exited, asset evaluation becomes 0
-                $monthData['evaluation_asset'] = 0;
-                $cumulativeEvaluation = 0; // Reset for future months after exit
+                $data['months'][$month]['evaluation_asset'] = 0;
+                $runningTotal = 0; // Reset for future months after exit
             } else {
                 // Calculate cumulative asset evaluation:
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
-                $cumulativeEvaluation = $cumulativeEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
-                $monthData['evaluation_asset'] = $cumulativeEvaluation;
+                $expenses = $data['months'][$month]['expense_asset'] ?? 0;
+                $revenues = $data['months'][$month]['revenue_asset'] ?? 0;
+                $corrections = $data['months'][$month]['value_correction'] ?? 0;
                 
-                // Debug for Q1 Villa Oct 2025
-                if (strpos($project->title, 'Q1 Villa') !== false && $month === '2025-10') {
-                    $monthData['debug_calc'] = "Cumulative: {$cumulativeEvaluation}";
-                }
+                $runningTotal = $runningTotal + $expenses - $revenues + $corrections;
+                $data['months'][$month]['evaluation_asset'] = $runningTotal;
             }
             
             // Calculate total fields
-            $monthData['expense_total'] = $monthData['expense_asset'] + $monthData['expense_operation'];
-            $monthData['revenue_total'] = $monthData['revenue_asset'] + $monthData['revenue_operation'];
+            $data['months'][$month]['expense_total'] = $data['months'][$month]['expense_asset'] + $data['months'][$month]['expense_operation'];
+            $data['months'][$month]['revenue_total'] = $data['months'][$month]['revenue_asset'] + $data['months'][$month]['revenue_operation'];
             
             // Calculate derived profit metrics
-            $monthData['profit_operation'] = $monthData['revenue_operation'] - $monthData['expense_operation'];
-            $monthData['profit_asset'] = $monthData['revenue_asset'] - $monthData['expense_asset'];
-            $monthData['total_profit'] = $monthData['profit_operation'] + $monthData['profit_asset'];
+            $data['months'][$month]['profit_operation'] = $data['months'][$month]['revenue_operation'] - $data['months'][$month]['expense_operation'];
+            $data['months'][$month]['profit_asset'] = $data['months'][$month]['revenue_asset'] - $data['months'][$month]['expense_asset'];
+            $data['months'][$month]['total_profit'] = $data['months'][$month]['profit_operation'] + $data['months'][$month]['profit_asset'];
         }
         
         // Calculate totals (process in original order - newest first)
