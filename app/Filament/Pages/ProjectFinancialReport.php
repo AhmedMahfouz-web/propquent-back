@@ -334,8 +334,8 @@ class ProjectFinancialReport extends Page implements HasForms
         
         // Add value corrections from before the filtered period
         $valueCorrections = \App\Models\ValueCorrection::where('project_key', $project->key)
-            ->where('month', '<', $firstFilteredMonth)
-            ->sum('amount');
+            ->where('correction_date', '<', $firstFilteredMonth)
+            ->sum('correction_amount');
         $baselineEvaluation += $valueCorrections;
         
         $previousAssetEvaluation = $baselineEvaluation;
