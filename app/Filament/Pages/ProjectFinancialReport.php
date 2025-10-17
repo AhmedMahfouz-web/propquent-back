@@ -298,47 +298,8 @@ class ProjectFinancialReport extends Page implements HasForms
             $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m-01');
         }
         
-        // Calculate cumulative asset evaluation
-        // First, calculate the baseline evaluation from all transactions before the filtered period
-        $firstFilteredMonth = end($allMonths); // Get the oldest month in the filtered range
-        $baselineEvaluation = 0;
-        
-        // Calculate baseline from all transactions before the filtered period
-        foreach ($project->transactions as $transaction) {
-            $dateToUse = null;
-            $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
-            $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
-            
-            // Only include done transactions
-            if ($transaction->status === 'done') {
-                if ($actualDate && $actualDate->lte($today)) {
-                    $dateToUse = $transaction->actual_date;
-                } elseif (!$actualDate && $transactionDate->lte($today)) {
-                    $dateToUse = $transaction->transaction_date;
-                } else {
-                    continue;
-                }
-            } else {
-                continue;
-            }
-            
-            $transactionMonth = date('Y-m-01', strtotime($dateToUse));
-            
-            // If transaction is before the filtered period, include it in baseline
-            if ($transactionMonth < $firstFilteredMonth && $transaction->financial_type === 'expense' && $transaction->serving === 'asset') {
-                $baselineEvaluation += $transaction->amount;
-            } elseif ($transactionMonth < $firstFilteredMonth && $transaction->financial_type === 'revenue' && $transaction->serving === 'asset') {
-                $baselineEvaluation -= $transaction->amount;
-            }
-        }
-        
-        // Add value corrections from before the filtered period
-        $valueCorrections = \App\Models\ValueCorrection::where('project_key', $project->key)
-            ->where('correction_date', '<', $firstFilteredMonth)
-            ->sum('correction_amount');
-        $baselineEvaluation += $valueCorrections;
-        
-        $previousAssetEvaluation = $baselineEvaluation;
+        // Calculate cumulative asset evaluation starting from 0
+        $previousAssetEvaluation = 0;
         $isFirstMonth = true; // Track if this is the first (most recent) month
         
         // Process months in chronological order (oldest first) for cumulative calculation
@@ -367,11 +328,6 @@ class ProjectFinancialReport extends Page implements HasForms
                 // Calculate cumulative asset evaluation:
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
                 $monthData['evaluation_asset'] = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
-                
-                // Debug for Q1 Villa project
-                if (strpos($project->title, 'Q1 Villa') !== false && $month >= '2025-09-01') {
-                    $monthData['debug_info'] = "Prev: {$previousAssetEvaluation}, Exp: {$monthData['expense_asset']}, Rev: {$monthData['revenue_asset']}, Corr: {$monthData['value_correction']}, Result: {$monthData['evaluation_asset']}";
-                }
             }
             
             
