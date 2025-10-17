@@ -59,7 +59,6 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public $refreshCounter = 0;
 
-    public $debugInfo = [];
 
     protected $listeners = ['correction-updated' => 'refreshReportData'];
 
@@ -272,15 +271,6 @@ class ProjectFinancialReport extends Page implements HasForms
         // We need chronological order (oldest first: Jun, Jul, Aug, Sep, Oct) for cumulative calculation
         $monthsChronological = array_reverse($allMonths);
         
-        // Store debug info for this project
-        $debugKey = $project->key . ' - ' . $project->title;
-        $this->debugInfo[$debugKey] = [
-            'project_status' => $project->status,
-            'exit_date' => $project->exit_date,
-            'months_original' => $allMonths,
-            'months_chronological' => $monthsChronological,
-            'calculations' => []
-        ];
         
         
         foreach ($monthsChronological as $month) {
@@ -304,16 +294,6 @@ class ProjectFinancialReport extends Page implements HasForms
                 $monthData['evaluation_asset'] = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
             }
             
-            // Store calculation details for debugging
-            $this->debugInfo[$debugKey]['calculations'][$month] = [
-                'previous_evaluation' => $previousAssetEvaluation,
-                'expense_asset' => $monthData['expense_asset'],
-                'revenue_asset' => $monthData['revenue_asset'],
-                'value_correction' => $monthData['value_correction'],
-                'calculated_evaluation' => $monthData['evaluation_asset'],
-                'is_after_exit' => $isAfterExit,
-                'formula' => $isAfterExit ? 'Set to 0 (exited)' : "{$previousAssetEvaluation} + {$monthData['expense_asset']} - {$monthData['revenue_asset']} + {$monthData['value_correction']} = {$monthData['evaluation_asset']}"
-            ];
             
             // Update previous evaluation for next iteration
             $previousAssetEvaluation = $monthData['evaluation_asset'];
@@ -418,10 +398,6 @@ class ProjectFinancialReport extends Page implements HasForms
         $this->resetPage();
     }
 
-    public function getDebugInfo(): array
-    {
-        return $this->debugInfo;
-    }
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 

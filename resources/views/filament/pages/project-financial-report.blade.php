@@ -166,66 +166,6 @@
                 {{ $projects->links() }}
             </div>
 
-            <!-- Debug Section -->
-            @if(!empty($this->getDebugInfo()))
-                <div class="mt-8 bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Asset Evaluation Debug Information</h3>
-                    
-                    @foreach($this->getDebugInfo() as $projectKey => $debugData)
-                        <div class="mb-6 bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                            <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">{{ $projectKey }}</h4>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <strong class="text-gray-700 dark:text-gray-300">Status:</strong> 
-                                    <span class="text-gray-900 dark:text-gray-100">{{ $debugData['project_status'] }}</span>
-                                </div>
-                                <div>
-                                    <strong class="text-gray-700 dark:text-gray-300">Exit Date:</strong> 
-                                    <span class="text-gray-900 dark:text-gray-100">{{ $debugData['exit_date'] ?? 'N/A' }}</span>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <strong class="text-gray-700 dark:text-gray-300">Month Processing Order:</strong>
-                                <div class="mt-2 text-sm">
-                                    <div><strong>Original (Display Order):</strong> {{ implode(' → ', $debugData['months_original']) }}</div>
-                                    <div><strong>Chronological (Calculation Order):</strong> {{ implode(' → ', $debugData['months_chronological']) }}</div>
-                                </div>
-                            </div>
-
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full text-sm border border-gray-300 dark:border-gray-600">
-                                    <thead class="bg-gray-100 dark:bg-gray-600">
-                                        <tr>
-                                            <th class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-500">Month</th>
-                                            <th class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-500">Previous Eval</th>
-                                            <th class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-500">Expense Asset</th>
-                                            <th class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-500">Revenue Asset</th>
-                                            <th class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-500">Value Correction</th>
-                                            <th class="px-3 py-2 text-left border-r border-gray-300 dark:border-gray-500">Final Eval</th>
-                                            <th class="px-3 py-2 text-left">Formula</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($debugData['calculations'] as $month => $calc)
-                                            <tr class="border-b border-gray-200 dark:border-gray-600 {{ $calc['is_after_exit'] ? 'bg-red-50 dark:bg-red-900/20' : '' }}">
-                                                <td class="px-3 py-2 border-r border-gray-300 dark:border-gray-500 font-medium">{{ $month }}</td>
-                                                <td class="px-3 py-2 border-r border-gray-300 dark:border-gray-500">${{ number_format($calc['previous_evaluation'], 2) }}</td>
-                                                <td class="px-3 py-2 border-r border-gray-300 dark:border-gray-500">${{ number_format($calc['expense_asset'], 2) }}</td>
-                                                <td class="px-3 py-2 border-r border-gray-300 dark:border-gray-500">${{ number_format($calc['revenue_asset'], 2) }}</td>
-                                                <td class="px-3 py-2 border-r border-gray-300 dark:border-gray-500">${{ number_format($calc['value_correction'], 2) }}</td>
-                                                <td class="px-3 py-2 border-r border-gray-300 dark:border-gray-500 font-bold {{ $calc['calculated_evaluation'] == 0 && !$calc['is_after_exit'] ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">${{ number_format($calc['calculated_evaluation'], 2) }}</td>
-                                                <td class="px-3 py-2 text-xs">{{ $calc['formula'] }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
         </div>
     </div>
 </x-filament-panels::page>
