@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Filament\Notifications\Notification;
 
@@ -266,10 +267,22 @@ class ProjectFinancialReport extends Page implements HasForms
         $previousAssetEvaluation = 0;
         $isFirstMonth = true; // Track if this is the first (most recent) month
         
-        // Process months in reverse chronological order (oldest first) for cumulative calculation
-        $monthsReversed = array_reverse($allMonths);
+        // Process months in chronological order (oldest first) for cumulative calculation
+        // $allMonths is in reverse chronological order (newest first: Oct, Sep, Aug, Jul, Jun)
+        // We need chronological order (oldest first: Jun, Jul, Aug, Sep, Oct) for cumulative calculation
+        $monthsChronological = array_reverse($allMonths);
         
-        foreach ($monthsReversed as $month) {
+        // Debug logging for Q1 Villa project
+        if ($project->key === 'Q1-Villa' || strpos($project->title, 'Q1 Villa') !== false) {
+            Log::info("Q1 Villa Month Order Debug", [
+                'project_key' => $project->key,
+                'project_title' => $project->title,
+                'allMonths_original' => $allMonths,
+                'monthsChronological' => $monthsChronological
+            ]);
+        }
+        
+        foreach ($monthsChronological as $month) {
             $monthData = &$data['months'][$month];
             
             // Get Value Correction from database
@@ -288,6 +301,18 @@ class ProjectFinancialReport extends Page implements HasForms
                 // Calculate cumulative asset evaluation:
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
                 $monthData['evaluation_asset'] = $previousAssetEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
+                
+                // Debug logging for Q1 Villa project
+                if ($project->key === 'Q1-Villa' || strpos($project->title, 'Q1 Villa') !== false) {
+                    \Log::info("Q1 Villa Asset Evaluation Debug", [
+                        'month' => $month,
+                        'previous_evaluation' => $previousAssetEvaluation,
+                        'expense_asset' => $monthData['expense_asset'],
+                        'revenue_asset' => $monthData['revenue_asset'],
+                        'value_correction' => $monthData['value_correction'],
+                        'calculated_evaluation' => $monthData['evaluation_asset']
+                    ]);
+                }
             }
             
             // Update previous evaluation for next iteration
