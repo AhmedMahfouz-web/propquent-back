@@ -123,10 +123,46 @@ class ProjectFinancialReport extends Page implements HasForms
         $this->readyToLoad = true;
     }
 
+    public function submit(): void
+    {
+        try {
+            $data = $this->form->getState();
+            
+            // Update component properties from form data
+            $this->search = $data['search'] ?? '';
+            $this->startMonth = $data['startMonth'] ?? $this->startMonth;
+            $this->endMonth = $data['endMonth'] ?? $this->endMonth;
+            $this->status = $data['status'] ?? '';
+            $this->stage = $data['stage'] ?? '';
+            $this->type = $data['type'] ?? '';
+            $this->investment_type = $data['investment_type'] ?? '';
+            $this->selectedMetrics = $data['selectedMetrics'] ?? [];
+            $this->perPage = $data['perPage'] ?? 25;
+            
+            $this->resetPage();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Filter Error')
+                ->body('Please try refreshing the page.')
+                ->danger()
+                ->send();
+        }
+    }
+
     public function updated($property): void
     {
-        if (in_array(str_replace('data.', '', $property), ['search', 'startMonth', 'endMonth', 'status', 'stage', 'type', 'investment_type', 'selectedMetrics', 'perPage', 'sortDirection'])) {
-            $this->resetPage();
+        try {
+            if (in_array(str_replace('data.', '', $property), ['search', 'startMonth', 'endMonth', 'status', 'stage', 'type', 'investment_type', 'selectedMetrics', 'perPage', 'sortDirection'])) {
+                $this->resetPage();
+                
+                // Force refresh of computed properties
+                $this->readyToLoad = false;
+                $this->readyToLoad = true;
+            }
+        } catch (\Exception $e) {
+            // Silently handle errors to prevent crashes
+            $this->readyToLoad = false;
+            $this->readyToLoad = true;
         }
     }
 
@@ -263,7 +299,46 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         
         // Calculate cumulative asset evaluation
-        $previousAssetEvaluation = 0;
+        // First, calculate the baseline evaluation from all transactions before the filtered period
+        $firstFilteredMonth = end($allMonths); // Get the oldest month in the filtered range
+        $baselineEvaluation = 0;
+        
+        // Calculate baseline from all transactions before the filtered period
+        foreach ($project->transactions as $transaction) {
+            $dateToUse = null;
+            $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
+            $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
+            
+            // Only include done transactions
+            if ($transaction->status === 'done') {
+                if ($actualDate && $actualDate->lte($today)) {
+                    $dateToUse = $transaction->actual_date;
+                } elseif (!$actualDate && $transactionDate->lte($today)) {
+                    $dateToUse = $transaction->transaction_date;
+                } else {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+            
+            $transactionMonth = date('Y-m-01', strtotime($dateToUse));
+            
+            // If transaction is before the filtered period, include it in baseline
+            if ($transactionMonth < $firstFilteredMonth && $transaction->financial_type === 'expense' && $transaction->serving === 'asset') {
+                $baselineEvaluation += $transaction->amount;
+            } elseif ($transactionMonth < $firstFilteredMonth && $transaction->financial_type === 'revenue' && $transaction->serving === 'asset') {
+                $baselineEvaluation -= $transaction->amount;
+            }
+        }
+        
+        // Add value corrections from before the filtered period
+        $valueCorrections = \App\Models\ValueCorrection::where('project_key', $project->key)
+            ->where('month', '<', $firstFilteredMonth)
+            ->sum('amount');
+        $baselineEvaluation += $valueCorrections;
+        
+        $previousAssetEvaluation = $baselineEvaluation;
         $isFirstMonth = true; // Track if this is the first (most recent) month
         
         // Process months in chronological order (oldest first) for cumulative calculation
@@ -309,18 +384,19 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         
         // Calculate totals (process in original order - newest first)
+        $isFirstMonthInTotals = true;
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
                 if ($key === 'evaluation_asset') {
-                    // For Asset Evaluation, use only the most recent month's value (first iteration)
-                    if ($isFirstMonth) {
+                    // For Asset Evaluation, use only the most recent month's value (first month in display order)
+                    if ($isFirstMonthInTotals) {
                         $total = $monthData[$key];
                     }
                 } else {
                     $total += $monthData[$key];
                 }
             }
-            $isFirstMonth = false; // After first iteration, set to false
+            $isFirstMonthInTotals = false; // After first iteration, set to false
         }
         
         return $data;
@@ -373,19 +449,19 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         
         // Calculate totals (process in original order - newest first)
-        $isFirstMonth = true;
+        $isFirstMonthInSummary = true;
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
                 if ($key === 'evaluation_asset') {
-                    // For Asset Evaluation, use only the most recent month's value (first iteration)
-                    if ($isFirstMonth) {
+                    // For Asset Evaluation, use only the most recent month's value (first month in display order)
+                    if ($isFirstMonthInSummary) {
                         $total = $monthData[$key];
                     }
                 } else {
                     $total += $monthData[$key];
                 }
             }
-            $isFirstMonth = false; // After first iteration, set to false
+            $isFirstMonthInSummary = false; // After first iteration, set to false
         }
         
         return $summary;
