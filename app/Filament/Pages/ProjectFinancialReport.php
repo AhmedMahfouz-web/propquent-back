@@ -354,8 +354,8 @@ class ProjectFinancialReport extends Page implements HasForms
         $isFirstMonthInTotals = true;
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
-                // Skip debug keys that don't exist in month data
-                if (!isset($monthData[$key])) {
+                // Skip debug keys that don't exist in month data or are debug keys
+                if (!isset($monthData[$key]) || $key === 'debug_calc') {
                     continue;
                 }
                 
@@ -424,8 +424,8 @@ class ProjectFinancialReport extends Page implements HasForms
         $isFirstMonthInSummary = true;
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
-                // Skip debug keys that don't exist in month data
-                if (!isset($monthData[$key])) {
+                // Skip debug keys that don't exist in month data or are debug keys
+                if (!isset($monthData[$key]) || $key === 'debug_calc') {
                     continue;
                 }
                 
