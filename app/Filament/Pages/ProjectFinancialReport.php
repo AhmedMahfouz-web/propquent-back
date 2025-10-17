@@ -295,7 +295,7 @@ class ProjectFinancialReport extends Page implements HasForms
         // Determine exit month if project is exited
         $exitMonth = null;
         if ($project->status === Project::STATUS_EXITED && $project->exit_date) {
-            $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m-01');
+            $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
         }
         
         // Calculate cumulative asset evaluation
@@ -326,6 +326,11 @@ class ProjectFinancialReport extends Page implements HasForms
                 // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
                 $cumulativeEvaluation = $cumulativeEvaluation + $monthData['expense_asset'] - $monthData['revenue_asset'] + $monthData['value_correction'];
                 $monthData['evaluation_asset'] = $cumulativeEvaluation;
+                
+                // Debug for Q1 Villa Oct 2025
+                if (strpos($project->title, 'Q1 Villa') !== false && $month === '2025-10') {
+                    $monthData['debug_calc'] = "Cumulative: {$cumulativeEvaluation}";
+                }
             }
             
             // Calculate total fields
