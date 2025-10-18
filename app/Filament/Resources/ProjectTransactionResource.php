@@ -39,7 +39,7 @@ class ProjectTransactionResource extends Resource
                                 return \App\Models\Project::with('developer')
                                     ->get()
                                     ->mapWithKeys(function ($project) {
-                                        return [$project->key => "{$project->title} ({$project->developer->name})"];
+                                        return [$project->key => "{$project->key} - {$project->title} ({$project->developer->name})"];
                                     })
                                     ->toArray();
                             })
@@ -252,7 +252,7 @@ class ProjectTransactionResource extends Resource
                     ->relationship('project', 'title')
                     ->searchable()
                     ->preload()
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->key} - {$record->title}"),
+                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->key} - {$record->title}"),
 
 
                 Tables\Filters\SelectFilter::make('financial_type')
