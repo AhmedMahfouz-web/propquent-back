@@ -166,15 +166,9 @@ class ProjectFinancialReport extends Page implements HasForms
         try {
             if (in_array(str_replace('data.', '', $property), ['search', 'keyFilter', 'startMonth', 'endMonth', 'status', 'stage', 'type', 'investment_type', 'selectedMetrics', 'perPage', 'sortField', 'sortDirection'])) {
                 $this->resetPage();
-                
-                // Force refresh of computed properties
-                $this->readyToLoad = false;
-                $this->readyToLoad = true;
             }
         } catch (\Exception $e) {
             // Silently handle errors to prevent crashes
-            $this->readyToLoad = false;
-            $this->readyToLoad = true;
         }
     }
 
@@ -485,6 +479,9 @@ class ProjectFinancialReport extends Page implements HasForms
             $this->sortDirection = 'asc';
         }
         $this->resetPage();
+        
+        // Force component refresh to maintain state
+        $this->dispatch('$refresh');
         
         // Add notification to confirm sorting is working
         Notification::make()
