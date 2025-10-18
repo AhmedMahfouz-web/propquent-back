@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Filament\Notifications\Notification;
 
@@ -478,13 +479,21 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function sortBy($field): void
     {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
+        try {
+            if ($this->sortField === $field) {
+                $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                $this->sortField = $field;
+                $this->sortDirection = 'asc';
+            }
+            $this->resetPage();
+            
+            // Clear any cached computed properties
+            unset($this->reportData);
+        } catch (\Exception $e) {
+            // Log error but don't break the UI
+            \Log::error('Sort error: ' . $e->getMessage());
         }
-        $this->resetPage();
     }
 
 
