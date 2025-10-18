@@ -27,5 +27,8 @@ class AppServiceProvider extends ServiceProvider
         // );
 
         // Model observers removed - caching disabled for performance
+        
+        // Register ProjectTransaction observer for monthly evaluations
+        \App\Models\ProjectTransaction::observe(\App\Observers\ProjectTransactionObserver::class);
     }
 }
