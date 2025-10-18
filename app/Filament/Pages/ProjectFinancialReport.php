@@ -40,7 +40,13 @@ class ProjectFinancialReport extends Page implements HasForms
     public $endMonth = '';
 
     #[Url]
+    public $sortField = 'created_at';
+
+    #[Url]
     public $sortDirection = 'desc';
+
+    #[Url]
+    public $keyFilter = '';
 
     #[Url]
     public $status = '';
@@ -79,6 +85,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
         $this->form->fill([
             'search' => $this->search,
+            'keyFilter' => $this->keyFilter,
             'startMonth' => $this->startMonth,
             'endMonth' => $this->endMonth,
             'status' => $this->status,
@@ -101,6 +108,7 @@ class ProjectFinancialReport extends Page implements HasForms
                     ->columns(4)
                     ->schema([
                         TextInput::make('search')->label('Search Projects')->live(onBlur: true),
+                        TextInput::make('keyFilter')->label('Filter by Key')->live(onBlur: true),
                         Select::make('startMonth')->label('Start Month')->options($monthOptions)->live(),
                         Select::make('endMonth')->label('End Month')->options($monthOptions)->live(),
                         Select::make('perPage')->label('Items Per Page')->options([10 => 10, 25 => 25, 50 => 50, 'all' => 'All'])->live(),
@@ -130,6 +138,7 @@ class ProjectFinancialReport extends Page implements HasForms
             
             // Update component properties from form data
             $this->search = $data['search'] ?? '';
+            $this->keyFilter = $data['keyFilter'] ?? '';
             $this->startMonth = $data['startMonth'] ?? $this->startMonth;
             $this->endMonth = $data['endMonth'] ?? $this->endMonth;
             $this->status = $data['status'] ?? '';
@@ -152,7 +161,7 @@ class ProjectFinancialReport extends Page implements HasForms
     public function updated($property): void
     {
         try {
-            if (in_array(str_replace('data.', '', $property), ['search', 'startMonth', 'endMonth', 'status', 'stage', 'type', 'investment_type', 'selectedMetrics', 'perPage', 'sortDirection'])) {
+            if (in_array(str_replace('data.', '', $property), ['search', 'keyFilter', 'startMonth', 'endMonth', 'status', 'stage', 'type', 'investment_type', 'selectedMetrics', 'perPage', 'sortField', 'sortDirection'])) {
                 $this->resetPage();
                 
                 // Force refresh of computed properties
@@ -211,6 +220,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
         $projectsQuery = Project::query()
             ->when($this->search, fn($q, $s) => $q->where('title', 'like', "%$s%")->orWhere('key', 'like', "%$s%"))
+            ->when($this->keyFilter, fn($q, $s) => $q->where('key', 'like', "%$s%"))
             ->when($this->status, fn($q, $s) => $q->where('status', $s))
             ->when($this->stage, fn($q, $s) => $q->where('stage', $s))
             ->when($this->type, fn($q, $s) => $q->where('type', $s))
@@ -221,7 +231,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
         $projects = (clone $projectsQuery)
             ->with(['transactions', 'statusChanges', 'valueCorrections'])
-            ->orderBy('created_at', $this->sortDirection)
+            ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
         $projectsData = [];
@@ -456,7 +466,12 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function sortBy($field): void
     {
-        $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
         $this->resetPage();
     }
 
