@@ -95,7 +95,7 @@ class ProjectFinancialReport extends Page implements HasForms
             'selectedMetrics' => $this->selectedMetrics,
             'perPage' => $this->perPage,
         ]);
-        
+
         // Initialize data loading
         $this->readyToLoad = true;
     }
@@ -138,7 +138,7 @@ class ProjectFinancialReport extends Page implements HasForms
     {
         try {
             $data = $this->form->getState();
-            
+
             // Update component properties from form data
             $this->search = $data['search'] ?? '';
             $this->keyFilter = $data['keyFilter'] ?? '';
@@ -150,7 +150,7 @@ class ProjectFinancialReport extends Page implements HasForms
             $this->investment_type = $data['investment_type'] ?? '';
             $this->selectedMetrics = $data['selectedMetrics'] ?? [];
             $this->perPage = $data['perPage'] ?? 25;
-            
+
             $this->resetPage();
         } catch (\Exception $e) {
             Notification::make()
@@ -183,15 +183,15 @@ class ProjectFinancialReport extends Page implements HasForms
     public function getAvailableMonthsProperty(): array
     {
         $today = now()->format('Y-m-d');
-        
+
         $months = ProjectTransaction::where('status', 'done')
             ->select(DB::raw('DATE_FORMAT(
-                CASE 
+                CASE
                     WHEN actual_date IS NOT NULL AND actual_date <= "' . $today . '" THEN actual_date
                     WHEN actual_date IS NULL AND transaction_date <= "' . $today . '" THEN transaction_date
                     ELSE NULL
                 END, "%Y-%m-01") as month_date'))
-            ->whereNotNull(DB::raw('CASE 
+            ->whereNotNull(DB::raw('CASE
                 WHEN actual_date IS NOT NULL AND actual_date <= "' . $today . '" THEN actual_date
                 WHEN actual_date IS NULL AND transaction_date <= "' . $today . '" THEN transaction_date
                 ELSE NULL
@@ -229,12 +229,12 @@ class ProjectFinancialReport extends Page implements HasForms
         // For now, disable month-based sorting to avoid Livewire component issues
         // Use standard database sorting for all columns
         $sortField = $this->sortField;
-        
+
         // Map month sorting to a standard field to avoid complex calculations
         if (str_starts_with($this->sortField, 'month_')) {
             $sortField = 'created_at'; // Fallback to creation date for month columns
         }
-        
+
         $projects = (clone $projectsQuery)
             ->with(['transactions', 'statusChanges', 'valueCorrections'])
             ->orderBy($sortField, $this->sortDirection)
@@ -274,12 +274,12 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
         $today = now()->startOfDay();
-        
+
         foreach ($project->transactions as $transaction) {
             $dateToUse = null;
             $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
             $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
-            
+
             // Only include done transactions
             if ($transaction->status === 'done') {
                 if ($actualDate && $actualDate->lte($today)) {
@@ -296,9 +296,9 @@ class ProjectFinancialReport extends Page implements HasForms
                 // Skip pending, cancelled or other status transactions
                 continue;
             }
-            
+
             $month = date('Y-m-01', strtotime($dateToUse));
-            
+
             if (isset($data['months'][$month]) && $transaction->financial_type && $transaction->serving) {
                 $key = $transaction->financial_type . '_' . $transaction->serving;
                 if (!isset($data['months'][$month][$key])) {
@@ -307,29 +307,29 @@ class ProjectFinancialReport extends Page implements HasForms
                 $data['months'][$month][$key] += $transaction->amount;
             }
         }
-        
+
         // Determine exit month if project is exited
         $exitMonth = null;
         if ($project->status === Project::STATUS_EXITED && $project->exit_date) {
             $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
         }
-        
+
         // Calculate cumulative asset evaluation and profit asset
         // Process months in chronological order (oldest first) for cumulative calculation
         $monthsChronological = array_reverse($allMonths);
         $runningTotal = 0;
         $previousAssetEvaluation = 0;
-        
+
         foreach ($monthsChronological as $monthIndex => $month) {
             // Get Value Correction from database
             $data['months'][$month]['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
-            
+
             // Check if this month is after project exit
             $isAfterExit = false;
             if ($exitMonth && $month >= $exitMonth) {
                 $isAfterExit = true;
             }
-            
+
             if ($isAfterExit) {
                 // If project is exited, asset evaluation becomes 0
                 $data['months'][$month]['evaluation_asset'] = 0;
@@ -341,43 +341,43 @@ class ProjectFinancialReport extends Page implements HasForms
                 $expenses = $data['months'][$month]['expense_asset'] ?? 0;
                 $revenues = $data['months'][$month]['revenue_asset'] ?? 0;
                 $corrections = $data['months'][$month]['value_correction'] ?? 0;
-                
+
                 $runningTotal = $runningTotal + $expenses - $revenues + $corrections;
                 $data['months'][$month]['evaluation_asset'] = $runningTotal;
             }
-            
+
             // Calculate total fields
             $data['months'][$month]['expense_total'] = $data['months'][$month]['expense_asset'] + $data['months'][$month]['expense_operation'];
             $data['months'][$month]['revenue_total'] = $data['months'][$month]['revenue_asset'] + $data['months'][$month]['revenue_operation'];
-            
+
             // Calculate derived profit metrics
             $data['months'][$month]['profit_operation'] = $data['months'][$month]['revenue_operation'] - $data['months'][$month]['expense_operation'];
-            
+
             // Calculate Profit Asset using the new formula:
             // Profit Asset = Current month Asset Evaluation - Previous month Asset Evaluation + Current month Revenue Asset - Current month Expense Asset
             $currentAssetEvaluation = $data['months'][$month]['evaluation_asset'];
             $currentRevenueAsset = $data['months'][$month]['revenue_asset'] ?? 0;
             $currentExpenseAsset = $data['months'][$month]['expense_asset'] ?? 0;
-            
+
             $data['months'][$month]['profit_asset'] = $currentAssetEvaluation - $previousAssetEvaluation + $currentRevenueAsset - $currentExpenseAsset;
-            
+
             $data['months'][$month]['total_profit'] = $data['months'][$month]['profit_operation'] + $data['months'][$month]['profit_asset'];
-            
+
             // Store current evaluation as previous for next iteration
             $previousAssetEvaluation = $currentAssetEvaluation;
         }
-        
+
         // Calculate totals (process in original order - newest first)
         $monthKeys = array_keys($data['months']);
         $lastMonth = reset($monthKeys); // Get the first month in display order (which is the chronologically newest/end month)
-        
+
         foreach ($data['months'] as $month => $monthData) {
             foreach ($data['totals'] as $key => &$total) {
                 // Skip keys that don't exist in month data
                 if (!isset($monthData[$key])) {
                     continue;
                 }
-                
+
                 if ($key === 'evaluation_asset') {
                     // For Asset Evaluation, use only the LAST month's value (end month in filtered range)
                     if ($month === $lastMonth) {
@@ -388,7 +388,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 }
             }
         }
-        
+
         return $data;
     }
 
@@ -399,21 +399,21 @@ class ProjectFinancialReport extends Page implements HasForms
         foreach ($allMonths as $month) {
             $summary['months'][$month] = $summary['totals'];
         }
-        
+
         // Get all projects with their data to calculate cumulative asset evaluations
         $projects = (clone $projectsQuery)->with(['transactions', 'valueCorrections'])->get();
-        
+
         // Calculate individual project data for each month
         $projectsData = [];
         foreach ($projects as $project) {
             $projectsData[$project->key] = $this->getProjectFinancialData($project, $allMonths);
         }
-        
+
         // Aggregate all project data into summary
         foreach ($allMonths as $month) {
             foreach ($projectsData as $projectData) {
                 $monthData = $projectData['months'][$month];
-                
+
                 // Sum all metrics except asset evaluation (which needs special handling)
                 foreach ($monthData as $key => $value) {
                     if ($key !== 'evaluation_asset') {
@@ -421,40 +421,40 @@ class ProjectFinancialReport extends Page implements HasForms
                     }
                 }
             }
-            
+
             // For asset evaluation, sum the current asset evaluations of all projects
             $summary['months'][$month]['evaluation_asset'] = 0;
             foreach ($projectsData as $projectData) {
                 $summary['months'][$month]['evaluation_asset'] += $projectData['months'][$month]['evaluation_asset'];
             }
-            
+
             // Calculate total fields
             $summary['months'][$month]['expense_total'] = $summary['months'][$month]['expense_asset'] + $summary['months'][$month]['expense_operation'];
             $summary['months'][$month]['revenue_total'] = $summary['months'][$month]['revenue_asset'] + $summary['months'][$month]['revenue_operation'];
-            
+
             // Calculate derived profit metrics
             $summary['months'][$month]['profit_operation'] = $summary['months'][$month]['revenue_operation'] - $summary['months'][$month]['expense_operation'];
-            
+
             // For summary, profit_asset is the sum of all individual project profit_asset values (already calculated with new formula)
             $summary['months'][$month]['profit_asset'] = 0;
             foreach ($projectsData as $projectData) {
                 $summary['months'][$month]['profit_asset'] += $projectData['months'][$month]['profit_asset'];
             }
-            
+
             $summary['months'][$month]['total_profit'] = $summary['months'][$month]['profit_operation'] + $summary['months'][$month]['profit_asset'];
         }
-        
+
         // Calculate totals (process in original order - newest first)
         $summaryMonthKeys = array_keys($summary['months']);
         $lastSummaryMonth = reset($summaryMonthKeys); // Get the first month in display order (which is the chronologically newest/end month)
-        
+
         foreach ($summary['months'] as $month => $monthData) {
             foreach ($summary['totals'] as $key => &$total) {
                 // Skip keys that don't exist in month data
                 if (!isset($monthData[$key])) {
                     continue;
                 }
-                
+
                 if ($key === 'evaluation_asset') {
                     // For Asset Evaluation, use only the LAST month's value (end month in filtered range)
                     if ($month === $lastSummaryMonth) {
@@ -465,9 +465,10 @@ class ProjectFinancialReport extends Page implements HasForms
                 }
             }
         }
-        
+
         return $summary;
     }
+
 
     public function sortBy($field): void
     {
@@ -479,6 +480,7 @@ class ProjectFinancialReport extends Page implements HasForms
         }
         $this->resetPage();
     }
+
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
@@ -504,7 +506,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 ->exports([
                     ExcelExport::make()
                         ->fromTable()
-                        ->withFilename(fn () => 'project-financial-report-' . date('Y-m-d'))
+                        ->withFilename(fn() => 'project-financial-report-' . date('Y-m-d'))
                         ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
                 ])
         ];
@@ -603,7 +605,7 @@ class ProjectFinancialReport extends Page implements HasForms
     {
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
-        
+
         // Use explicit color mappings to ensure Tailwind generates the classes
         $colorMap = [
             'green' => [
@@ -691,7 +693,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 'badge' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
             ],
         ];
-        
+
         return $colorMap[$color] ?? [
             'bg' => 'bg-gray-100 dark:bg-gray-900',
             'text' => 'text-gray-800 dark:text-gray-200',
@@ -704,7 +706,7 @@ class ProjectFinancialReport extends Page implements HasForms
     {
         $config = $this->getMetricConfig();
         $color = $config[$metricKey]['color'] ?? 'gray';
-        
+
         // Only text colors for totals (no background)
         $colorMap = [
             'green' => [
@@ -764,7 +766,7 @@ class ProjectFinancialReport extends Page implements HasForms
                 'text' => 'text-indigo-700 dark:text-indigo-400',
             ],
         ];
-        
+
         return $colorMap[$color] ?? [
             'bg' => '',
             'text' => 'text-gray-700 dark:text-gray-400',
