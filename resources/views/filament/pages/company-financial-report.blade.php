@@ -54,6 +54,11 @@
             foreach ($monthsToShow as $month) {
                 $monthlyTotals['revenue'][$month] = 0;
                 $monthlyTotals['expense'][$month] = 0;
+                // Initialize operation and asset arrays to ensure they always exist
+                $reportData['revenue']['operation'][$month] = 0;
+                $reportData['revenue']['asset'][$month] = 0;
+                $reportData['expense']['operation'][$month] = 0;
+                $reportData['expense']['asset'][$month] = 0;
             }
 
             $projectTransactions = DB::table('project_transactions as pt')
@@ -175,9 +180,13 @@
         }
     }
 
-    // No operation evaluation needed - only asset evaluation
+    // Calculate operation evaluation (display even if zero)
     foreach ($monthsToShow as $month) {
-        // Total evaluation is just asset evaluation
+        $operationExpense = $reportData['expense']['operation'][$month] ?? 0;
+        $operationRevenue = $reportData['revenue']['operation'][$month] ?? 0;
+        $evaluation['operation'][$month] = $operationExpense - $operationRevenue;
+        
+        // Total evaluation is just asset evaluation (operation doesn't affect total)
         $evaluation['total'][$month] = $evaluation['asset'][$month];
     }
 
@@ -424,6 +433,33 @@
                         @foreach ($monthsToShow as $month)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                                 {{ Illuminate\Support\Number::currency($evaluation['asset'][$month] ?? 0, 'USD') }}
+                            </td>
+                        @endforeach
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
+                            Operation Expense</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                {{ Illuminate\Support\Number::currency($reportData['expense']['operation'][$month] ?? 0, 'USD') }}
+                            </td>
+                        @endforeach
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
+                            Operation Revenue</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                {{ Illuminate\Support\Number::currency($reportData['revenue']['operation'][$month] ?? 0, 'USD') }}
+                            </td>
+                        @endforeach
+                    </tr>
+                    <tr class="bg-white dark:bg-gray-800">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
+                            Operation Evaluation</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                {{ Illuminate\Support\Number::currency($evaluation['operation'][$month] ?? 0, 'USD') }}
                             </td>
                         @endforeach
                     </tr>
