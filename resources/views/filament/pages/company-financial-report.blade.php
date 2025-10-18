@@ -190,12 +190,12 @@
     $previousMonthCash = 0;
 
     foreach (array_reverse($monthsToShow->toArray()) as $month) {
-        $revenue = $monthlyTotals['revenue'][$month] ?? 0;
-        $expense = $monthlyTotals['expense'][$month] ?? 0;
+        $assetRevenue = $reportData['revenue']['asset'][$month] ?? 0;
+        $assetExpense = $reportData['expense']['asset'][$month] ?? 0;
         $deposits = $userFinancials['deposits'][$month] ?? 0;
         $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
 
-        $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+        $cash[$month] = $previousMonthCash + $deposits + $assetRevenue - $withdrawals - $assetExpense;
         $previousMonthCash = $cash[$month];
     }
 
