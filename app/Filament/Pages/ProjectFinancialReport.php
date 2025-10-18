@@ -470,16 +470,6 @@ class ProjectFinancialReport extends Page implements HasForms
     }
 
 
-    public function sortBy($field): void
-    {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
-        }
-        $this->resetPage();
-    }
 
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';

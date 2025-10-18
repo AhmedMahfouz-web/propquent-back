@@ -36,7 +36,8 @@
                         <tr>
                             <th
                                 class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
-                                <button wire:click="sortBy('key')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                <a href="{{ request()->fullUrlWithQuery(['sortField' => 'key', 'sortDirection' => ($sortField === 'key' && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
                                     Code
                                     @if ($sortField === 'key')
                                         @if ($sortDirection === 'asc')
@@ -45,11 +46,12 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </button>
+                                </a>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
                                 style="max-width: 220px;">
-                                <button wire:click="sortBy('title')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                <a href="{{ request()->fullUrlWithQuery(['sortField' => 'title', 'sortDirection' => ($sortField === 'title' && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
                                     Project
                                     @if ($sortField === 'title')
                                         @if ($sortDirection === 'asc')
@@ -58,7 +60,7 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </button>
+                                </a>
                             </th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
@@ -66,7 +68,8 @@
                             </th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                <button wire:click="sortBy('created_at')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                <a href="{{ request()->fullUrlWithQuery(['sortField' => 'created_at', 'sortDirection' => ($sortField === 'created_at' && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
                                     Total
                                     @if ($sortField === 'created_at')
                                         @if ($sortDirection === 'asc')
@@ -75,12 +78,13 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </button>
+                                </a>
                             </th>
                             @foreach ($allMonths as $month)
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                    <button wire:click="sortBy('month_{{ $month }}')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                    <a href="{{ request()->fullUrlWithQuery(['sortField' => 'month_' . $month, 'sortDirection' => ($sortField === 'month_' . $month && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
+                                       class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
                                         {{ date('M Y', strtotime($month)) }}
                                         @if ($sortField === 'month_' . $month)
                                             @if ($sortDirection === 'asc')
@@ -89,7 +93,7 @@
                                                 <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                             @endif
                                         @endif
-                                    </button>
+                                    </a>
                                 </th>
                             @endforeach
                         </tr>
@@ -394,25 +398,3 @@
     </style>
 @endpush
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add click event listeners to all sortable buttons
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('button[wire\\:click^="sortBy"]')) {
-            // Small delay to ensure Livewire processes the click
-            setTimeout(function() {
-                // Force a gentle re-render by triggering a small DOM update
-                const table = document.querySelector('.compact-table');
-                if (table) {
-                    table.style.opacity = '0.99';
-                    setTimeout(() => {
-                        table.style.opacity = '1';
-                    }, 10);
-                }
-            }, 100);
-        }
-    });
-});
-</script>
-@endpush
