@@ -138,7 +138,7 @@
         }
     }
 
-    // 5. Calculate Asset Evaluation using cumulative logic from ProjectFinancialReport
+    // 5. Calculate Asset Evaluation using EXACT same method as ProjectFinancialReport
     $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
 
     // Initialize evaluation arrays
@@ -148,93 +148,103 @@
         $evaluation['total'][$month] = 0;
     }
 
-    // Calculate cumulative Asset Evaluation by aggregating all projects
-    // Get all projects and calculate their individual asset evaluations, then sum them
-    $projects = App\Models\Project::with(['transactions', 'valueCorrections'])->get();
+    // Get all projects and calculate their individual financial data using the same method
+    $projects = App\Models\Project::with(['transactions', 'statusChanges', 'valueCorrections'])->get();
     
-    // Process months in chronological order (oldest first) for cumulative calculation
-    $monthsChronological = array_reverse($monthsToShow->toArray());
-    
-    // Calculate asset evaluation for each project, then sum for company total
-    foreach ($monthsChronological as $month) {
-        $totalAssetEvaluation = 0;
+    // Use the exact same getProjectFinancialData method logic for each project
+    foreach ($projects as $project) {
+        // Calculate project financial data using the same logic as ProjectFinancialReport
+        $projectData = [];
+        $projectData['key'] = $project->key;
+        $projectData['title'] = $project->title;
+        $projectData['status'] = $project->status;
+        $projectData['months'] = [];
+        $projectData['totals'] = array_fill_keys(['evaluation_asset', 'value_correction', 'expense_operation', 'expense_asset', 'expense_total', 'revenue_operation', 'revenue_asset', 'revenue_total', 'profit_operation', 'profit_asset', 'total_profit'], 0);
         
-        foreach ($projects as $project) {
-            $projectAssetEvaluation = 0;
-            
-            // Calculate cumulative asset evaluation for this project up to this month
-            foreach ($monthsChronological as $processMonth) {
-                if ($processMonth > $month) continue; // Only process months up to current month
-                
-                // Get project transactions for this month
-                $monthExpenses = $project->transactions()
-                    ->where('status', 'done')
-                    ->where('financial_type', 'expense')
-                    ->where('serving', 'asset')
-                    ->where(function($query) use ($processMonth) {
-                        $today = now()->startOfDay();
-                        $monthStart = \Carbon\Carbon::parse($processMonth)->startOfMonth();
-                        $monthEnd = \Carbon\Carbon::parse($processMonth)->endOfMonth();
-                        
-                        $query->where(function($q) use ($monthStart, $monthEnd, $today) {
-                            // Done transactions with actual_date in this month and <= today
-                            $q->whereNotNull('actual_date')
-                              ->whereBetween('actual_date', [$monthStart, $monthEnd])
-                              ->where('actual_date', '<=', $today);
-                        })->orWhere(function($q) use ($monthStart, $monthEnd, $today) {
-                            // Done transactions without actual_date but transaction_date in this month and <= today
-                            $q->whereNull('actual_date')
-                              ->whereBetween('transaction_date', [$monthStart, $monthEnd])
-                              ->where('transaction_date', '<=', $today);
-                        });
-                    })
-                    ->sum('amount');
-                
-                $monthRevenues = $project->transactions()
-                    ->where('status', 'done')
-                    ->where('financial_type', 'revenue')
-                    ->where('serving', 'asset')
-                    ->where(function($query) use ($processMonth) {
-                        $today = now()->startOfDay();
-                        $monthStart = \Carbon\Carbon::parse($processMonth)->startOfMonth();
-                        $monthEnd = \Carbon\Carbon::parse($processMonth)->endOfMonth();
-                        
-                        $query->where(function($q) use ($monthStart, $monthEnd, $today) {
-                            // Done transactions with actual_date in this month and <= today
-                            $q->whereNotNull('actual_date')
-                              ->whereBetween('actual_date', [$monthStart, $monthEnd])
-                              ->where('actual_date', '<=', $today);
-                        })->orWhere(function($q) use ($monthStart, $monthEnd, $today) {
-                            // Done transactions without actual_date but transaction_date in this month and <= today
-                            $q->whereNull('actual_date')
-                              ->whereBetween('transaction_date', [$monthStart, $monthEnd])
-                              ->where('transaction_date', '<=', $today);
-                        });
-                    })
-                    ->sum('amount');
-                
-                // Get value corrections for this month
-                $monthCorrections = App\Models\ValueCorrection::getCorrectionForMonth($project->key, $processMonth);
-                
-                // Add to cumulative asset evaluation: expenses - revenues + corrections
-                $projectAssetEvaluation += $monthExpenses - $monthRevenues + $monthCorrections;
-                
-                // Check if project is exited and this month is after exit
-                if ($project->status === 'exited' && $project->exit_date) {
-                    $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
-                    if ($processMonth >= $exitMonth) {
-                        $projectAssetEvaluation = 0; // Reset to 0 after exit
-                        break; // No need to process further months for this project
-                    }
-                }
-            }
-            
-            $totalAssetEvaluation += $projectAssetEvaluation;
+        foreach ($monthsToShow as $month) {
+            $projectData['months'][$month] = array_fill_keys(array_keys($projectData['totals']), 0);
         }
         
-        $evaluation['asset'][$month] = $totalAssetEvaluation;
+        $today = now()->startOfDay();
+
+        // Process transactions exactly like ProjectFinancialReport
+        foreach ($project->transactions as $transaction) {
+            $dateToUse = null;
+            $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
+            $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
+
+            // Only include done transactions
+            if ($transaction->status === 'done') {
+                if ($actualDate && $actualDate->lte($today)) {
+                    // Done transaction with actual date in past/present - use actual_date
+                    $dateToUse = $transaction->actual_date;
+                } elseif (!$actualDate && $transactionDate->lte($today)) {
+                    // Done transaction without actual_date but transaction_date in past/present
+                    $dateToUse = $transaction->transaction_date;
+                } else {
+                    // Skip future done transactions or other cases
+                    continue;
+                }
+            } else {
+                // Skip pending, cancelled or other status transactions
+                continue;
+            }
+
+            $month = date('Y-m-01', strtotime($dateToUse));
+
+            if (isset($projectData['months'][$month]) && $transaction->financial_type && $transaction->serving) {
+                $key = $transaction->financial_type . '_' . $transaction->serving;
+                if (!isset($projectData['months'][$month][$key])) {
+                    $projectData['months'][$month][$key] = 0;
+                }
+                $projectData['months'][$month][$key] += $transaction->amount;
+            }
+        }
+
+        // Determine exit month if project is exited
+        $exitMonth = null;
+        if ($project->status === 'exited' && $project->exit_date) {
+            $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
+        }
+
+        // Calculate cumulative asset evaluation exactly like ProjectFinancialReport
+        $monthsChronological = array_reverse($monthsToShow->toArray());
+        $runningTotal = 0;
+
+        foreach ($monthsChronological as $month) {
+            // Get Value Correction from database
+            $projectData['months'][$month]['value_correction'] = App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
+
+            // Check if this month is after project exit
+            $isAfterExit = false;
+            if ($exitMonth && $month >= $exitMonth) {
+                $isAfterExit = true;
+            }
+
+            if ($isAfterExit) {
+                // If project is exited, asset evaluation becomes 0
+                $projectData['months'][$month]['evaluation_asset'] = 0;
+                $runningTotal = 0; // Reset for future months after exit
+            } else {
+                // Calculate cumulative asset evaluation:
+                // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
+                $expenses = $projectData['months'][$month]['expense_asset'] ?? 0;
+                $revenues = $projectData['months'][$month]['revenue_asset'] ?? 0;
+                $corrections = $projectData['months'][$month]['value_correction'] ?? 0;
+
+                $runningTotal = $runningTotal + $expenses - $revenues + $corrections;
+                $projectData['months'][$month]['evaluation_asset'] = $runningTotal;
+            }
+        }
         
-        // Operation evaluation remains simple calculation (expense - revenue)
+        // Add this project's asset evaluation to the company total for each month
+        foreach ($monthsToShow as $month) {
+            $evaluation['asset'][$month] += $projectData['months'][$month]['evaluation_asset'] ?? 0;
+        }
+    }
+
+    // Calculate operation evaluation (simple expense - revenue)
+    foreach ($monthsToShow as $month) {
         $operationExpense = $reportData['expense']['operation'][$month] ?? 0;
         $operationRevenue = $reportData['revenue']['operation'][$month] ?? 0;
         $evaluation['operation'][$month] = $operationExpense - $operationRevenue;
