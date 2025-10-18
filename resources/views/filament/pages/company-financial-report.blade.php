@@ -148,11 +148,25 @@
         $evaluation['total'][$month] = 0;
     }
 
-    // Get pre-calculated asset evaluations from database (FAST!)
-    $assetEvaluations = App\Models\MonthlyProjectEvaluation::getCompanyEvaluations($monthsToShow->toArray());
-    
+    // Get pre-calculated asset evaluations from database - MANUAL SUM to debug
     foreach ($monthsToShow as $month) {
-        $evaluation['asset'][$month] = $assetEvaluations[$month] ?? 0;
+        // Get all project evaluations for this month and sum them manually
+        $monthEvaluations = App\Models\MonthlyProjectEvaluation::where('month_date', $month)
+            ->get(['project_key', 'asset_evaluation']);
+        
+        $monthTotal = 0;
+        foreach ($monthEvaluations as $eval) {
+            $monthTotal += $eval->asset_evaluation;
+        }
+        
+        $evaluation['asset'][$month] = $monthTotal;
+        
+        // Debug: Check for duplicates
+        $uniqueProjects = $monthEvaluations->pluck('project_key')->unique();
+        if ($monthEvaluations->count() != $uniqueProjects->count()) {
+            // There are duplicate project records for this month!
+            error_log("DUPLICATE RECORDS FOUND for month {$month}: " . $monthEvaluations->count() . " records, " . $uniqueProjects->count() . " unique projects");
+        }
     }
 
     // Calculate operation evaluation (simple expense - revenue)
