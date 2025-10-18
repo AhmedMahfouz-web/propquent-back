@@ -438,33 +438,6 @@
                     </tr>
                     <tr class="bg-white dark:bg-gray-800">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                            Operation Expense</td>
-                        @foreach ($monthsToShow as $month)
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                {{ Illuminate\Support\Number::currency($reportData['expense']['operation'][$month] ?? 0, 'USD') }}
-                            </td>
-                        @endforeach
-                    </tr>
-                    <tr class="bg-white dark:bg-gray-800">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                            Operation Revenue</td>
-                        @foreach ($monthsToShow as $month)
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                {{ Illuminate\Support\Number::currency($reportData['revenue']['operation'][$month] ?? 0, 'USD') }}
-                            </td>
-                        @endforeach
-                    </tr>
-                    <tr class="bg-white dark:bg-gray-800">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                            Operation Evaluation</td>
-                        @foreach ($monthsToShow as $month)
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                {{ Illuminate\Support\Number::currency($evaluation['operation'][$month] ?? 0, 'USD') }}
-                            </td>
-                        @endforeach
-                    </tr>
-                    <tr class="bg-white dark:bg-gray-800">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
                             Cash</td>
                         @foreach ($monthsToShow as $month)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
