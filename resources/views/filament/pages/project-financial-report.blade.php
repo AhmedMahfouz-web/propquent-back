@@ -36,16 +36,27 @@
                         <tr>
                             <th
                                 class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
-                                Code
+                                <button wire:click="sortBy('key')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                    Code
+                                    @if ($sortField === 'key')
+                                        @if ($sortDirection === 'asc')
+                                            <x-heroicon-s-chevron-up class="w-4 h-4 ml-1" />
+                                        @else
+                                            <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
+                                        @endif
+                                    @endif
+                                </button>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
                                 style="max-width: 220px;">
-                                <button wire:click="sortBy('created_at')" class="flex items-center">
+                                <button wire:click="sortBy('title')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
                                     Project
-                                    @if ($sortDirection === 'asc')
-                                        <x-heroicon-s-chevron-up class="w-4 h-4 ml-1" />
-                                    @else
-                                        <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
+                                    @if ($sortField === 'title')
+                                        @if ($sortDirection === 'asc')
+                                            <x-heroicon-s-chevron-up class="w-4 h-4 ml-1" />
+                                        @else
+                                            <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
+                                        @endif
                                     @endif
                                 </button>
                             </th>
@@ -55,12 +66,30 @@
                             </th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                Total
+                                <button wire:click="sortBy('created_at')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                    Total
+                                    @if ($sortField === 'created_at')
+                                        @if ($sortDirection === 'asc')
+                                            <x-heroicon-s-chevron-up class="w-4 h-4 ml-1" />
+                                        @else
+                                            <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
+                                        @endif
+                                    @endif
+                                </button>
                             </th>
                             @foreach ($allMonths as $month)
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                    {{ date('M Y', strtotime($month)) }}
+                                    <button wire:click="sortBy('month_{{ $month }}')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                        {{ date('M Y', strtotime($month)) }}
+                                        @if ($sortField === 'month_' . $month)
+                                            @if ($sortDirection === 'asc')
+                                                <x-heroicon-s-chevron-up class="w-4 h-4 ml-1" />
+                                            @else
+                                                <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
+                                            @endif
+                                        @endif
+                                    </button>
                                 </th>
                             @endforeach
                         </tr>
@@ -318,10 +347,48 @@
         .dark .metric-total-purple { background-color: #6b21a8 !important; color: #e9d5ff !important; }
         .dark .metric-total-indigo { background-color: #3730a3 !important; color: #c7d2fe !important; }
 
+        /* Sortable column header styles */
+        th button {
+            transition: all 0.2s ease-in-out;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        th button:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .dark th button:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        th button:active {
+            transform: translateY(0);
+        }
+
+        /* Active sort indicator */
+        th button.active-sort {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: rgb(59, 130, 246);
+        }
+
+        .dark th button.active-sort {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: rgb(147, 197, 253);
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .project-name-cell {
                 max-width: 180px;
+            }
+            
+            th button {
+                font-size: 0.7rem;
+                padding: 0.125rem 0.25rem;
             }
         }
     </style>
