@@ -167,6 +167,12 @@
             // There are duplicate project records for this month!
             error_log("DUPLICATE RECORDS FOUND for month {$month}: " . $monthEvaluations->count() . " records, " . $uniqueProjects->count() . " unique projects");
         }
+        
+        // Debug: Log the calculation details
+        error_log("COMPANY REPORT DEBUG - Month {$month}: Found " . $monthEvaluations->count() . " projects, Total: {$monthTotal}");
+        foreach ($monthEvaluations as $eval) {
+            error_log("  Project {$eval->project_key}: {$eval->asset_evaluation}");
+        }
     }
 
     // Calculate operation evaluation (simple expense - revenue)
