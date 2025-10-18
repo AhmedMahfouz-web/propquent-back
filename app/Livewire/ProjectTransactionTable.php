@@ -196,7 +196,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                     ->relationship('project', 'title')
                     ->searchable()
                     ->preload()
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->key} - {$record->title}"),
+                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->key} - {$record->title}"),
 
                 Tables\Filters\SelectFilter::make('financial_type')
                     ->options(fn() => ProjectTransaction::getAvailableFinancialTypes()),
@@ -268,7 +268,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                                 return Project::with('developer')
                                     ->get()
                                     ->mapWithKeys(function ($project) {
-                                        return [$project->key => "{$project->title} ({$project->developer->name})"];
+                                        return [$project->key => "{$project->key} - {$project->title} ({$project->developer->name})"];
                                     })
                                     ->toArray();
                             })
@@ -460,33 +460,33 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
         try {
             // Get ALL filtered records (not just current page)
             $query = $this->getFilteredTableQuery();
-            
+
             // Calculate totals from all filtered records
             $recordCount = $query->count();
             $totalAmount = $query->sum('amount');
             $totalRevenue = $query->where('financial_type', 'revenue')->sum('amount');
             $totalExpense = $query->where('financial_type', 'expense')->sum('amount');
-            
+
             // Calculate serving breakdown for revenue
             $revenueOperationTotal = $query->where('financial_type', 'revenue')
                 ->where('serving', 'operation')->sum('amount');
             $revenueAssetTotal = $query->where('financial_type', 'revenue')
                 ->where('serving', 'asset')->sum('amount');
-            
+
             // Calculate serving breakdown for expense
             $expenseOperationTotal = $query->where('financial_type', 'expense')
                 ->where('serving', 'operation')->sum('amount');
             $expenseAssetTotal = $query->where('financial_type', 'expense')
                 ->where('serving', 'asset')->sum('amount');
-            
+
             // Get all records for status calculations
             $allRecords = $query->get();
-            
+
             // Calculate status breakdown from the collection
             $doneTotalAmount = $allRecords->where('status', 'done')->sum('amount');
             $pendingTotalAmount = $allRecords->where('status', 'pending')->sum('amount');
             $cancelledTotalAmount = $allRecords->where('status', 'cancelled')->sum('amount');
-            
+
             // Revenue by status
             $revenueStatusDone = $allRecords->where('financial_type', 'revenue')
                 ->where('status', 'done')->sum('amount');
@@ -494,7 +494,7 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 ->where('status', 'pending')->sum('amount');
             $revenueStatusCancelled = $allRecords->where('financial_type', 'revenue')
                 ->where('status', 'cancelled')->sum('amount');
-            
+
             // Expense by status
             $expenseStatusDone = $allRecords->where('financial_type', 'expense')
                 ->where('status', 'done')->sum('amount');
