@@ -104,7 +104,7 @@
                                     $isEvenRow = ($loop->index % 2 == 0);
                                     $rowBgClass = $isEvenRow ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800';
                                 @endphp
-                                <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}-{{ $sortField }}-{{ $sortDirection }}"
+                                <tr wire:key="project-{{ $projectKey }}-metric-{{ $key }}"
                                     class="{{ $rowBgClass }} metric-row">
                                     <td
                                         class="px-2 py-2 align-top whitespace-nowrap border-r dark:border-gray-600 sticky left-0 {{ $rowBgClass }} z-10 {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
@@ -155,7 +155,7 @@
                                                         'month' => $month,
                                                         'projectTitle' => $projectData['title'],
                                                     ],
-                                                    key($projectData['key'] . '-' . $month . '-correction-' . $sortField . '-' . $sortDirection)
+                                                    key($projectData['key'] . '-' . $month . '-correction')
                                                 )
                                             @elseif ($key === 'evaluation_asset')
                                                 <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
