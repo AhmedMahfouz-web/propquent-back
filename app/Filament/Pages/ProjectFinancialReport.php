@@ -479,16 +479,6 @@ class ProjectFinancialReport extends Page implements HasForms
             $this->sortDirection = 'asc';
         }
         $this->resetPage();
-        
-        // Force component refresh to maintain state
-        $this->dispatch('$refresh');
-        
-        // Add notification to confirm sorting is working
-        Notification::make()
-            ->title('Sorting by: ' . $field)
-            ->body('Direction: ' . $this->sortDirection)
-            ->info()
-            ->send();
     }
 
 

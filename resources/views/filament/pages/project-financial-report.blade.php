@@ -30,7 +30,7 @@
                     }
                 }
             @endphp
-            <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800" wire:key="financial-report-table">
+            <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm compact-table">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -392,4 +392,27 @@
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click event listeners to all sortable buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('button[wire\\:click^="sortBy"]')) {
+            // Small delay to ensure Livewire processes the click
+            setTimeout(function() {
+                // Force a gentle re-render by triggering a small DOM update
+                const table = document.querySelector('.compact-table');
+                if (table) {
+                    table.style.opacity = '0.99';
+                    setTimeout(() => {
+                        table.style.opacity = '1';
+                    }, 10);
+                }
+            }, 100);
+        }
+    });
+});
+</script>
 @endpush
