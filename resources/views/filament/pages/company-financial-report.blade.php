@@ -175,14 +175,10 @@
         }
     }
 
-    // Calculate operation evaluation (simple expense - revenue)
+    // No operation evaluation needed - only asset evaluation
     foreach ($monthsToShow as $month) {
-        $operationExpense = $reportData['expense']['operation'][$month] ?? 0;
-        $operationRevenue = $reportData['revenue']['operation'][$month] ?? 0;
-        $evaluation['operation'][$month] = $operationExpense - $operationRevenue;
-        
-        // Total evaluation
-        $evaluation['total'][$month] = $evaluation['asset'][$month] + $evaluation['operation'][$month];
+        // Total evaluation is just asset evaluation
+        $evaluation['total'][$month] = $evaluation['asset'][$month];
     }
 
     // 6. Calculate Cash
@@ -190,12 +186,12 @@
     $previousMonthCash = 0;
 
     foreach (array_reverse($monthsToShow->toArray()) as $month) {
-        $assetRevenue = $reportData['revenue']['asset'][$month] ?? 0;
-        $assetExpense = $reportData['expense']['asset'][$month] ?? 0;
+        $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+        $expense = $monthlyTotals['expense'][$month] ?? 0;
         $deposits = $userFinancials['deposits'][$month] ?? 0;
         $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
 
-        $cash[$month] = $previousMonthCash + $deposits + $assetRevenue - $withdrawals - $assetExpense;
+        $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
         $previousMonthCash = $cash[$month];
     }
 
