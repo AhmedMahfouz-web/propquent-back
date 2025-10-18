@@ -36,8 +36,7 @@
                         <tr>
                             <th
                                 class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
-                                <a href="{{ request()->fullUrlWithQuery(['sortField' => 'key', 'sortDirection' => ($sortField === 'key' && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
-                                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
+                                <button onclick="sortTable('key')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
                                     Code
                                     @if ($sortField === 'key')
                                         @if ($sortDirection === 'asc')
@@ -46,12 +45,11 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </a>
+                                </button>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
                                 style="max-width: 220px;">
-                                <a href="{{ request()->fullUrlWithQuery(['sortField' => 'title', 'sortDirection' => ($sortField === 'title' && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
-                                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
+                                <button onclick="sortTable('title')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
                                     Project
                                     @if ($sortField === 'title')
                                         @if ($sortDirection === 'asc')
@@ -60,7 +58,7 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </a>
+                                </button>
                             </th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
@@ -68,8 +66,7 @@
                             </th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                <a href="{{ request()->fullUrlWithQuery(['sortField' => 'created_at', 'sortDirection' => ($sortField === 'created_at' && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
-                                   class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
+                                <button onclick="sortTable('created_at')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
                                     Total
                                     @if ($sortField === 'created_at')
                                         @if ($sortDirection === 'asc')
@@ -78,13 +75,12 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </a>
+                                </button>
                             </th>
                             @foreach ($allMonths as $month)
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                    <a href="{{ request()->fullUrlWithQuery(['sortField' => 'month_' . $month, 'sortDirection' => ($sortField === 'month_' . $month && $sortDirection === 'asc') ? 'desc' : 'asc']) }}" 
-                                       class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 no-underline">
+                                    <button onclick="sortTable('month_{{ $month }}')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
                                         {{ date('M Y', strtotime($month)) }}
                                         @if ($sortField === 'month_' . $month)
                                             @if ($sortDirection === 'asc')
@@ -93,7 +89,7 @@
                                                 <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                             @endif
                                         @endif
-                                    </a>
+                                    </button>
                                 </th>
                             @endforeach
                         </tr>
@@ -396,5 +392,14 @@
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+<script>
+function sortTable(field) {
+    // Use Livewire's $wire to call the sortBy method
+    @this.call('sortBy', field);
+}
+</script>
 @endpush
 
