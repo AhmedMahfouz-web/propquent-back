@@ -44,6 +44,31 @@ class TestEvaluationCalculation extends Command
             
             $this->line("  Calculated Check: " . $calculated);
             $this->line("  Match: " . ($calculated == $stored->asset_evaluation ? 'YES' : 'NO'));
+            
+            // Show formula breakdown
+            $this->line("");
+            $this->line("Formula Breakdown:");
+            $this->line("  Previous: {$stored->previous_evaluation}");
+            $this->line("  + Expense: {$stored->expense_asset}");
+            $this->line("  - Revenue: {$stored->revenue_asset}");
+            $this->line("  + Correction: {$stored->value_correction}");
+            $this->line("  = Result: {$calculated}");
+            
+            // Check company total for this month
+            $companyTotal = \App\Models\MonthlyProjectEvaluation::getCompanyAssetEvaluation($month);
+            $this->line("");
+            $this->line("Company Total for {$month}: {$companyTotal}");
+            
+            // Show all projects for this month
+            $allProjects = \App\Models\MonthlyProjectEvaluation::where('month_date', $month)
+                ->get(['project_key', 'asset_evaluation']);
+            
+            $this->line("");
+            $this->line("All Projects for {$month}:");
+            foreach ($allProjects as $proj) {
+                $this->line("  {$proj->project_key}: {$proj->asset_evaluation}");
+            }
+            
         } else {
             $this->error("No stored evaluation found for {$projectKey} - {$month}");
         }
