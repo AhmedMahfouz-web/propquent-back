@@ -95,6 +95,9 @@ class ProjectFinancialReport extends Page implements HasForms
             'selectedMetrics' => $this->selectedMetrics,
             'perPage' => $this->perPage,
         ]);
+        
+        // Initialize data loading
+        $this->readyToLoad = true;
     }
 
     public function form(Form $form): Form
@@ -482,11 +485,6 @@ class ProjectFinancialReport extends Page implements HasForms
             $this->sortDirection = 'asc';
         }
         $this->resetPage();
-        
-        // Force refresh to prevent Livewire component state issues
-        $this->readyToLoad = false;
-        $this->dispatch('$refresh');
-        $this->readyToLoad = true;
     }
 
 
