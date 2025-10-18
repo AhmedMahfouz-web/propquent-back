@@ -138,7 +138,7 @@
         }
     }
 
-    // 5. Calculate Evaluation (Expense - Revenue for each serving)
+    // 5. Calculate Asset Evaluation using cumulative logic from ProjectFinancialReport
     $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
 
     // Initialize evaluation arrays
@@ -148,14 +148,99 @@
         $evaluation['total'][$month] = 0;
     }
 
-    // Calculate evaluation for each serving
-    foreach (['asset', 'operation'] as $serving) {
-        foreach ($monthsToShow as $month) {
-            $expense = $reportData['expense'][$serving][$month] ?? 0;
-            $revenue = $reportData['revenue'][$serving][$month] ?? 0;
-            $evaluation[$serving][$month] = $expense - $revenue;
-            $evaluation['total'][$month] += $evaluation[$serving][$month];
+    // Calculate cumulative Asset Evaluation by aggregating all projects
+    // Get all projects and calculate their individual asset evaluations, then sum them
+    $projects = App\Models\Project::with(['transactions', 'valueCorrections'])->get();
+    
+    // Process months in chronological order (oldest first) for cumulative calculation
+    $monthsChronological = array_reverse($monthsToShow->toArray());
+    
+    // Calculate asset evaluation for each project, then sum for company total
+    foreach ($monthsChronological as $month) {
+        $totalAssetEvaluation = 0;
+        
+        foreach ($projects as $project) {
+            $projectAssetEvaluation = 0;
+            
+            // Calculate cumulative asset evaluation for this project up to this month
+            foreach ($monthsChronological as $processMonth) {
+                if ($processMonth > $month) continue; // Only process months up to current month
+                
+                // Get project transactions for this month
+                $monthExpenses = $project->transactions()
+                    ->where('status', 'done')
+                    ->where('financial_type', 'expense')
+                    ->where('serving', 'asset')
+                    ->where(function($query) use ($processMonth) {
+                        $today = now()->startOfDay();
+                        $monthStart = \Carbon\Carbon::parse($processMonth)->startOfMonth();
+                        $monthEnd = \Carbon\Carbon::parse($processMonth)->endOfMonth();
+                        
+                        $query->where(function($q) use ($monthStart, $monthEnd, $today) {
+                            // Done transactions with actual_date in this month and <= today
+                            $q->whereNotNull('actual_date')
+                              ->whereBetween('actual_date', [$monthStart, $monthEnd])
+                              ->where('actual_date', '<=', $today);
+                        })->orWhere(function($q) use ($monthStart, $monthEnd, $today) {
+                            // Done transactions without actual_date but transaction_date in this month and <= today
+                            $q->whereNull('actual_date')
+                              ->whereBetween('transaction_date', [$monthStart, $monthEnd])
+                              ->where('transaction_date', '<=', $today);
+                        });
+                    })
+                    ->sum('amount');
+                
+                $monthRevenues = $project->transactions()
+                    ->where('status', 'done')
+                    ->where('financial_type', 'revenue')
+                    ->where('serving', 'asset')
+                    ->where(function($query) use ($processMonth) {
+                        $today = now()->startOfDay();
+                        $monthStart = \Carbon\Carbon::parse($processMonth)->startOfMonth();
+                        $monthEnd = \Carbon\Carbon::parse($processMonth)->endOfMonth();
+                        
+                        $query->where(function($q) use ($monthStart, $monthEnd, $today) {
+                            // Done transactions with actual_date in this month and <= today
+                            $q->whereNotNull('actual_date')
+                              ->whereBetween('actual_date', [$monthStart, $monthEnd])
+                              ->where('actual_date', '<=', $today);
+                        })->orWhere(function($q) use ($monthStart, $monthEnd, $today) {
+                            // Done transactions without actual_date but transaction_date in this month and <= today
+                            $q->whereNull('actual_date')
+                              ->whereBetween('transaction_date', [$monthStart, $monthEnd])
+                              ->where('transaction_date', '<=', $today);
+                        });
+                    })
+                    ->sum('amount');
+                
+                // Get value corrections for this month
+                $monthCorrections = App\Models\ValueCorrection::getCorrectionForMonth($project->key, $processMonth);
+                
+                // Add to cumulative asset evaluation: expenses - revenues + corrections
+                $projectAssetEvaluation += $monthExpenses - $monthRevenues + $monthCorrections;
+                
+                // Check if project is exited and this month is after exit
+                if ($project->status === 'exited' && $project->exit_date) {
+                    $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
+                    if ($processMonth >= $exitMonth) {
+                        $projectAssetEvaluation = 0; // Reset to 0 after exit
+                        break; // No need to process further months for this project
+                    }
+                }
+            }
+            
+            $totalAssetEvaluation += $projectAssetEvaluation;
         }
+        
+        $evaluation['asset'][$month] = $totalAssetEvaluation;
+        
+        // Operation evaluation remains simple calculation (expense - revenue)
+        $operationExpense = $reportData['expense']['operation'][$month] ?? 0;
+        $operationRevenue = $reportData['revenue']['operation'][$month] ?? 0;
+        $evaluation['operation'][$month] = $operationExpense - $operationRevenue;
+        
+        // Total evaluation
+        $evaluation['total'][$month] = $evaluation['asset'][$month] + $evaluation['operation'][$month];
     }
 
     // 6. Calculate Cash
@@ -172,10 +257,10 @@
         $previousMonthCash = $cash[$month];
     }
 
-    // 7. Calculate Equity Total
+    // 7. Calculate Equity Total (Asset Evaluation + Cash)
     $equityTotal = [];
     foreach ($monthsToShow as $month) {
-        $equityTotal[$month] = ($evaluation['total'][$month] ?? 0) + ($cash[$month] ?? 0);
+        $equityTotal[$month] = ($evaluation['asset'][$month] ?? 0) + ($cash[$month] ?? 0);
     }
 
     // 8. Calculate Profit
@@ -318,51 +403,72 @@
                     </tr>
                 @endif
 
-                {{-- Revenue and Expense Sections --}}
-                @foreach (['revenue', 'expense'] as $type)
-                    @if (!empty($reportData[$type]))
-                        @php
-                            $sectionColor = $type === 'revenue' ? 'green' : 'red';
-                            $icon = $type === 'revenue' ? 'heroicon-o-banknotes' : 'heroicon-o-credit-card';
-                        @endphp
-                        <tr class="bg-{{ $sectionColor }}-50 dark:bg-{{ $sectionColor }}-900/20">
-                            <th colspan="{{ 1 + $monthsToShow->count() }}"
-                                class="px-6 py-4 text-left text-lg font-semibold text-{{ $sectionColor }}-800 dark:text-{{ $sectionColor }}-200 flex items-center gap-2">
-                                @svg($icon, 'h-6 w-6')
-                                <span>{{ ucfirst($type) }}</span>
-                            </th>
-                        </tr>
-                        @foreach ($reportData[$type] as $servingName => $monthlyData)
-                            <tr class="bg-white dark:bg-gray-800">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                                    {{ $servingName }}</td>
-                                @foreach ($monthsToShow as $month)
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                        {{ Illuminate\Support\Number::currency($monthlyData[$month] ?? 0, 'USD') }}
-                                    </td>
-                                @endforeach
-                            </tr>
-                        @endforeach
-                        <tr class="bg-{{ $sectionColor }}-50 dark:bg-{{ $sectionColor }}-900/20 font-semibold">
-                            <td
-                                class="px-6 py-4 whitespace-nowrap text-sm text-{{ $sectionColor }}-800 dark:text-{{ $sectionColor }}-200 pl-12">
-                                Total {{ ucfirst($type) }}</td>
+                {{-- Revenue Section --}}
+                @if (!empty($reportData['revenue']))
+                    <tr class="bg-green-50 dark:bg-green-900/20">
+                        <th colspan="{{ 1 + $monthsToShow->count() }}"
+                            class="px-6 py-4 text-left text-lg font-semibold text-green-800 dark:text-green-200 flex items-center gap-2">
+                            @svg('heroicon-o-banknotes', 'h-6 w-6')
+                            <span>Revenue</span>
+                        </th>
+                    </tr>
+                    @foreach ($reportData['revenue'] as $servingName => $monthlyData)
+                        <tr class="bg-white dark:bg-gray-800">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
+                                Revenue {{ ucfirst($servingName) }}</td>
                             @foreach ($monthsToShow as $month)
-                                <td
-                                    class="px-6 py-4 whitespace-nowrap text-sm text-{{ $sectionColor }}-800 dark:text-{{ $sectionColor }}-200">
-                                    {{ Illuminate\Support\Number::currency($monthlyTotals[$type][$month] ?? 0, 'USD') }}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                    {{ Illuminate\Support\Number::currency($monthlyData[$month] ?? 0, 'USD') }}
                                 </td>
                             @endforeach
                         </tr>
-                        @if (!$loop->last)
-                            <tr class="h-6">
-                                <td colspan="{{ 1 + $monthsToShow->count() }}"></td>
-                            </tr>
-                        @endif
-                    @endif
-                @endforeach
+                    @endforeach
+                    <tr class="bg-green-50 dark:bg-green-900/20 font-semibold">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-800 dark:text-green-200 pl-12">
+                            Total Revenue</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-800 dark:text-green-200">
+                                {{ Illuminate\Support\Number::currency($monthlyTotals['revenue'][$month] ?? 0, 'USD') }}
+                            </td>
+                        @endforeach
+                    </tr>
+                    <tr class="h-6">
+                        <td colspan="{{ 1 + $monthsToShow->count() }}"></td>
+                    </tr>
+                @endif
 
-                {{-- Evaluation Section --}}
+                {{-- Expense Section --}}
+                @if (!empty($reportData['expense']))
+                    <tr class="bg-red-50 dark:bg-red-900/20">
+                        <th colspan="{{ 1 + $monthsToShow->count() }}"
+                            class="px-6 py-4 text-left text-lg font-semibold text-red-800 dark:text-red-200 flex items-center gap-2">
+                            @svg('heroicon-o-credit-card', 'h-6 w-6')
+                            <span>Expense</span>
+                        </th>
+                    </tr>
+                    @foreach ($reportData['expense'] as $servingName => $monthlyData)
+                        <tr class="bg-white dark:bg-gray-800">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
+                                Expense {{ ucfirst($servingName) }}</td>
+                            @foreach ($monthsToShow as $month)
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                    {{ Illuminate\Support\Number::currency($monthlyData[$month] ?? 0, 'USD') }}
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                    <tr class="bg-red-50 dark:bg-red-900/20 font-semibold">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-800 dark:text-red-200 pl-12">
+                            Total Expense</td>
+                        @foreach ($monthsToShow as $month)
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-800 dark:text-red-200">
+                                {{ Illuminate\Support\Number::currency($monthlyTotals['expense'][$month] ?? 0, 'USD') }}
+                            </td>
+                        @endforeach
+                    </tr>
+                @endif
+
+                {{-- Equity Section --}}
                 @if (!empty($evaluation['asset']) || !empty($evaluation['operation']))
                     <tr class="h-6">
                         <td colspan="{{ 1 + $monthsToShow->count() }}"></td>
@@ -376,10 +482,10 @@
                     </tr>
                     <tr class="bg-white dark:bg-gray-800">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 pl-12">
-                            Evaluation Asset</td>
+                            Asset Evaluation</td>
                         @foreach ($monthsToShow as $month)
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                {{ Illuminate\Support\Number::currency($evaluation['total'][$month] ?? 0, 'USD') }}
+                                {{ Illuminate\Support\Number::currency($evaluation['asset'][$month] ?? 0, 'USD') }}
                             </td>
                         @endforeach
                     </tr>
