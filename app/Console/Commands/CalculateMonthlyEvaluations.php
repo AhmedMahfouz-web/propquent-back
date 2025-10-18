@@ -63,18 +63,26 @@ class CalculateMonthlyEvaluations extends Command
             return;
         }
 
+        // Generate all months in range
+        $months = $this->generateMonthRange($dateRange['start'], $dateRange['end']);
+        
         // Delete existing evaluations if force is enabled
         if ($force) {
             MonthlyProjectEvaluation::where('project_key', $project->key)
                 ->whereBetween('month_date', [$dateRange['start'], $dateRange['end']])
                 ->delete();
         }
-
-        // Generate all months in range
-        $months = $this->generateMonthRange($dateRange['start'], $dateRange['end']);
         
-        // Calculate evaluations month by month
+        // Calculate evaluations month by month in chronological order
         $previousEvaluation = 0;
+        
+        // Get the evaluation from the month before our range starts (if not forcing from beginning)
+        if (!$force || $dateRange['start'] !== $months[0]) {
+            $previousMonth = Carbon::parse($months[0])->subMonth()->format('Y-m-01');
+            $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $previousMonth)
+                ->value('asset_evaluation') ?? 0;
+        }
         
         foreach ($months as $month) {
             $evaluation = $this->calculateMonthEvaluation($project, $month, $previousEvaluation, $force);
@@ -130,18 +138,6 @@ class CalculateMonthlyEvaluations extends Command
 
     private function calculateMonthEvaluation(Project $project, string $month, float $previousEvaluation, bool $force): ?array
     {
-        // Check if already exists and not forcing
-        if (!$force) {
-            $existing = MonthlyProjectEvaluation::where('project_key', $project->key)
-                ->where('month_date', $month)
-                ->first();
-            
-            if ($existing) {
-                return [
-                    'asset_evaluation' => (float) $existing->asset_evaluation,
-                ];
-            }
-        }
 
         // Get transactions for this month
         $monthStart = Carbon::parse($month)->startOfMonth();
