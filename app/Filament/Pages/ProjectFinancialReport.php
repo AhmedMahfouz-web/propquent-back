@@ -229,60 +229,19 @@ class ProjectFinancialReport extends Page implements HasForms
         $allMonths = $this->getMonthsInRange();
         $financialSummary = $this->calculateFinancialSummary((clone $projectsQuery), $allMonths);
 
-        // Handle sorting
+        // For now, disable month-based sorting to avoid Livewire component issues
+        // Use standard database sorting for all columns
+        $sortField = $this->sortField;
+        
+        // Map month sorting to a standard field to avoid complex calculations
         if (str_starts_with($this->sortField, 'month_')) {
-            // For month-based sorting, we need to get all projects first, then sort by calculated values
-            $projects = (clone $projectsQuery)
-                ->with(['transactions', 'statusChanges', 'valueCorrections'])
-                ->get();
-            
-            // Calculate financial data for sorting
-            $projectsWithData = [];
-            foreach ($projects as $project) {
-                $projectData = $this->getProjectFinancialData($project, $allMonths);
-                $monthKey = str_replace('month_', '', $this->sortField);
-                
-                // Get the sum of all metrics for this month for sorting
-                $monthTotal = 0;
-                foreach ($projectData['months'][$monthKey] ?? [] as $value) {
-                    if (is_numeric($value)) {
-                        $monthTotal += $value;
-                    }
-                }
-                
-                $projectsWithData[] = [
-                    'project' => $project,
-                    'sort_value' => $monthTotal
-                ];
-            }
-            
-            // Sort by calculated month total
-            usort($projectsWithData, function($a, $b) {
-                if ($this->sortDirection === 'asc') {
-                    return $a['sort_value'] <=> $b['sort_value'];
-                } else {
-                    return $b['sort_value'] <=> $a['sort_value'];
-                }
-            });
-            
-            // Extract sorted projects and paginate manually
-            $sortedProjects = collect(array_column($projectsWithData, 'project'));
-            $perPage = $this->perPage === 'all' ? $sortedProjects->count() : (int) $this->perPage;
-            $currentPage = request()->get('page', 1);
-            $projects = new \Illuminate\Pagination\LengthAwarePaginator(
-                $sortedProjects->forPage($currentPage, $perPage),
-                $sortedProjects->count(),
-                $perPage,
-                $currentPage,
-                ['path' => request()->url(), 'pageName' => 'page']
-            );
-        } else {
-            // Regular database column sorting
-            $projects = (clone $projectsQuery)
-                ->with(['transactions', 'statusChanges', 'valueCorrections'])
-                ->orderBy($this->sortField, $this->sortDirection)
-                ->paginate($this->perPage);
+            $sortField = 'created_at'; // Fallback to creation date for month columns
         }
+        
+        $projects = (clone $projectsQuery)
+            ->with(['transactions', 'statusChanges', 'valueCorrections'])
+            ->orderBy($sortField, $this->sortDirection)
+            ->paginate($this->perPage);
 
         $projectsData = [];
         foreach ($projects as $project) {
@@ -523,6 +482,11 @@ class ProjectFinancialReport extends Page implements HasForms
             $this->sortDirection = 'asc';
         }
         $this->resetPage();
+        
+        // Force refresh to prevent Livewire component state issues
+        $this->readyToLoad = false;
+        $this->dispatch('$refresh');
+        $this->readyToLoad = true;
     }
 
 

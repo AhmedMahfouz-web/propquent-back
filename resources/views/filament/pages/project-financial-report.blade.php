@@ -30,7 +30,7 @@
                     }
                 }
             @endphp
-            <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
+            <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800" wire:key="financial-report-table-{{ $sortField }}-{{ $sortDirection }}">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm compact-table">
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
