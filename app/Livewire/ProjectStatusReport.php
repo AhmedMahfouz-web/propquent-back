@@ -601,9 +601,9 @@ class ProjectStatusReport extends Component
         $data['entry_date'] = $data['entry_date'] ?? null;
         $data['exit_date'] = $data['exit_date'] ?? null;
 
-        // Get asset evaluation and correction
+        // Get asset evaluation and value corrections
         $data['asset_evaluation'] = $this->calculateAssetEvaluation($project);
-        $data['asset_correction'] = $this->calculateAssetCorrection($project);
+        $data['value_corrections'] = $this->calculateAssetCorrection($project);
 
         return $data;
     }

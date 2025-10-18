@@ -549,7 +549,6 @@
                                     <div class="sub-header-grid equity-grid">
                                         <span>Asset Evaluation</span>
                                         <span>Value Corrections</span>
-                                        <span>Cash</span>
                                         <span>Profit Operation</span>
                                         <span>Profit Asset</span>
                                         <div class="excel-column-header">
@@ -851,9 +850,6 @@
                                                 </span>
                                                 <span class="content-value text-blue-600 dark:text-blue-400 font-medium">
                                                     ${{ number_format($projectData['value_corrections'] ?? 0, 0) }}
-                                                </span>
-                                                <span class="content-value text-green-600 dark:text-green-400 font-medium">
-                                                    ${{ number_format($projectData['cash'] ?? 0, 0) }}
                                                 </span>
                                                 <span class="content-value font-medium {{ $profitOperation >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
                                                     ${{ number_format($profitOperation, 0) }}
@@ -1200,8 +1196,8 @@
         }
 
         .equity-grid {
-            grid-template-columns: repeat(6, 1fr);
-            min-width: 600px;
+            grid-template-columns: repeat(5, 1fr);
+            min-width: 500px;
         }
 
         .status-section-width {
