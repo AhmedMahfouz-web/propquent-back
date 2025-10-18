@@ -36,8 +36,7 @@
                         <tr>
                             <th
                                 class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
-                                <button wire:click="sortBy('key')"
-                                    class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                <a href="javascript:void(0)" onclick="sortColumn('key')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                     Code
                                     @if ($sortField === 'key')
                                         @if ($sortDirection === 'asc')
@@ -46,12 +45,11 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </button>
+                                </a>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
                                 style="max-width: 220px;">
-                                <button wire:click="sortBy('title')"
-                                    class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                <a href="javascript:void(0)" onclick="sortColumn('title')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                     Project
                                     @if ($sortField === 'title')
                                         @if ($sortDirection === 'asc')
@@ -60,7 +58,7 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </button>
+                                </a>
                             </th>
                             <th
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
@@ -68,8 +66,7 @@
                             </th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                <button wire:click="sortBy('created_at')"
-                                    class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                <a href="javascript:void(0)" onclick="sortColumn('created_at')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                     Total
                                     @if ($sortField === 'created_at')
                                         @if ($sortDirection === 'asc')
@@ -78,13 +75,12 @@
                                             <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                         @endif
                                     @endif
-                                </button>
+                                </a>
                             </th>
                             @foreach ($allMonths as $month)
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                    <button wire:click="sortBy('month_{{ $month }}')"
-                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-100">
+                                    <a href="javascript:void(0)" onclick="sortColumn('month_{{ $month }}')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                         {{ date('M Y', strtotime($month)) }}
                                         @if ($sortField === 'month_' . $month)
                                             @if ($sortDirection === 'asc')
@@ -93,7 +89,7 @@
                                                 <x-heroicon-s-chevron-down class="w-4 h-4 ml-1" />
                                             @endif
                                         @endif
-                                    </button>
+                                    </a>
                                 </th>
                             @endforeach
                         </tr>
@@ -635,24 +631,38 @@
 @endpush
 
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add click event listeners to all sortable buttons
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('button[wire\\:click^="sortBy"]')) {
-                    // Small delay to ensure Livewire processes the click
-                    setTimeout(function() {
-                        // Force a gentle re-render by triggering a small DOM update
-                        const table = document.querySelector('.compact-table');
-                        if (table) {
-                            table.style.opacity = '0.99';
-                            setTimeout(() => {
-                                table.style.opacity = '1';
-                            }, 10);
-                        }
-                    }, 100);
-                }
-            });
-        });
-    </script>
+<script>
+function sortColumn(field) {
+    // Create a form to submit the sort parameters
+    const form = document.createElement('form');
+    form.method = 'GET';
+    form.action = window.location.pathname;
+    
+    // Get current URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Determine new sort direction
+    let newDirection = 'asc';
+    if (urlParams.get('sortField') === field && urlParams.get('sortDirection') === 'asc') {
+        newDirection = 'desc';
+    }
+    
+    // Set sort parameters
+    urlParams.set('sortField', field);
+    urlParams.set('sortDirection', newDirection);
+    
+    // Add all parameters as hidden inputs
+    for (const [key, value] of urlParams) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+    }
+    
+    // Submit the form
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
 @endpush
