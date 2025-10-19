@@ -26,9 +26,8 @@ class AppServiceProvider extends ServiceProvider
         //     \App\Listeners\InvalidateConfigurationCache::class
         // );
 
-        // Model observers removed - caching disabled for performance
-
-        // Register ProjectTransaction observer for monthly evaluations
+        // Register observers for automatic asset evaluation updates
         \App\Models\ProjectTransaction::observe(\App\Observers\ProjectTransactionObserver::class);
+        \App\Models\ValueCorrection::observe(\App\Observers\ValueCorrectionObserver::class);
     }
 }
