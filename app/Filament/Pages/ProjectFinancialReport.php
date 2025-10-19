@@ -70,6 +70,12 @@ class ProjectFinancialReport extends Page implements HasForms
 
     public function mount(): void
     {
+        // Handle correction saving
+        if (request('action') === 'save_correction') {
+            $this->saveCorrection();
+            return;
+        }
+
         // Set default date range: current month to 12 months ago
         if (empty($this->startMonth)) {
             $this->startMonth = now()->subMonths(11)->format('Y-m-01'); // 12 months ago (including current)
@@ -98,6 +104,36 @@ class ProjectFinancialReport extends Page implements HasForms
 
         // Initialize data loading
         $this->readyToLoad = true;
+    }
+
+    public function saveCorrection(): void
+    {
+        try {
+            $projectKey = request('project_key');
+            $month = request('month');
+            $amount = (float) request('amount');
+            $notes = request('notes');
+
+            \App\Models\ValueCorrection::setCorrectionForMonth($projectKey, $month, $amount, $notes);
+
+            Notification::make()
+                ->title('Value Correction Saved')
+                ->body('Value correction has been updated successfully.')
+                ->success()
+                ->send();
+
+            // Redirect back to refresh the data
+            redirect()->route('filament.admin.pages.project-financial-report', request()->except(['action', 'project_key', 'month', 'amount', 'notes', '_token']));
+
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error')
+                ->body('Failed to save value correction: ' . $e->getMessage())
+                ->danger()
+                ->send();
+
+            redirect()->back();
+        }
     }
 
     public function form(Form $form): Form
