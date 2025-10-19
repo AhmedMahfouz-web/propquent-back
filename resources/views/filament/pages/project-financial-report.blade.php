@@ -157,7 +157,7 @@
                                                         'month' => $month,
                                                         'projectTitle' => $projectData['title'],
                                                     ],
-                                                    key($projectData['key'] . '-' . $month . '-correction')
+                                                    key: $projectData['key'] . '-' . $month . '-correction'
                                                 )
                                             @elseif ($key === 'evaluation_asset')
                                                 <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
