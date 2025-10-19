@@ -281,8 +281,36 @@
                     Reset Filters
                 </a>
             </div>
+            <div>
+                <form action="{{ route('filament.admin.pages.company-financial-report') }}" method="POST" style="display: inline;">
+                    @csrf
+                    <input type="hidden" name="action" value="refresh_evaluations">
+                    <input type="hidden" name="start_month" value="{{ $selectedStartMonth }}">
+                    <input type="hidden" name="end_month" value="{{ $selectedEndMonth }}">
+                    <button type="submit"
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        🔄 Refresh Evaluations
+                    </button>
+                </form>
+            </div>
         </div>
     </form>
+
+    {{-- Last Update Info --}}
+    @php
+        $lastUpdate = App\Models\MonthlyProjectEvaluation::latest('updated_at')->first();
+    @endphp
+    @if($lastUpdate)
+        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+            <div class="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Asset evaluations last updated: {{ $lastUpdate->updated_at->diffForHumans() }}</span>
+                <span class="text-xs opacity-75">({{ $lastUpdate->updated_at->format('Y-m-d H:i:s') }})</span>
+            </div>
+        </div>
+    @endif
 
     {{-- Integrated Financial Report Table --}}
     <div class="overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
