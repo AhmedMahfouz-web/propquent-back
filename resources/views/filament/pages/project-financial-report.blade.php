@@ -150,15 +150,18 @@
                                         <td
                                             class="px-3 py-2 whitespace-nowrap text-right {{ $loop->first ? 'border-t-2 border-gray-300 dark:border-gray-600' : '' }}">
                                             @if ($key === 'value_correction')
-                                                @livewire(
-                                                    'quick-value-correction-edit',
-                                                    [
-                                                        'projectKey' => $projectData['key'],
-                                                        'month' => $month,
-                                                        'projectTitle' => $projectData['title'],
-                                                    ],
-                                                    $projectData['key'] . '-' . $month . '-correction'
-                                                )
+                                                <div class="bg-red-200 border-2 border-red-500 p-2 rounded">
+                                                    <div class="text-xs text-red-800 mb-1">DEBUG: Rendering correction for {{ $projectData['key'] }} - {{ $month }}</div>
+                                                    @livewire(
+                                                        'quick-value-correction-edit',
+                                                        [
+                                                            'projectKey' => $projectData['key'],
+                                                            'month' => $month,
+                                                            'projectTitle' => $projectData['title'],
+                                                        ],
+                                                        $projectData['key'] . '-' . $month . '-correction'
+                                                    )
+                                                </div>
                                             @elseif ($key === 'evaluation_asset')
                                                 <span class="font-medium text-xs text-gray-700 dark:text-gray-300">
                                                     ${{ number_format($projectData['months'][$month][$key] ?? 0, 2) }}
