@@ -350,37 +350,20 @@ class ProjectFinancialReport extends Page implements HasForms
             $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
         }
 
-        // Calculate cumulative asset evaluation and profit asset
-        // Process months in chronological order (oldest first) for cumulative calculation
+        // Use pre-calculated asset evaluations from database (MonthlyProjectEvaluation)
+        // This ensures correct cumulative calculations regardless of filtered date range
+        $assetEvaluations = \App\Models\MonthlyProjectEvaluation::getProjectEvaluations($project->key, $allMonths);
+        
+        // Process months in chronological order (oldest first) for profit calculations
         $monthsChronological = array_reverse($allMonths);
-        $runningTotal = 0;
         $previousAssetEvaluation = 0;
 
         foreach ($monthsChronological as $monthIndex => $month) {
             // Get Value Correction from database
             $data['months'][$month]['value_correction'] = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
 
-            // Check if this month is after project exit
-            $isAfterExit = false;
-            if ($exitMonth && $month >= $exitMonth) {
-                $isAfterExit = true;
-            }
-
-            if ($isAfterExit) {
-                // If project is exited, asset evaluation becomes 0
-                $data['months'][$month]['evaluation_asset'] = 0;
-                $runningTotal = 0; // Reset for future months after exit
-                $previousAssetEvaluation = 0;
-            } else {
-                // Calculate cumulative asset evaluation:
-                // Current = Previous + Current Month Asset Expenses - Current Month Asset Revenues + Current Month Value Correction
-                $expenses = $data['months'][$month]['expense_asset'] ?? 0;
-                $revenues = $data['months'][$month]['revenue_asset'] ?? 0;
-                $corrections = $data['months'][$month]['value_correction'] ?? 0;
-
-                $runningTotal = $runningTotal + $expenses - $revenues + $corrections;
-                $data['months'][$month]['evaluation_asset'] = $runningTotal;
-            }
+            // Use pre-calculated asset evaluation from database
+            $data['months'][$month]['evaluation_asset'] = $assetEvaluations[$month] ?? 0;
 
             // Calculate total fields
             $data['months'][$month]['expense_total'] = $data['months'][$month]['expense_asset'] + $data['months'][$month]['expense_operation'];
@@ -389,7 +372,7 @@ class ProjectFinancialReport extends Page implements HasForms
             // Calculate derived profit metrics
             $data['months'][$month]['profit_operation'] = $data['months'][$month]['revenue_operation'] - $data['months'][$month]['expense_operation'];
 
-            // Calculate Profit Asset using the new formula:
+            // Calculate Profit Asset using the formula:
             // Profit Asset = Current month Asset Evaluation - Previous month Asset Evaluation + Current month Revenue Asset - Current month Expense Asset
             $currentAssetEvaluation = $data['months'][$month]['evaluation_asset'];
             $currentRevenueAsset = $data['months'][$month]['revenue_asset'] ?? 0;
@@ -458,11 +441,8 @@ class ProjectFinancialReport extends Page implements HasForms
                 }
             }
 
-            // For asset evaluation, sum the current asset evaluations of all projects
-            $summary['months'][$month]['evaluation_asset'] = 0;
-            foreach ($projectsData as $projectData) {
-                $summary['months'][$month]['evaluation_asset'] += $projectData['months'][$month]['evaluation_asset'];
-            }
+            // Use optimized database query for company asset evaluation
+            $summary['months'][$month]['evaluation_asset'] = \App\Models\MonthlyProjectEvaluation::getCompanyAssetEvaluation($month);
 
             // Calculate total fields
             $summary['months'][$month]['expense_total'] = $summary['months'][$month]['expense_asset'] + $summary['months'][$month]['expense_operation'];
