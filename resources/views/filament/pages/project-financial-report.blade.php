@@ -751,37 +751,17 @@ function saveCorrectionModal() {
         return;
     }
     
-    // Create form to submit correction
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("filament.admin.pages.project-financial-report") }}';
-    
-    // Add CSRF token
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = '_token';
-    csrfInput.value = '{{ csrf_token() }}';
-    form.appendChild(csrfInput);
-    
-    // Add correction data
-    const inputs = {
+    // Use GET request with parameters instead of POST
+    const params = new URLSearchParams({
         'action': 'save_correction',
         'project_key': currentCorrectionData.projectKey,
         'month': currentCorrectionData.month,
         'amount': amount,
         'notes': notes
-    };
+    });
     
-    for (const [key, value] of Object.entries(inputs)) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
-    }
-    
-    document.body.appendChild(form);
-    form.submit();
+    // Redirect with parameters
+    window.location.href = '{{ route("filament.admin.pages.project-financial-report") }}?' + params.toString();
 }
 </script>
 @endpush
