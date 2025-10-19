@@ -223,20 +223,23 @@
                                     <span id="correctionProjectTitle"></span> - <span id="correctionMonth"></span>
                                 </p>
                             </div>
-                            <div class="mt-4">
-                                <label for="correctionAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Correction Amount ($)
-                                </label>
-                                <input type="number" step="0.01" id="correctionAmount" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            </div>
-                            <div class="mt-4">
-                                <label for="correctionNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Notes (Optional)
-                                </label>
-                                <textarea id="correctionNotes" rows="3"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
-                            </div>
+                            <form onsubmit="event.preventDefault(); saveCorrectionModal(); return false;">
+                                <div class="mt-4">
+                                    <label for="correctionAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Correction Amount ($)
+                                    </label>
+                                    <input type="number" step="0.01" id="correctionAmount" 
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        onkeypress="if(event.key==='Enter'){event.preventDefault(); saveCorrectionModal();}">
+                                </div>
+                                <div class="mt-4">
+                                    <label for="correctionNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Notes (Optional)
+                                    </label>
+                                    <textarea id="correctionNotes" rows="3"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
