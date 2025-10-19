@@ -257,8 +257,8 @@
                     </div>
                 </div>
                 <div class="bg-gray-500 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse dark:bg-gray-700 ">
-                    <button onclick="saveCorrectionModal()" type="button"
-                        class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 focus-visible:ring-custom-500/50 dark:bg-custom-500 dark:hover:bg-custom-400 dark:focus-visible:ring-custom-400/50 fi-ac-action fi-ac-btn-action">
+                    <button onclick="saveCorrectionModal()" type="button" style="background-color: #60a5fa;"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Save
                     </button>
                     <button onclick="closeCorrectionModal()" type="button"
