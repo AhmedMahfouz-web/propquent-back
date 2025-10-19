@@ -1,11 +1,11 @@
-<div class="value-correction-component">
+<div class="value-correction-component bg-purple-50 border-2 border-purple-300 rounded p-2" style="min-height: 32px;">
     <!-- Value Correction Display with Edit Button -->
-    <div class="flex items-center gap-2">
-        <span class="font-medium text-xs">
+    <div class="flex items-center justify-between gap-2 w-full">
+        <span class="font-bold text-sm text-purple-800">
             ${{ number_format($correction_amount ?? 0, 2) }}
         </span>
         <button wire:click="openModal"
-            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            class="flex-shrink-0 px-2 py-1 text-white bg-blue-600 hover:bg-blue-700 rounded shadow-sm border-2 border-blue-800 transition-colors"
             title="Edit value correction for {{ $projectTitle }} - {{ date('M Y', strtotime($month)) }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
