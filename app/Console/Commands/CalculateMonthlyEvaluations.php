@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class CalculateMonthlyEvaluations extends Command
 {
-    protected $signature = 'evaluations:calculate 
+    protected $signature = 'evaluations:calculate
                           {--project-key= : Calculate for specific project only}
                           {--from-month= : Start from specific month (Y-m-01 format)}
                           {--to-month= : End at specific month (Y-m-01 format)}
@@ -57,7 +57,7 @@ class CalculateMonthlyEvaluations extends Command
 
         // Get date range for this project
         $dateRange = $this->getProjectDateRange($project, $fromMonth, $toMonth);
-        
+
         if (empty($dateRange)) {
             $this->line("  No transactions found for project {$project->key}");
             return;
@@ -65,17 +65,17 @@ class CalculateMonthlyEvaluations extends Command
 
         // Generate all months in range
         $months = $this->generateMonthRange($dateRange['start'], $dateRange['end']);
-        
+
         // Delete existing evaluations if force is enabled
         if ($force) {
             MonthlyProjectEvaluation::where('project_key', $project->key)
                 ->whereBetween('month_date', [$dateRange['start'], $dateRange['end']])
                 ->delete();
         }
-        
+
         // Calculate evaluations month by month in chronological order
         $previousEvaluation = 0;
-        
+
         // Get the evaluation from the month before our range starts (if not forcing from beginning)
         if (!$force || $dateRange['start'] !== $months[0]) {
             $previousMonth = Carbon::parse($months[0])->subMonth()->format('Y-m-01');
@@ -83,14 +83,11 @@ class CalculateMonthlyEvaluations extends Command
                 ->where('month_date', $previousMonth)
                 ->value('asset_evaluation') ?? 0;
         }
-        
-        $this->line("  Starting with previous evaluation: {$previousEvaluation}");
-        
+
         foreach ($months as $month) {
             $evaluation = $this->calculateMonthEvaluation($project, $month, $previousEvaluation, $force);
             if ($evaluation !== null) {
                 $previousEvaluation = $evaluation['asset_evaluation'];
-                $this->line("  Updated previous evaluation to: {$previousEvaluation} for next month");
             }
         }
 
@@ -150,17 +147,17 @@ class CalculateMonthlyEvaluations extends Command
         // Get expense asset transactions for this month
         $expenseAsset = 0;
         $revenueAsset = 0;
-        
+
         foreach ($project->transactions as $transaction) {
             if ($transaction->status !== 'done' || $transaction->serving !== 'asset') {
                 continue;
             }
-            
+
             // Determine which date to use - same logic as ProjectFinancialReport
             $dateToUse = null;
             $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
             $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
-            
+
             if ($actualDate && $actualDate->lte($today)) {
                 // Use actual_date if it exists and is <= today
                 $dateToUse = $transaction->actual_date;
@@ -171,10 +168,10 @@ class CalculateMonthlyEvaluations extends Command
                 // Skip future transactions
                 continue;
             }
-            
+
             // Check if this transaction belongs to the current month
             $transactionMonth = date('Y-m-01', strtotime($dateToUse));
-            
+
             if ($transactionMonth === $month) {
                 if ($transaction->financial_type === 'expense') {
                     $expenseAsset += $transaction->amount;
@@ -197,13 +194,6 @@ class CalculateMonthlyEvaluations extends Command
         // Calculate asset evaluation using the exact formula
         $assetEvaluation = $isAfterExit ? 0 : ($previousEvaluation + $expenseAsset - $revenueAsset + $valueCorrection);
 
-        // Debug output with detailed calculation
-        $calculationDetails = $isAfterExit ? 
-            "EXITED PROJECT - Asset Evaluation = 0" : 
-            "Asset Evaluation = {$previousEvaluation} + {$expenseAsset} - {$revenueAsset} + {$valueCorrection} = {$assetEvaluation}";
-        
-        $this->line("    Month {$month}: {$calculationDetails}");
-
         // Store the evaluation
         $evaluation = MonthlyProjectEvaluation::updateOrCreate(
             [
@@ -219,6 +209,9 @@ class CalculateMonthlyEvaluations extends Command
                 'is_after_exit' => $isAfterExit,
             ]
         );
+
+        // Debug output
+        $this->line("    Month {$month}: Prev={$previousEvaluation}, Exp={$expenseAsset}, Rev={$revenueAsset}, Corr={$valueCorrection} => {$assetEvaluation}");
 
         return [
             'asset_evaluation' => $assetEvaluation,

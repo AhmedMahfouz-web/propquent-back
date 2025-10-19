@@ -4,15 +4,15 @@
         // 1. Generate all possible months from 2 years ago to 2 years in the future
         $startDate = now()->subYears(2)->startOfYear();
         $endDate = now()->addYears(2)->endOfYear();
-        
+
         $allMonths = collect();
         $current = $startDate->copy();
-        
+
         while ($current <= $endDate) {
             $allMonths->push($current->format('Y-m-01'));
             $current->addMonth();
         }
-        
+
         // Reverse to show latest months first
         $allMonths = $allMonths->reverse();
 
@@ -21,9 +21,11 @@
         $selectedEndMonth = request('end_month', now()->format('Y-m-01')); // Default to current month
 
         // 3. Filter months to show only those between start and end month (inclusive)
-        $monthsToShow = $allMonths->filter(function ($month) use ($selectedStartMonth, $selectedEndMonth) {
-            return $month >= $selectedStartMonth && $month <= $selectedEndMonth;
-        })->values();
+        $monthsToShow = $allMonths
+            ->filter(function ($month) use ($selectedStartMonth, $selectedEndMonth) {
+                return $month >= $selectedStartMonth && $month <= $selectedEndMonth;
+            })
+            ->values();
 
         // 4. If no months match the filter, show all months
         if ($monthsToShow->isEmpty()) {
@@ -35,13 +37,13 @@
             $start = \Carbon\Carbon::parse($selectedStartMonth);
             $end = \Carbon\Carbon::parse($selectedEndMonth);
             $completeMonths = collect();
-            
+
             $current = $start->copy();
             while ($current <= $end) {
                 $completeMonths->push($current->format('Y-m-01'));
                 $current->addMonth();
             }
-            
+
             $monthsToShow = $completeMonths->reverse(); // Reverse to show latest first
         }
 
@@ -153,23 +155,42 @@
         $evaluation['total'][$month] = 0;
     }
 
-    // Use the optimized method from MonthlyProjectEvaluation model
-    $evaluation['asset'] = App\Models\MonthlyProjectEvaluation::getCompanyEvaluations($monthsToShow->toArray());
-    
-    // Debug: Log the calculation details for verification
+    // Get pre-calculated asset evaluations from database - MANUAL SUM to debug
     foreach ($monthsToShow as $month) {
-        $monthEvaluations = App\Models\MonthlyProjectEvaluation::where('month_date', $month)
-            ->get(['project_key', 'asset_evaluation', 'expense_asset', 'revenue_asset', 'value_correction', 'previous_evaluation']);
-        
-        error_log("COMPANY REPORT DEBUG - Month {$month}: Total Asset Evaluation: {$evaluation['asset'][$month]}");
+        // Get all project evaluations for this month and sum them manually
+        $monthEvaluations = App\Models\MonthlyProjectEvaluation::where('month_date', $month)->get([
+            'project_key',
+            'asset_evaluation',
+        ]);
+
+        $monthTotal = 0;
         foreach ($monthEvaluations as $eval) {
-            error_log("  Project {$eval->project_key}: Prev={$eval->previous_evaluation}, Exp={$eval->expense_asset}, Rev={$eval->revenue_asset}, Corr={$eval->value_correction} => Final={$eval->asset_evaluation}");
+            $monthTotal += $eval->asset_evaluation;
         }
-        
-        // Verify the calculation manually
-        $manualTotal = $monthEvaluations->sum('asset_evaluation');
-        if (abs($manualTotal - $evaluation['asset'][$month]) > 0.01) {
-            error_log("WARNING: Manual calculation ({$manualTotal}) differs from model method ({$evaluation['asset'][$month]}) for month {$month}");
+
+        $evaluation['asset'][$month] = $monthTotal;
+
+        // Debug: Check for duplicates
+        $uniqueProjects = $monthEvaluations->pluck('project_key')->unique();
+        if ($monthEvaluations->count() != $uniqueProjects->count()) {
+            // There are duplicate project records for this month!
+            error_log(
+                "DUPLICATE RECORDS FOUND for month {$month}: " .
+                    $monthEvaluations->count() .
+                    ' records, ' .
+                    $uniqueProjects->count() .
+                    ' unique projects',
+            );
+        }
+
+        // Debug: Log the calculation details
+        error_log(
+            "COMPANY REPORT DEBUG - Month {$month}: Found " .
+                $monthEvaluations->count() .
+                " projects, Total: {$monthTotal}",
+        );
+        foreach ($monthEvaluations as $eval) {
+            error_log("  Project {$eval->project_key}: {$eval->asset_evaluation}");
         }
     }
 
@@ -178,63 +199,63 @@
         $operationExpense = $reportData['expense']['operation'][$month] ?? 0;
         $operationRevenue = $reportData['revenue']['operation'][$month] ?? 0;
         $evaluation['operation'][$month] = $operationExpense - $operationRevenue;
-        
+
         // Total evaluation is just asset evaluation (operation doesn't affect total)
-        $evaluation['total'][$month] = $evaluation['asset'][$month];
-    }
+                $evaluation['total'][$month] = $evaluation['asset'][$month];
+            }
 
-    // 6. Calculate Cash
-    $cash = [];
-    $previousMonthCash = 0;
+            // 6. Calculate Cash
+            $cash = [];
+            $previousMonthCash = 0;
 
-    foreach (array_reverse($monthsToShow->toArray()) as $month) {
-        $revenue = $monthlyTotals['revenue'][$month] ?? 0;
-        $expense = $monthlyTotals['expense'][$month] ?? 0;
-        $deposits = $userFinancials['deposits'][$month] ?? 0;
-        $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
+            foreach (array_reverse($monthsToShow->toArray()) as $month) {
+                $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+                $expense = $monthlyTotals['expense'][$month] ?? 0;
+                $deposits = $userFinancials['deposits'][$month] ?? 0;
+                $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
 
-        $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
-        $previousMonthCash = $cash[$month];
-    }
+                $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+                $previousMonthCash = $cash[$month];
+            }
 
-    // 7. Calculate Equity Total (Asset Evaluation + Cash)
-    $equityTotal = [];
-    foreach ($monthsToShow as $month) {
-        $equityTotal[$month] = ($evaluation['asset'][$month] ?? 0) + ($cash[$month] ?? 0);
-    }
+            // 7. Calculate Equity Total (Asset Evaluation + Cash)
+            $equityTotal = [];
+            foreach ($monthsToShow as $month) {
+                $equityTotal[$month] = ($evaluation['asset'][$month] ?? 0) + ($cash[$month] ?? 0);
+            }
 
-    // 8. Calculate Profit
-    $profit = ['asset' => [], 'operation' => [], 'total' => []];
+            // 8. Calculate Profit
+            $profit = ['asset' => [], 'operation' => [], 'total' => []];
 
-    // Initialize profit arrays
-    foreach ($monthsToShow as $month) {
-        $profit['asset'][$month] = 0;
-        $profit['operation'][$month] = 0;
-        $profit['total'][$month] = 0;
-    }
+            // Initialize profit arrays
+            foreach ($monthsToShow as $month) {
+                $profit['asset'][$month] = 0;
+                $profit['operation'][$month] = 0;
+                $profit['total'][$month] = 0;
+            }
 
-    // Calculate profit for each serving
-    $monthsArray = $monthsToShow->toArray();
-    foreach ($monthsArray as $index => $month) {
-        // Asset Profit = Evaluation Asset for current month - Evaluation Asset for last month + Revenue Asset current month - Expense Asset current month
-        $currentEvaluationAsset = $evaluation['asset'][$month];
-        $lastMonthEvaluationAsset = isset($monthsArray[$index + 1])
-            ? $evaluation['asset'][$monthsArray[$index + 1]]
-            : 0;
-        $currentRevenueAsset = $reportData['revenue']['asset'][$month] ?? 0;
-        $currentExpenseAsset = $reportData['expense']['asset'][$month] ?? 0;
+            // Calculate profit for each serving
+            $monthsArray = $monthsToShow->toArray();
+            foreach ($monthsArray as $index => $month) {
+                // Asset Profit = Evaluation Asset for current month - Evaluation Asset for last month + Revenue Asset current month - Expense Asset current month
+                $currentEvaluationAsset = $evaluation['asset'][$month];
+                $lastMonthEvaluationAsset = isset($monthsArray[$index + 1])
+                    ? $evaluation['asset'][$monthsArray[$index + 1]]
+                    : 0;
+                $currentRevenueAsset = $reportData['revenue']['asset'][$month] ?? 0;
+                $currentExpenseAsset = $reportData['expense']['asset'][$month] ?? 0;
 
-        $profit['asset'][$month] =
-            $currentEvaluationAsset - $lastMonthEvaluationAsset + $currentRevenueAsset - $currentExpenseAsset;
+                $profit['asset'][$month] =
+                    $currentEvaluationAsset - $lastMonthEvaluationAsset + $currentRevenueAsset - $currentExpenseAsset;
 
-        // Operation Profit = Revenue Operation this month - Expenses Operation This Month
-        $currentRevenueOperation = $reportData['revenue']['operation'][$month] ?? 0;
-        $currentExpenseOperation = $reportData['expense']['operation'][$month] ?? 0;
+                // Operation Profit = Revenue Operation this month - Expenses Operation This Month
+                $currentRevenueOperation = $reportData['revenue']['operation'][$month] ?? 0;
+                $currentExpenseOperation = $reportData['expense']['operation'][$month] ?? 0;
 
-        $profit['operation'][$month] = $currentRevenueOperation - $currentExpenseOperation;
+                $profit['operation'][$month] = $currentRevenueOperation - $currentExpenseOperation;
 
-        // Total Profit = Asset Profit + Operation Profit
-        $profit['total'][$month] = $profit['asset'][$month] + $profit['operation'][$month];
+                // Total Profit = Asset Profit + Operation Profit
+                $profit['total'][$month] = $profit['asset'][$month] + $profit['operation'][$month];
             }
         }
 
@@ -277,40 +298,12 @@
             </div>
             <div>
                 <a href="{{ route('filament.admin.pages.company-financial-report') }}"
-                    class="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 text-center inline-block">
+                    class="w-full px-4 py-2 bg-gray-500 text-black rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 text-center inline-block">
                     Reset Filters
                 </a>
             </div>
-            <div>
-                <form action="{{ route('filament.admin.pages.company-financial-report') }}" method="POST" style="display: inline;">
-                    @csrf
-                    <input type="hidden" name="action" value="refresh_evaluations">
-                    <input type="hidden" name="start_month" value="{{ $selectedStartMonth }}">
-                    <input type="hidden" name="end_month" value="{{ $selectedEndMonth }}">
-                    <button type="submit"
-                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        🔄 Refresh Evaluations
-                    </button>
-                </form>
-            </div>
         </div>
     </form>
-
-    {{-- Last Update Info --}}
-    @php
-        $lastUpdate = App\Models\MonthlyProjectEvaluation::latest('updated_at')->first();
-    @endphp
-    @if($lastUpdate)
-        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
-            <div class="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Asset evaluations last updated: {{ $lastUpdate->updated_at->diffForHumans() }}</span>
-                <span class="text-xs opacity-75">({{ $lastUpdate->updated_at->format('Y-m-d H:i:s') }})</span>
-            </div>
-        </div>
-    @endif
 
     {{-- Integrated Financial Report Table --}}
     <div class="overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
