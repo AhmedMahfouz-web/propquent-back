@@ -36,7 +36,8 @@
                         <tr>
                             <th
                                 class="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-0 bg-gray-50 dark:bg-gray-700 z-10">
-                                <a href="javascript:void(0)" onclick="sortColumn('key')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                                <a href="javascript:void(0)" onclick="sortColumn('key')"
+                                    class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                     Code
                                     @if ($sortField === 'key')
                                         @if ($sortDirection === 'asc')
@@ -49,7 +50,8 @@
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 sticky left-12 bg-gray-50 dark:bg-gray-700 z-10"
                                 style="max-width: 220px;">
-                                <a href="javascript:void(0)" onclick="sortColumn('title')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                                <a href="javascript:void(0)" onclick="sortColumn('title')"
+                                    class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                     Project
                                     @if ($sortField === 'title')
                                         @if ($sortDirection === 'asc')
@@ -66,7 +68,8 @@
                             </th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                <a href="javascript:void(0)" onclick="sortColumn('created_at')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                                <a href="javascript:void(0)" onclick="sortColumn('created_at')"
+                                    class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                     Total
                                     @if ($sortField === 'created_at')
                                         @if ($sortDirection === 'asc')
@@ -80,7 +83,8 @@
                             @foreach ($allMonths as $month)
                                 <th
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
-                                    <a href="javascript:void(0)" onclick="sortColumn('month_{{ $month }}')" class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
+                                    <a href="javascript:void(0)" onclick="sortColumn('month_{{ $month }}')"
+                                        class="flex items-center hover:text-gray-700 dark:hover:text-gray-100 cursor-pointer">
                                         {{ date('M Y', strtotime($month)) }}
                                         @if ($sortField === 'month_' . $month)
                                             @if ($sortDirection === 'asc')
@@ -154,12 +158,16 @@
                                                     <span class="text-xs font-medium">
                                                         ${{ number_format($projectData['months'][$month]['value_correction'] ?? 0, 2) }}
                                                     </span>
-                                                    <button 
+                                                    <button
                                                         onclick="openCorrectionModal('{{ $projectData['key'] }}', '{{ $month }}', '{{ $projectData['title'] }}', {{ $projectData['months'][$month]['value_correction'] ?? 0 }})"
                                                         class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
                                                         title="Edit value correction">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                            </path>
                                                         </svg>
                                                     </button>
                                                 </div>
@@ -205,13 +213,16 @@
     </div>
 
     <!-- Value Correction Modal -->
-    <div id="correctionModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="correctionModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeCorrectionModal()"></div>
-            
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeCorrectionModal()">
+            </div>
+
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            
-            <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
+
+            <div
+                class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 dark:bg-gray-800">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
@@ -225,15 +236,17 @@
                             </div>
                             <form onsubmit="event.preventDefault(); saveCorrectionModal(); return false;">
                                 <div class="mt-4">
-                                    <label for="correctionAmount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label for="correctionAmount"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         Correction Amount ($)
                                     </label>
-                                    <input type="number" step="0.01" id="correctionAmount" 
+                                    <input type="number" step="0.01" id="correctionAmount"
                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                         onkeypress="if(event.key==='Enter'){event.preventDefault(); saveCorrectionModal();}">
                                 </div>
                                 <div class="mt-4">
-                                    <label for="correctionNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label for="correctionNotes"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         Notes (Optional)
                                     </label>
                                     <textarea id="correctionNotes" rows="3"
@@ -243,7 +256,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse dark:bg-gray-700">
+                <div
+                    class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-color-custom fi-btn-color-primary fi-color-primary fi-size-md fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-custom-600 text-white hover:bg-custom-500 focus-visible:ring-custom-500/50 dark:bg-custom-500 dark:hover:bg-custom-400 dark:focus-visible:ring-custom-400/50 fi-ac-action fi-ac-btn-action">
                     <button onclick="saveCorrectionModal()" type="button"
                         class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Save
@@ -688,83 +702,91 @@
 @endpush
 
 @push('scripts')
-<script>
-function sortColumn(field) {
-    // Create a form to submit the sort parameters
-    const form = document.createElement('form');
-    form.method = 'GET';
-    form.action = window.location.pathname;
-    
-    // Get current URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Determine new sort direction
-    let newDirection = 'asc';
-    if (urlParams.get('sortField') === field && urlParams.get('sortDirection') === 'asc') {
-        newDirection = 'desc';
-    }
-    
-    // Set sort parameters
-    urlParams.set('sortField', field);
-    urlParams.set('sortDirection', newDirection);
-    
-    // Add all parameters as hidden inputs
-    for (const [key, value] of urlParams) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
-    }
-    
-    // Submit the form
-    document.body.appendChild(form);
-    form.submit();
-}
+    <script>
+        function sortColumn(field) {
+            // Create a form to submit the sort parameters
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = window.location.pathname;
 
-// Value Correction Modal Functions
-let currentCorrectionData = {};
+            // Get current URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
 
-function openCorrectionModal(projectKey, month, projectTitle, currentAmount) {
-    currentCorrectionData = { projectKey, month, projectTitle, currentAmount };
-    
-    document.getElementById('correctionProjectTitle').textContent = projectTitle;
-    document.getElementById('correctionMonth').textContent = formatMonth(month);
-    document.getElementById('correctionAmount').value = currentAmount;
-    document.getElementById('correctionNotes').value = '';
-    
-    document.getElementById('correctionModal').classList.remove('hidden');
-}
+            // Determine new sort direction
+            let newDirection = 'asc';
+            if (urlParams.get('sortField') === field && urlParams.get('sortDirection') === 'asc') {
+                newDirection = 'desc';
+            }
 
-function closeCorrectionModal() {
-    document.getElementById('correctionModal').classList.add('hidden');
-}
+            // Set sort parameters
+            urlParams.set('sortField', field);
+            urlParams.set('sortDirection', newDirection);
 
-function formatMonth(monthStr) {
-    const date = new Date(monthStr + '-01');
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-}
+            // Add all parameters as hidden inputs
+            for (const [key, value] of urlParams) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
 
-function saveCorrectionModal() {
-    const amount = document.getElementById('correctionAmount').value;
-    const notes = document.getElementById('correctionNotes').value;
-    
-    if (!amount || isNaN(amount)) {
-        alert('Please enter a valid amount');
-        return;
-    }
-    
-    // Use GET request with parameters instead of POST
-    const params = new URLSearchParams({
-        'action': 'save_correction',
-        'project_key': currentCorrectionData.projectKey,
-        'month': currentCorrectionData.month,
-        'amount': amount,
-        'notes': notes
-    });
-    
-    // Redirect with parameters
-    window.location.href = '{{ route("filament.admin.pages.project-financial-report") }}?' + params.toString();
-}
-</script>
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Value Correction Modal Functions
+        let currentCorrectionData = {};
+
+        function openCorrectionModal(projectKey, month, projectTitle, currentAmount) {
+            currentCorrectionData = {
+                projectKey,
+                month,
+                projectTitle,
+                currentAmount
+            };
+
+            document.getElementById('correctionProjectTitle').textContent = projectTitle;
+            document.getElementById('correctionMonth').textContent = formatMonth(month);
+            document.getElementById('correctionAmount').value = currentAmount;
+            document.getElementById('correctionNotes').value = '';
+
+            document.getElementById('correctionModal').classList.remove('hidden');
+        }
+
+        function closeCorrectionModal() {
+            document.getElementById('correctionModal').classList.add('hidden');
+        }
+
+        function formatMonth(monthStr) {
+            const date = new Date(monthStr + '-01');
+            return date.toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function saveCorrectionModal() {
+            const amount = document.getElementById('correctionAmount').value;
+            const notes = document.getElementById('correctionNotes').value;
+
+            if (!amount || isNaN(amount)) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            // Use GET request with parameters instead of POST
+            const params = new URLSearchParams({
+                'action': 'save_correction',
+                'project_key': currentCorrectionData.projectKey,
+                'month': currentCorrectionData.month,
+                'amount': amount,
+                'notes': notes
+            });
+
+            // Redirect with parameters
+            window.location.href = '{{ route('filament.admin.pages.project-financial-report') }}?' + params.toString();
+        }
+    </script>
 @endpush
