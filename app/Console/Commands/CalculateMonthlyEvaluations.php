@@ -204,8 +204,9 @@ class CalculateMonthlyEvaluations extends Command
             $isAfterExit = $month >= $exitMonth;
         }
 
-        // Calculate asset evaluation using the exact formula
-        $assetEvaluation = $isAfterExit ? 0 : ($previousEvaluation + $expenseAsset - $revenueAsset + $valueCorrection);
+        // Calculate asset evaluation using the correct formula:
+        // Asset Evaluation = Previous Month + Asset Expense + Value Correction - Asset Revenue
+        $assetEvaluation = $isAfterExit ? 0 : ($previousEvaluation + $expenseAsset + $valueCorrection - $revenueAsset);
 
         // Store the evaluation
         $evaluation = MonthlyProjectEvaluation::updateOrCreate(
@@ -224,7 +225,7 @@ class CalculateMonthlyEvaluations extends Command
         );
 
         // Debug output
-        $this->line("    Month {$month}: Prev={$previousEvaluation}, Exp={$expenseAsset}, Rev={$revenueAsset}, Corr={$valueCorrection} => {$assetEvaluation}");
+        $this->line("    Month {$month}: {$previousEvaluation} + {$expenseAsset} + {$valueCorrection} - {$revenueAsset} = {$assetEvaluation}");
 
         return [
             'asset_evaluation' => $assetEvaluation,
