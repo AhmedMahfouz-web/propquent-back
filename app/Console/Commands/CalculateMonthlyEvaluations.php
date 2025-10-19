@@ -66,13 +66,6 @@ class CalculateMonthlyEvaluations extends Command
         // Generate all months in range
         $months = $this->generateMonthRange($dateRange['start'], $dateRange['end']);
 
-        // Delete existing evaluations if force is enabled
-        if ($force) {
-            MonthlyProjectEvaluation::where('project_key', $project->key)
-                ->whereBetween('month_date', [$dateRange['start'], $dateRange['end']])
-                ->delete();
-        }
-
         // Calculate evaluations month by month in chronological order
         $previousEvaluation = 0;
 
@@ -81,6 +74,13 @@ class CalculateMonthlyEvaluations extends Command
         $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
             ->where('month_date', $previousMonth)
             ->value('asset_evaluation') ?? 0;
+
+        // Delete existing evaluations if force is enabled (after getting previous month value)
+        if ($force) {
+            MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->whereBetween('month_date', [$dateRange['start'], $dateRange['end']])
+                ->delete();
+        }
 
         foreach ($months as $month) {
             $evaluation = $this->calculateMonthEvaluation($project, $month, $previousEvaluation, $force);
@@ -112,7 +112,22 @@ class CalculateMonthlyEvaluations extends Command
         }
 
         $startDate = $fromMonth ? Carbon::parse($fromMonth) : Carbon::parse($earliestTransaction->transaction_date)->startOfMonth();
-        $endDate = $toMonth ? Carbon::parse($toMonth) : Carbon::now()->startOfMonth();
+        
+        // End date should include future months if there are value corrections or future transactions
+        if ($toMonth) {
+            $endDate = Carbon::parse($toMonth);
+        } else {
+            // Get the latest date from either transactions or value corrections
+            $latestValueCorrection = \App\Models\ValueCorrection::where('project_key', $project->key)
+                ->orderBy('correction_date', 'desc')
+                ->first();
+            
+            $transactionEndDate = $latestTransaction ? Carbon::parse($latestTransaction->transaction_date) : Carbon::now();
+            $correctionEndDate = $latestValueCorrection ? Carbon::parse($latestValueCorrection->correction_date) : Carbon::now();
+            
+            // Use the later of the two dates, but at least current month
+            $endDate = collect([$transactionEndDate, $correctionEndDate, Carbon::now()])->max()->startOfMonth();
+        }
 
         return [
             'start' => $startDate->format('Y-m-01'),
