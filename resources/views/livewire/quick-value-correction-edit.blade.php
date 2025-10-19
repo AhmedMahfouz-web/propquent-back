@@ -1,19 +1,12 @@
-<div class="value-correction-component bg-purple-50 border-2 border-purple-300 rounded p-2" style="min-height: 32px;">
-    <!-- Value Correction Display with Edit Button -->
-    <div class="flex items-center justify-between gap-2 w-full">
-        <span class="font-bold text-sm text-purple-800">
-            ${{ number_format($correction_amount ?? 0, 2) }}
-        </span>
-        <button wire:click="openModal"
-            class="flex-shrink-0 px-2 py-1 text-white bg-blue-600 hover:bg-blue-700 rounded shadow-sm border-2 border-blue-800 transition-colors"
-            title="Edit value correction for {{ $projectTitle }} - {{ date('M Y', strtotime($month)) }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                </path>
-            </svg>
-        </button>
-    </div>
+<div class="bg-green-200 border-2 border-green-500 p-2 rounded">
+    <div class="text-xs text-green-800 mb-1">LIVEWIRE COMPONENT LOADED!</div>
+    <div class="text-xs text-green-800 mb-1">Project: {{ $projectKey ?? 'N/A' }}</div>
+    <div class="text-xs text-green-800 mb-1">Month: {{ $month ?? 'N/A' }}</div>
+    <div class="text-xs text-green-800 mb-1">Amount: ${{ number_format($correction_amount ?? 0, 2) }}</div>
+    <button wire:click="openModal" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">
+        EDIT
+    </button>
+</div>
 
     <!-- Modal -->
     @if ($showModal)
