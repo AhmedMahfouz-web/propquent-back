@@ -36,14 +36,10 @@ class ValueCorrectionObserver
      */
     private function updateEvaluations(ValueCorrection $valueCorrection): void
     {
-        // Get the month that needs updating
-        $correctionDate = $valueCorrection->correction_date;
-        $fromMonth = date('Y-m-01', strtotime($correctionDate));
-
-        // Run the calculation command for this project from the affected month onwards
+        // Recalculate the entire project to ensure proper cumulative calculation
+        // This is necessary because value corrections can affect the cumulative chain
         Artisan::call('evaluations:calculate', [
             '--project-key' => $valueCorrection->project_key,
-            '--from-month' => $fromMonth,
             '--force' => true,
         ]);
     }
