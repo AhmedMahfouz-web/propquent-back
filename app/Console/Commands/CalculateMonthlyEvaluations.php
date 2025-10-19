@@ -76,13 +76,11 @@ class CalculateMonthlyEvaluations extends Command
         // Calculate evaluations month by month in chronological order
         $previousEvaluation = 0;
 
-        // Get the evaluation from the month before our range starts (if not forcing from beginning)
-        if (!$force || $dateRange['start'] !== $months[0]) {
-            $previousMonth = Carbon::parse($months[0])->subMonth()->format('Y-m-01');
-            $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
-                ->where('month_date', $previousMonth)
-                ->value('asset_evaluation') ?? 0;
-        }
+        // Get the evaluation from the month before our range starts
+        $previousMonth = Carbon::parse($months[0])->subMonth()->format('Y-m-01');
+        $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->where('month_date', $previousMonth)
+            ->value('asset_evaluation') ?? 0;
 
         foreach ($months as $month) {
             $evaluation = $this->calculateMonthEvaluation($project, $month, $previousEvaluation, $force);
