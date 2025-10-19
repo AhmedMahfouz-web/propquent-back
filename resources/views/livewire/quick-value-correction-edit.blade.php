@@ -1,7 +1,7 @@
-<div>
+<div class="value-correction-component">
     <!-- Value Correction Display with Edit Button -->
     <div class="flex items-center gap-2">
-        <span class="font-medium">
+        <span class="font-medium text-xs">
             ${{ number_format($correction_amount ?? 0, 2) }}
         </span>
         <button wire:click="openModal"
@@ -23,13 +23,11 @@
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                <div
-                    class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
+                <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full dark:bg-gray-800">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 dark:bg-gray-800">
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
-                                    id="modal-title">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
                                     Edit Value Correction
                                 </h3>
                                 <div class="mt-2">
