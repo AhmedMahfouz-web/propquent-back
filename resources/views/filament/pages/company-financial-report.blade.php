@@ -153,30 +153,23 @@
         $evaluation['total'][$month] = 0;
     }
 
-    // Get pre-calculated asset evaluations from database - MANUAL SUM to debug
+    // Use the optimized method from MonthlyProjectEvaluation model
+    $evaluation['asset'] = App\Models\MonthlyProjectEvaluation::getCompanyEvaluations($monthsToShow->toArray());
+    
+    // Debug: Log the calculation details for verification
     foreach ($monthsToShow as $month) {
-        // Get all project evaluations for this month and sum them manually
         $monthEvaluations = App\Models\MonthlyProjectEvaluation::where('month_date', $month)
-            ->get(['project_key', 'asset_evaluation']);
+            ->get(['project_key', 'asset_evaluation', 'expense_asset', 'revenue_asset', 'value_correction', 'previous_evaluation']);
         
-        $monthTotal = 0;
+        error_log("COMPANY REPORT DEBUG - Month {$month}: Total Asset Evaluation: {$evaluation['asset'][$month]}");
         foreach ($monthEvaluations as $eval) {
-            $monthTotal += $eval->asset_evaluation;
+            error_log("  Project {$eval->project_key}: Prev={$eval->previous_evaluation}, Exp={$eval->expense_asset}, Rev={$eval->revenue_asset}, Corr={$eval->value_correction} => Final={$eval->asset_evaluation}");
         }
         
-        $evaluation['asset'][$month] = $monthTotal;
-        
-        // Debug: Check for duplicates
-        $uniqueProjects = $monthEvaluations->pluck('project_key')->unique();
-        if ($monthEvaluations->count() != $uniqueProjects->count()) {
-            // There are duplicate project records for this month!
-            error_log("DUPLICATE RECORDS FOUND for month {$month}: " . $monthEvaluations->count() . " records, " . $uniqueProjects->count() . " unique projects");
-        }
-        
-        // Debug: Log the calculation details
-        error_log("COMPANY REPORT DEBUG - Month {$month}: Found " . $monthEvaluations->count() . " projects, Total: {$monthTotal}");
-        foreach ($monthEvaluations as $eval) {
-            error_log("  Project {$eval->project_key}: {$eval->asset_evaluation}");
+        // Verify the calculation manually
+        $manualTotal = $monthEvaluations->sum('asset_evaluation');
+        if (abs($manualTotal - $evaluation['asset'][$month]) > 0.01) {
+            error_log("WARNING: Manual calculation ({$manualTotal}) differs from model method ({$evaluation['asset'][$month]}) for month {$month}");
         }
     }
 
