@@ -247,7 +247,8 @@ class ProjectStatusReport extends Component
         $query = Project::query()
             ->with(['transactions' => function ($query) {
                 $query->where('status', 'done')
-                      ->whereIn('financial_type', ['expense', 'revenue']);
+                      ->whereIn('financial_type', ['expense', 'revenue'])
+                      ->whereNotNull('project_key');
             }, 'valueCorrections', 'developer', 'compound'])
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
