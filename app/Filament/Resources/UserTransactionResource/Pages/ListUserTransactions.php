@@ -15,7 +15,7 @@ class ListUserTransactions extends Page
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // Removed CreateAction - using Livewire table's headerActions instead
         ];
     }
 }
