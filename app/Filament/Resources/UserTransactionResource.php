@@ -25,90 +25,48 @@ class UserTransactionResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Transaction Details')
-                    ->schema([
-                        Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'full_name')
-                            ->searchable(['full_name', 'email'])
-                            ->preload()
-                            ->required()
-                            ->columnSpanFull()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('full_name')
-                                    ->required()
-                                    ->maxLength(255),
-                                Forms\Components\TextInput::make('email')
-                                    ->email()
-                                    ->required()
-                                    ->maxLength(255),
-                                Forms\Components\TextInput::make('phone')
-                                    ->tel()
-                                    ->maxLength(255),
-                            ])
-                            ->createOptionUsing(function (array $data) {
-                                return \App\Models\User::create([
-                                    'full_name' => $data['full_name'],
-                                    'email' => $data['email'],
-                                    'phone' => $data['phone'] ?? null,
-                                    'password' => \Illuminate\Support\Facades\Hash::make('password123'),
-                                    'custom_id' => 'inv-' . (\App\Models\User::count() + 1),
-                                ])->id;
-                            }),
-
-                        Forms\Components\Select::make('transaction_type')
-                            ->label('Type')
-                            ->options(fn() => UserTransaction::getAvailableTransactionTypes())
-                            ->required(),
-
-                        Forms\Components\TextInput::make('amount')
-                            ->numeric()
-                            ->prefix('$')
-                            ->step(0.01)
-                            ->required()
-                            ->rules(['min:0.01']),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Payment Information')
-                    ->schema([
-                        Forms\Components\Select::make('method')
-                            ->options(fn() => UserTransaction::getAvailableMethods())
-                            ->nullable()
-                            ->searchable(),
-
-                        Forms\Components\TextInput::make('reference_no')
-                            ->label('Reference Number')
-                            ->maxLength(255)
-                            ->nullable(),
-
-                        Forms\Components\Select::make('status')
-                            ->options(fn() => UserTransaction::getAvailableStatuses())
-                            ->required(),
-                    ])
-                    ->columns(3),
-
-                Forms\Components\Section::make('Date Information')
-                    ->schema([
-                        Forms\Components\DatePicker::make('transaction_date')
-                            ->required()
-                            ->default(today()),
-
-                        Forms\Components\DatePicker::make('actual_date')
-                            ->nullable()
-                            ->helperText('Date when transaction was actually processed'),
-                    ])
-                    ->columns(2),
-
-                Forms\Components\Section::make('Additional Information')
-                    ->schema([
-                        Forms\Components\Textarea::make('note')
-                            ->maxLength(65535)
-                            ->nullable()
-                            ->columnSpanFull(),
-                    ]),
-            ]);
+        $users = \App\Models\User::all()->pluck('full_name', 'id')->toArray();
+        
+        return $form->schema([
+            Forms\Components\Select::make('user_id')
+                ->label('User')
+                ->options($users)
+                ->required()
+                ->searchable(),
+                
+            Forms\Components\TextInput::make('amount')
+                ->label('Amount')
+                ->numeric()
+                ->required()
+                ->prefix('$'),
+                
+            Forms\Components\Select::make('transaction_type')
+                ->label('Type')
+                ->options([
+                    'deposit' => 'Deposit',
+                    'withdraw' => 'Withdrawal'
+                ])
+                ->required(),
+                
+            Forms\Components\Select::make('status')
+                ->label('Status')
+                ->options([
+                    'pending' => 'Pending',
+                    'done' => 'Done',
+                    'cancelled' => 'Cancelled'
+                ])
+                ->default('pending')
+                ->required(),
+                
+            Forms\Components\DatePicker::make('transaction_date')
+                ->label('Transaction Date')
+                ->default(today())
+                ->required(),
+                
+            Forms\Components\TextInput::make('note')
+                ->label('Note')
+                ->nullable(),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -319,10 +277,10 @@ class UserTransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUserTransactions::route('/'),
-            'create' => Pages\CreateUserTransaction::route('/create'),
-            'view' => Pages\ViewUserTransaction::route('/{record}'),
-            'edit' => Pages\EditUserTransaction::route('/{record}/edit'),
+            'index' => Pages\ListUserTransactions::class,
+            'create' => Pages\CreateUserTransaction::class,
+            'view' => Pages\ViewUserTransaction::class,
+            'edit' => Pages\EditUserTransaction::class,
         ];
     }
 }
