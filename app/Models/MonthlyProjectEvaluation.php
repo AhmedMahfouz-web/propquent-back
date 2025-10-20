@@ -95,4 +95,16 @@ class MonthlyProjectEvaluation extends Model
 
         return $result;
     }
+
+    /**
+     * Get the latest month's asset evaluation for a specific project
+     */
+    public static function getLatestAssetEvaluation(string $projectKey): float
+    {
+        $evaluation = self::where('project_key', $projectKey)
+            ->orderBy('month_date', 'desc')
+            ->first();
+
+        return $evaluation ? (float) $evaluation->asset_evaluation : 0;
+    }
 }

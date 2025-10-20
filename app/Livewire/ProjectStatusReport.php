@@ -621,24 +621,9 @@ class ProjectStatusReport extends Component
 
     private function calculateAssetEvaluation($project)
     {
-        // Asset Evaluation = Total Asset Expenses - Total Asset Revenues + Asset Correction
-        $assetExpenses = 0;
-        $assetRevenues = 0;
-
-        // Calculate asset expenses and revenues using the same logic as the main calculation
-        foreach ($project->transactions()->where('serving', 'asset')->where('status', 'done')->whereIn('financial_type', ['expense', 'revenue'])->get() as $transaction) {
-            $amount = (float) $transaction->amount;
-
-            if ($transaction->financial_type === 'revenue') {
-                $assetRevenues += $amount;
-            } else {
-                $assetExpenses += $amount;
-            }
-        }
-
-        $assetCorrection = $this->calculateAssetCorrection($project);
-
-        return $assetExpenses - $assetRevenues + $assetCorrection;
+        // Use the latest month's asset evaluation from the pre-calculated database table
+        // This ensures consistency with the financial reports and proper cumulative calculations
+        return \App\Models\MonthlyProjectEvaluation::getLatestAssetEvaluation($project->key);
     }
 
     private function calculateAssetCorrection($project)
