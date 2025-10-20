@@ -283,9 +283,18 @@
                 
                 // Process months in chronological order for profit calculations
                 $monthsChronological = array_reverse($allMonths);
+                
+                // Get the evaluation from the month before our range starts (same logic as ProjectFinancialReport)
+                $firstMonth = $monthsChronological[0] ?? null;
                 $previousAssetEvaluation = 0;
+                if ($firstMonth) {
+                    $previousMonth = \Carbon\Carbon::parse($firstMonth)->subMonth()->format('Y-m-01');
+                    $previousAssetEvaluation = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
+                        ->where('month_date', $previousMonth)
+                        ->value('asset_evaluation') ?? 0;
+                }
 
-                foreach ($monthsChronological as $month) {
+                foreach ($monthsChronological as $monthIndex => $month) {
                     // Use pre-calculated asset evaluation from database
                     $data['months'][$month]['evaluation_asset'] = $assetEvaluations[$month] ?? 0;
 
@@ -296,6 +305,9 @@
                     $currentExpenseAsset = $data['months'][$month]['expense_asset'] ?? 0;
 
                     $data['months'][$month]['profit_asset'] = $currentAssetEvaluation - $previousAssetEvaluation + $currentRevenueAsset - $currentExpenseAsset;
+
+                    // Debug: Log the calculation for this project and month
+                    error_log("PROJECT CALC DEBUG - Project {$project->key}, Month {$month}: {$currentAssetEvaluation} - {$previousAssetEvaluation} + {$currentRevenueAsset} - {$currentExpenseAsset} = {$data['months'][$month]['profit_asset']}");
 
                     // Store current evaluation as previous for next iteration
                     $previousAssetEvaluation = $currentAssetEvaluation;
@@ -315,9 +327,18 @@
             foreach ($monthsToShow as $month) {
                 // Asset Profit = Sum of all individual project asset profits (calculated with correct formula)
                 $profit['asset'][$month] = 0;
-                foreach ($projectsData as $projectData) {
-                    $profit['asset'][$month] += $projectData['months'][$month]['profit_asset'] ?? 0;
+                foreach ($projectsData as $projectKey => $projectData) {
+                    $projectAssetProfit = $projectData['months'][$month]['profit_asset'] ?? 0;
+                    $profit['asset'][$month] += $projectAssetProfit;
+                    
+                    // Debug: Log individual project contributions
+                    if ($projectAssetProfit != 0) {
+                        error_log("COMPANY REPORT DEBUG - Month {$month}, Project {$projectKey}: Asset Profit = {$projectAssetProfit}");
+                    }
                 }
+                
+                // Debug: Log total for the month
+                error_log("COMPANY REPORT DEBUG - Month {$month}: Total Asset Profit = {$profit['asset'][$month]}");
 
                 // Operation Profit = Revenue Operation this month - Expenses Operation This Month
                 $currentRevenueOperation = $reportData['revenue']['operation'][$month] ?? 0;
