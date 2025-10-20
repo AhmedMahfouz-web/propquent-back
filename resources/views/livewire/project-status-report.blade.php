@@ -40,13 +40,13 @@
             <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4">
                 <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Debug Information</h3>
                 <div class="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                    <div><strong>Total Projects:</strong> {{ $projects->count() }}</div>
+                    <div><strong>Total Projects:</strong> {{ $this->projects->count() }}</div>
                     <div><strong>Projects with Revenue:</strong> 
                         @php
                             $projectsWithRevenue = 0;
                             $totalRevenue = 0;
-                            foreach($projects as $project) {
-                                $projectData = $projectsData[$project->key] ?? [];
+                            foreach($this->projects as $project) {
+                                $projectData = $this->projectsData[$project->key] ?? [];
                                 if(($projectData['total_revenues'] ?? 0) > 0) {
                                     $projectsWithRevenue++;
                                     $totalRevenue += $projectData['total_revenues'];
@@ -57,7 +57,7 @@
                     </div>
                     <div><strong>Total Revenue Amount:</strong> {{ number_format($totalRevenue, 2) }}</div>
                     <div><strong>Revenue Transactions per Project:</strong></div>
-                    @foreach($projects as $project)
+                    @foreach($this->projects as $project)
                         @php
                             $revenueTransactions = $project->transactions->where('financial_type', 'revenue');
                         @endphp
