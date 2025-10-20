@@ -34,7 +34,28 @@ class UserTransactionResource extends Resource
                             ->searchable(['full_name', 'email'])
                             ->preload()
                             ->required()
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('full_name')
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('email')
+                                    ->email()
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('phone')
+                                    ->tel()
+                                    ->maxLength(255),
+                            ])
+                            ->createOptionUsing(function (array $data) {
+                                return \App\Models\User::create([
+                                    'full_name' => $data['full_name'],
+                                    'email' => $data['email'],
+                                    'phone' => $data['phone'] ?? null,
+                                    'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                                    'custom_id' => 'inv-' . (\App\Models\User::count() + 1),
+                                ])->id;
+                            }),
 
                         Forms\Components\Select::make('transaction_type')
                             ->label('Type')
