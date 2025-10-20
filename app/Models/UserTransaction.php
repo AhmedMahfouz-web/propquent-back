@@ -134,7 +134,18 @@ class UserTransaction extends Model
      */
     public static function getAvailableStatuses(): array
     {
-        return SystemConfiguration::getOptions('transaction_statuses');
+        $statuses = SystemConfiguration::getOptions('transaction_statuses');
+        
+        // Fallback if no system configurations are seeded
+        if (empty($statuses)) {
+            return [
+                'done' => 'Done',
+                'pending' => 'Pending',
+                'cancelled' => 'Cancelled',
+            ];
+        }
+        
+        return $statuses;
     }
 
     public static function isValidStatus(string $status): bool
@@ -147,7 +158,20 @@ class UserTransaction extends Model
      */
     public static function getAvailableMethods(): array
     {
-        return SystemConfiguration::getOptions('transaction_methods');
+        $methods = SystemConfiguration::getOptions('transaction_methods');
+        
+        // Fallback if no system configurations are seeded
+        if (empty($methods)) {
+            return [
+                'bank_transfer' => 'Bank Transfer',
+                'check' => 'Check',
+                'cash' => 'Cash',
+                'credit_card' => 'Credit Card',
+                'instapay' => 'Instapay',
+            ];
+        }
+        
+        return $methods;
     }
 
 }
