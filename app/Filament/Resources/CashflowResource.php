@@ -163,7 +163,7 @@ class CashflowResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCashflows::class,
+            'index' => Pages\ListCashflows::route('/'),
         ];
     }
 
@@ -190,20 +190,20 @@ class CashflowResource extends Resource
     {
         return Cache::remember('current_cash_balance', now()->addMinutes(5), function () {
             $today = now()->startOfDay();
-            
+
             // Project transactions - use smart date logic
             $projectBalance = DB::table('project_transactions')
                 ->where(function ($query) use ($today) {
                     $query->where(function ($q) use ($today) {
                         // Done transactions with actual_date in past/present
                         $q->where('status', 'done')
-                          ->whereNotNull('actual_date')
-                          ->where('actual_date', '<=', $today);
+                            ->whereNotNull('actual_date')
+                            ->where('actual_date', '<=', $today);
                     })->orWhere(function ($q) use ($today) {
                         // Done transactions without actual_date but transaction_date in past/present
                         $q->where('status', 'done')
-                          ->whereNull('actual_date')
-                          ->where('transaction_date', '<=', $today);
+                            ->whereNull('actual_date')
+                            ->where('transaction_date', '<=', $today);
                     });
                 })
                 ->selectRaw('
@@ -218,13 +218,13 @@ class CashflowResource extends Resource
                     $query->where(function ($q) use ($today) {
                         // Done transactions with actual_date in past/present
                         $q->where('status', 'done')
-                          ->whereNotNull('actual_date')
-                          ->where('actual_date', '<=', $today);
+                            ->whereNotNull('actual_date')
+                            ->where('actual_date', '<=', $today);
                     })->orWhere(function ($q) use ($today) {
                         // Done transactions without actual_date but transaction_date in past/present
                         $q->where('status', 'done')
-                          ->whereNull('actual_date')
-                          ->where('transaction_date', '<=', $today);
+                            ->whereNull('actual_date')
+                            ->where('transaction_date', '<=', $today);
                     });
                 })
                 ->selectRaw('
@@ -249,7 +249,7 @@ class CashflowResource extends Resource
             $next30Days = now()->addDays(30);
 
             $today = now()->startOfDay();
-            
+
             // Include both pending future transactions and done future transactions
             $pendingIn = DB::table('project_transactions')
                 ->where('financial_type', 'revenue')
@@ -257,20 +257,20 @@ class CashflowResource extends Resource
                     $query->where(function ($q) use ($today, $next30Days) {
                         // Pending transactions with future due_date
                         $q->where('status', 'pending')
-                          ->where('due_date', '>', $today)
-                          ->where('due_date', '<=', $next30Days);
+                            ->where('due_date', '>', $today)
+                            ->where('due_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future actual_date
                         $q->where('status', 'done')
-                          ->whereNotNull('actual_date')
-                          ->where('actual_date', '>', $today)
-                          ->where('actual_date', '<=', $next30Days);
+                            ->whereNotNull('actual_date')
+                            ->where('actual_date', '>', $today)
+                            ->where('actual_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future transaction_date (no actual_date)
                         $q->where('status', 'done')
-                          ->whereNull('actual_date')
-                          ->where('transaction_date', '>', $today)
-                          ->where('transaction_date', '<=', $next30Days);
+                            ->whereNull('actual_date')
+                            ->where('transaction_date', '>', $today)
+                            ->where('transaction_date', '<=', $next30Days);
                     });
                 })
                 ->sum('amount') ?? 0;
@@ -282,20 +282,20 @@ class CashflowResource extends Resource
                     $query->where(function ($q) use ($today, $next30Days) {
                         // Pending transactions with future transaction_date
                         $q->where('status', 'pending')
-                          ->where('transaction_date', '>', $today)
-                          ->where('transaction_date', '<=', $next30Days);
+                            ->where('transaction_date', '>', $today)
+                            ->where('transaction_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future actual_date
                         $q->where('status', 'done')
-                          ->whereNotNull('actual_date')
-                          ->where('actual_date', '>', $today)
-                          ->where('actual_date', '<=', $next30Days);
+                            ->whereNotNull('actual_date')
+                            ->where('actual_date', '>', $today)
+                            ->where('actual_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future transaction_date (no actual_date)
                         $q->where('status', 'done')
-                          ->whereNull('actual_date')
-                          ->where('transaction_date', '>', $today)
-                          ->where('transaction_date', '<=', $next30Days);
+                            ->whereNull('actual_date')
+                            ->where('transaction_date', '>', $today)
+                            ->where('transaction_date', '<=', $next30Days);
                     });
                 })
                 ->sum('amount') ?? 0;
@@ -306,20 +306,20 @@ class CashflowResource extends Resource
                     $query->where(function ($q) use ($today, $next30Days) {
                         // Pending transactions with future due_date
                         $q->where('status', 'pending')
-                          ->where('due_date', '>', $today)
-                          ->where('due_date', '<=', $next30Days);
+                            ->where('due_date', '>', $today)
+                            ->where('due_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future actual_date
                         $q->where('status', 'done')
-                          ->whereNotNull('actual_date')
-                          ->where('actual_date', '>', $today)
-                          ->where('actual_date', '<=', $next30Days);
+                            ->whereNotNull('actual_date')
+                            ->where('actual_date', '>', $today)
+                            ->where('actual_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future transaction_date (no actual_date)
                         $q->where('status', 'done')
-                          ->whereNull('actual_date')
-                          ->where('transaction_date', '>', $today)
-                          ->where('transaction_date', '<=', $next30Days);
+                            ->whereNull('actual_date')
+                            ->where('transaction_date', '>', $today)
+                            ->where('transaction_date', '<=', $next30Days);
                     });
                 })
                 ->sum('amount') ?? 0;
@@ -331,20 +331,20 @@ class CashflowResource extends Resource
                     $query->where(function ($q) use ($today, $next30Days) {
                         // Pending transactions with future transaction_date
                         $q->where('status', 'pending')
-                          ->where('transaction_date', '>', $today)
-                          ->where('transaction_date', '<=', $next30Days);
+                            ->where('transaction_date', '>', $today)
+                            ->where('transaction_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future actual_date
                         $q->where('status', 'done')
-                          ->whereNotNull('actual_date')
-                          ->where('actual_date', '>', $today)
-                          ->where('actual_date', '<=', $next30Days);
+                            ->whereNotNull('actual_date')
+                            ->where('actual_date', '>', $today)
+                            ->where('actual_date', '<=', $next30Days);
                     })->orWhere(function ($q) use ($today, $next30Days) {
                         // Done transactions with future transaction_date (no actual_date)
                         $q->where('status', 'done')
-                          ->whereNull('actual_date')
-                          ->where('transaction_date', '>', $today)
-                          ->where('transaction_date', '<=', $next30Days);
+                            ->whereNull('actual_date')
+                            ->where('transaction_date', '>', $today)
+                            ->where('transaction_date', '<=', $next30Days);
                     });
                 })
                 ->sum('amount') ?? 0;
@@ -508,20 +508,20 @@ class CashflowResource extends Resource
                 $query->where(function ($q) use ($today, $weekEnd) {
                     // Pending transactions with due_date up to this week end
                     $q->where('status', 'pending')
-                      ->where('due_date', '>', $today)
-                      ->where('due_date', '<=', $weekEnd);
+                        ->where('due_date', '>', $today)
+                        ->where('due_date', '<=', $weekEnd);
                 })->orWhere(function ($q) use ($today, $weekEnd) {
                     // Done transactions with future actual_date up to this week end
                     $q->where('status', 'done')
-                      ->whereNotNull('actual_date')
-                      ->where('actual_date', '>', $today)
-                      ->where('actual_date', '<=', $weekEnd);
+                        ->whereNotNull('actual_date')
+                        ->where('actual_date', '>', $today)
+                        ->where('actual_date', '<=', $weekEnd);
                 })->orWhere(function ($q) use ($today, $weekEnd) {
                     // Done transactions with future transaction_date up to this week end (no actual_date)
                     $q->where('status', 'done')
-                      ->whereNull('actual_date')
-                      ->where('transaction_date', '>', $today)
-                      ->where('transaction_date', '<=', $weekEnd);
+                        ->whereNull('actual_date')
+                        ->where('transaction_date', '>', $today)
+                        ->where('transaction_date', '<=', $weekEnd);
                 });
             })
             ->selectRaw('
@@ -536,20 +536,20 @@ class CashflowResource extends Resource
                 $query->where(function ($q) use ($today, $weekEnd) {
                     // Pending transactions with transaction_date up to this week end
                     $q->where('status', 'pending')
-                      ->where('transaction_date', '>', $today)
-                      ->where('transaction_date', '<=', $weekEnd);
+                        ->where('transaction_date', '>', $today)
+                        ->where('transaction_date', '<=', $weekEnd);
                 })->orWhere(function ($q) use ($today, $weekEnd) {
                     // Done transactions with future actual_date up to this week end
                     $q->where('status', 'done')
-                      ->whereNotNull('actual_date')
-                      ->where('actual_date', '>', $today)
-                      ->where('actual_date', '<=', $weekEnd);
+                        ->whereNotNull('actual_date')
+                        ->where('actual_date', '>', $today)
+                        ->where('actual_date', '<=', $weekEnd);
                 })->orWhere(function ($q) use ($today, $weekEnd) {
                     // Done transactions with future transaction_date up to this week end (no actual_date)
                     $q->where('status', 'done')
-                      ->whereNull('actual_date')
-                      ->where('transaction_date', '>', $today)
-                      ->where('transaction_date', '<=', $weekEnd);
+                        ->whereNull('actual_date')
+                        ->where('transaction_date', '>', $today)
+                        ->where('transaction_date', '<=', $weekEnd);
                 });
             })
             ->selectRaw('

@@ -134,24 +134,7 @@ class UserTransaction extends Model
      */
     public static function getAvailableStatuses(): array
     {
-        $statuses = SystemConfiguration::getOptions('transaction_statuses');
-        
-        // Auto-seed if no system configurations are found
-        if (empty($statuses)) {
-            self::seedTransactionStatuses();
-            $statuses = SystemConfiguration::getOptions('transaction_statuses');
-        }
-        
-        // Final fallback
-        if (empty($statuses)) {
-            return [
-                'done' => 'Done',
-                'pending' => 'Pending',
-                'cancelled' => 'Cancelled',
-            ];
-        }
-        
-        return $statuses;
+        return SystemConfiguration::getOptions('transaction_statuses');
     }
 
     public static function isValidStatus(string $status): bool
@@ -164,66 +147,6 @@ class UserTransaction extends Model
      */
     public static function getAvailableMethods(): array
     {
-        $methods = SystemConfiguration::getOptions('transaction_methods');
-        
-        // Auto-seed if no system configurations are found
-        if (empty($methods)) {
-            self::seedTransactionMethods();
-            $methods = SystemConfiguration::getOptions('transaction_methods');
-        }
-        
-        // Final fallback
-        if (empty($methods)) {
-            return [
-                'bank_transfer' => 'Bank Transfer',
-                'check' => 'Check',
-                'cash' => 'Cash',
-                'credit_card' => 'Credit Card',
-                'instapay' => 'Instapay',
-            ];
-        }
-        
-        return $methods;
+        return SystemConfiguration::getOptions('transaction_methods');
     }
-    
-    /**
-     * Auto-seed transaction statuses
-     */
-    private static function seedTransactionStatuses(): void
-    {
-        $statuses = [
-            ['category' => 'transaction_statuses', 'key' => 'done', 'value' => 'Done', 'label' => 'Done'],
-            ['category' => 'transaction_statuses', 'key' => 'pending', 'value' => 'Pending', 'label' => 'Pending'],
-            ['category' => 'transaction_statuses', 'key' => 'cancelled', 'value' => 'Cancelled', 'label' => 'Cancelled'],
-        ];
-        
-        foreach ($statuses as $status) {
-            SystemConfiguration::updateOrCreate(
-                ['category' => $status['category'], 'key' => $status['key']],
-                array_merge($status, ['is_active' => true])
-            );
-        }
-    }
-    
-    /**
-     * Auto-seed transaction methods
-     */
-    private static function seedTransactionMethods(): void
-    {
-        $methods = [
-            ['category' => 'transaction_methods', 'key' => 'bank_transfer', 'value' => 'Bank Transfer', 'label' => 'Bank Transfer'],
-            ['category' => 'transaction_methods', 'key' => 'check', 'value' => 'Check', 'label' => 'Check'],
-            ['category' => 'transaction_methods', 'key' => 'cash', 'value' => 'Cash', 'label' => 'Cash'],
-            ['category' => 'transaction_methods', 'key' => 'credit_card', 'value' => 'Credit Card', 'label' => 'Credit Card'],
-            ['category' => 'transaction_methods', 'key' => 'instapay', 'value' => 'Instapay', 'label' => 'Instapay'],
-        ];
-        
-        foreach ($methods as $method) {
-            SystemConfiguration::updateOrCreate(
-                ['category' => $method['category'], 'key' => $method['key']],
-                array_merge($method, ['is_active' => true])
-            );
-        }
-    }
-
 }

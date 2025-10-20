@@ -139,10 +139,10 @@ class ValueCorrectionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListValueCorrections::class,
-            'create' => Pages\CreateValueCorrection::class,
-            'edit' => Pages\EditValueCorrection::class,
-            'bulk-edit' => Pages\BulkValueCorrections::class,
+            'index' => Pages\ListValueCorrections::route('/'),
+            'create' => Pages\CreateValueCorrection::route('/create'),
+            'edit' => Pages\EditValueCorrection::route('/{record}/edit'),
+            'bulk-edit' => Pages\BulkValueCorrections::route('/bulk-edit'),
         ];
     }
 }

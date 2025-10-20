@@ -138,10 +138,10 @@ class AdminResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAdmins::class,
-            'create' => Pages\CreateAdmin::class,
-            'view' => Pages\ViewAdmin::class,
-            'edit' => Pages\EditAdmin::class,
+            'index' => Pages\ListAdmins::route('/'),
+            'create' => Pages\CreateAdmin::route('/create'),
+            'view' => Pages\ViewAdmin::route('/{record}'),
+            'edit' => Pages\EditAdmin::route('/{record}/edit'),
         ];
     }
 
