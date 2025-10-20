@@ -246,7 +246,8 @@ class ProjectStatusReport extends Component
 
         $query = Project::query()
             ->with(['transactions' => function ($query) {
-                $query->where('status', 'done');
+                $query->where('status', 'done')
+                      ->whereIn('financial_type', ['expense', 'revenue']);
             }, 'valueCorrections', 'developer', 'compound'])
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
@@ -624,10 +625,10 @@ class ProjectStatusReport extends Component
         $assetRevenues = 0;
 
         // Calculate asset expenses and revenues using the same logic as the main calculation
-        foreach ($project->transactions()->where('serving', 'asset')->where('status', 'done')->get() as $transaction) {
+        foreach ($project->transactions()->where('serving', 'asset')->where('status', 'done')->whereIn('financial_type', ['expense', 'revenue'])->get() as $transaction) {
             $amount = (float) $transaction->amount;
 
-            if ($this->determineTransactionType($transaction)) {
+            if ($transaction->financial_type === 'revenue') {
                 $assetRevenues += $amount;
             } else {
                 $assetExpenses += $amount;
