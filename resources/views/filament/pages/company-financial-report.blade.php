@@ -224,7 +224,7 @@
                 $equityTotal[$month] = ($evaluation['asset'][$month] ?? 0) + ($cash[$month] ?? 0);
             }
 
-            // 8. Calculate Profit
+            // 8. Calculate Profit using the same logic as ProjectFinancialReport
             $profit = ['asset' => [], 'operation' => [], 'total' => []];
 
             // Initialize profit arrays
@@ -234,19 +234,90 @@
                 $profit['total'][$month] = 0;
             }
 
-            // Calculate profit for each serving
-            $monthsArray = $monthsToShow->toArray();
-            foreach ($monthsArray as $index => $month) {
-                // Asset Profit = Evaluation Asset for current month - Evaluation Asset for last month + Revenue Asset current month - Expense Asset current month
-                $currentEvaluationAsset = $evaluation['asset'][$month];
-                $lastMonthEvaluationAsset = isset($monthsArray[$index + 1])
-                    ? $evaluation['asset'][$monthsArray[$index + 1]]
-                    : 0;
-                $currentRevenueAsset = $reportData['revenue']['asset'][$month] ?? 0;
-                $currentExpenseAsset = $reportData['expense']['asset'][$month] ?? 0;
+            // Get all projects to calculate individual asset profits and sum them
+            $projects = App\Models\Project::with(['transactions', 'valueCorrections'])->get();
+            
+            // Helper function to calculate project financial data (same logic as ProjectFinancialReport)
+            $calculateProjectFinancialData = function($project, $allMonths) {
+                $data = ['key' => $project->key, 'title' => $project->title, 'status' => $project->status, 'months' => []];
+                foreach ($allMonths as $month) {
+                    $data['months'][$month] = [
+                        'evaluation_asset' => 0, 'expense_asset' => 0, 'revenue_asset' => 0, 
+                        'expense_operation' => 0, 'revenue_operation' => 0, 'profit_asset' => 0
+                    ];
+                }
+                $today = now()->startOfDay();
 
-                $profit['asset'][$month] =
-                    $currentEvaluationAsset - $lastMonthEvaluationAsset + $currentRevenueAsset - $currentExpenseAsset;
+                // Process transactions
+                foreach ($project->transactions as $transaction) {
+                    $dateToUse = null;
+                    $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
+                    $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
+
+                    // Only include done transactions
+                    if ($transaction->status === 'done') {
+                        if ($actualDate && $actualDate->lte($today)) {
+                            $dateToUse = $transaction->actual_date;
+                        } elseif (!$actualDate && $transactionDate->lte($today)) {
+                            $dateToUse = $transaction->transaction_date;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+
+                    $month = date('Y-m-01', strtotime($dateToUse));
+
+                    if (isset($data['months'][$month]) && $transaction->financial_type && $transaction->serving) {
+                        $key = $transaction->financial_type . '_' . $transaction->serving;
+                        if (!isset($data['months'][$month][$key])) {
+                            $data['months'][$month][$key] = 0;
+                        }
+                        $data['months'][$month][$key] += $transaction->amount;
+                    }
+                }
+
+                // Use pre-calculated asset evaluations from database
+                $assetEvaluations = \App\Models\MonthlyProjectEvaluation::getProjectEvaluations($project->key, $allMonths);
+                
+                // Process months in chronological order for profit calculations
+                $monthsChronological = array_reverse($allMonths);
+                $previousAssetEvaluation = 0;
+
+                foreach ($monthsChronological as $month) {
+                    // Use pre-calculated asset evaluation from database
+                    $data['months'][$month]['evaluation_asset'] = $assetEvaluations[$month] ?? 0;
+
+                    // Calculate Profit Asset using the correct formula:
+                    // Profit Asset = Current month Asset Evaluation - Previous month Asset Evaluation + Current month Revenue Asset - Current month Expense Asset
+                    $currentAssetEvaluation = $data['months'][$month]['evaluation_asset'];
+                    $currentRevenueAsset = $data['months'][$month]['revenue_asset'] ?? 0;
+                    $currentExpenseAsset = $data['months'][$month]['expense_asset'] ?? 0;
+
+                    $data['months'][$month]['profit_asset'] = $currentAssetEvaluation - $previousAssetEvaluation + $currentRevenueAsset - $currentExpenseAsset;
+
+                    // Store current evaluation as previous for next iteration
+                    $previousAssetEvaluation = $currentAssetEvaluation;
+                }
+
+                return $data;
+            };
+            
+            // Calculate individual project data for each month using the same logic as ProjectFinancialReport
+            $projectsData = [];
+            foreach ($projects as $project) {
+                $projectData = $calculateProjectFinancialData($project, $monthsToShow->toArray());
+                $projectsData[$project->key] = $projectData;
+            }
+
+            // Calculate profit for each month
+            foreach ($monthsToShow as $month) {
+                // Asset Profit = Sum of all individual project asset profits (calculated with correct formula)
+                $profit['asset'][$month] = 0;
+                foreach ($projectsData as $projectData) {
+                    $profit['asset'][$month] += $projectData['months'][$month]['profit_asset'] ?? 0;
+                }
 
                 // Operation Profit = Revenue Operation this month - Expenses Operation This Month
                 $currentRevenueOperation = $reportData['revenue']['operation'][$month] ?? 0;
