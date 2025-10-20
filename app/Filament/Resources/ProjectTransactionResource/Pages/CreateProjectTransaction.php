@@ -32,7 +32,7 @@ class CreateProjectTransaction extends CreateRecord
             $this->getCancelFormAction()
                 ->url(
                     fn() => request()->has('project_id')
-                        ? route('filament.admin.resources.projects.view', ['record' => request('project_id')])
+                        ? \App\Filament\Resources\ProjectResource::getUrl('view', ['record' => request('project_id')])
                         : $this->getResource()::getUrl('index')
                 ),
         ];

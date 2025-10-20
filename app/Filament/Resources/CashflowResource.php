@@ -163,7 +163,7 @@ class CashflowResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCashflows::route('/'),
+            'index' => Pages\ListCashflows::class,
         ];
     }
 

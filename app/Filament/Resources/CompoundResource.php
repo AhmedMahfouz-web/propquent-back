@@ -91,9 +91,9 @@ class CompoundResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCompounds::route('/'),
-            'create' => Pages\CreateCompound::route('/create'),
-            'edit' => Pages\EditCompound::route('/{record}/edit'),
+            'index' => Pages\ListCompounds::class,
+            'create' => Pages\CreateCompound::class,
+            'edit' => Pages\EditCompound::class,
         ];
     }
 }

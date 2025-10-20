@@ -145,7 +145,7 @@ class TransactionsRelationManager extends RelationManager
                 Tables\Actions\Action::make('create')
                     ->label('New Transaction')
                     ->icon('heroicon-o-plus')
-                    ->url(fn() => route('filament.admin.resources.project-transactions.index')),
+                    ->url(fn() => \App\Filament\Resources\ProjectTransactionResource::getUrl('index')),
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),
