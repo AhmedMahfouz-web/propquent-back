@@ -36,6 +36,42 @@
                 <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading projects...</span>
             </div>
         @else
+            <!-- Debug Information -->
+            <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4">
+                <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Debug Information</h3>
+                <div class="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+                    <div><strong>Total Projects:</strong> {{ $projects->count() }}</div>
+                    <div><strong>Projects with Revenue:</strong> 
+                        @php
+                            $projectsWithRevenue = 0;
+                            $totalRevenue = 0;
+                            foreach($projects as $project) {
+                                $projectData = $projectsData[$project->key] ?? [];
+                                if(($projectData['total_revenues'] ?? 0) > 0) {
+                                    $projectsWithRevenue++;
+                                    $totalRevenue += $projectData['total_revenues'];
+                                }
+                            }
+                        @endphp
+                        {{ $projectsWithRevenue }}
+                    </div>
+                    <div><strong>Total Revenue Amount:</strong> {{ number_format($totalRevenue, 2) }}</div>
+                    <div><strong>Revenue Transactions per Project:</strong></div>
+                    @foreach($projects as $project)
+                        @php
+                            $revenueTransactions = $project->transactions->where('financial_type', 'revenue');
+                        @endphp
+                        @if($revenueTransactions->count() > 0)
+                            <div class="ml-4">
+                                <strong>{{ $project->title }} ({{ $project->key }}):</strong> 
+                                {{ $revenueTransactions->count() }} revenue transactions, 
+                                Total: {{ number_format($revenueTransactions->sum('amount'), 2) }}
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+
             <!-- Project Status Table with Foldable Sections -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                 <div class="project-status-table-container">
