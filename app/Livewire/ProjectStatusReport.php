@@ -579,6 +579,9 @@ class ProjectStatusReport extends Component
                 $data['total_revenues'] += $amount;
                 $key = $serving . '_' . $financialType;
                 $data['revenue_breakdown'][$key] = ($data['revenue_breakdown'][$key] ?? 0) + $amount;
+                
+                // Also store individual serving revenue for table display
+                $data[$serving . '_revenue'] = ($data[$serving . '_revenue'] ?? 0) + $amount;
             } else {
                 $data['total_expenses'] += $amount;
                 $key = $serving . '_' . $financialType;
