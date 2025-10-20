@@ -610,39 +610,11 @@ class ProjectStatusReport extends Component
 
     private function determineTransactionType($transaction)
     {
-        // Logic to determine if transaction is revenue or expense based on business rules
-
-        // Check transaction category patterns for revenue
-        $revenueCategories = ['revenue'];
-        $expenseCategories = ['expense'];
-
-        $category = strtolower($transaction->financial_type ?? '');
-        $note = strtolower($transaction->note ?? '');
-
-        // First check explicit category matches
-        foreach ($revenueCategories as $revCat) {
-            if (strpos($category, $revCat) !== false || strpos($note, $revCat) !== false) {
-                return true;
-            }
-        }
-
-        foreach ($expenseCategories as $expCat) {
-            if (strpos($category, $expCat) !== false || strpos($note, $expCat) !== false) {
-                return false;
-            }
-        }
-
-        // Business logic based on serving type and context
-        if ($transaction->serving === 'operation') {
-            // Operation transactions are typically revenue (rental income, sales, etc.)
-            return true;
-        } elseif ($transaction->serving === 'asset') {
-            // Asset transactions are typically expenses (property purchase, improvements, etc.)
-            return false;
-        }
-
-        // Default to expense if uncertain
-        return false;
+        // Simple and direct logic: check the financial_type field
+        $financialType = $transaction->financial_type ?? 'expense';
+        
+        // Return true for revenue, false for expense
+        return $financialType === 'revenue';
     }
 
     private function calculateAssetEvaluation($project)
