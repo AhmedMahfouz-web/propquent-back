@@ -20,10 +20,10 @@ class UserTransactionTable extends Component implements HasTable, HasForms
 {
     use InteractsWithTable;
     use InteractsWithForms;
-    
+
     public $showSummary = true;
     public $customSelectedRecords = [];
-    
+
     protected $listeners = [
         'updateSelectedSummary' => '$refresh',
         'tableSelectionChanged' => 'updateSelectedRecords'
@@ -34,18 +34,18 @@ class UserTransactionTable extends Component implements HasTable, HasForms
     {
         $this->dispatch('$refresh');
     }
-    
+
     public function updateSelectedRecords($selectedIds)
     {
         $this->customSelectedRecords = $selectedIds;
     }
-    
+
     // Make summaries computed properties that react to changes
     public function getTableSummaryProperty()
     {
         return $this->getTableSummary();
     }
-    
+
     public function getSelectedSummaryProperty()
     {
         return $this->getSelectedSummary();
@@ -72,62 +72,62 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                         }
                         return $state;
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('transaction_type')
                     ->label('Type')
                     ->searchable(isIndividual: true)
                     ->sortable()
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'deposit' => 'success',
                         'withdraw' => 'danger',
                         default => 'gray',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Amount')
                     ->money('EGP')
                     ->sortable()
                     ->alignEnd()
-                    ->color(fn ($record): string => $record->transaction_type === 'withdraw' ? 'danger' : 'success'),
-                    
+                    ->color(fn($record): string => $record->transaction_type === 'withdraw' ? 'danger' : 'success'),
+
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->label('Transaction Date')
                     ->date('M j, Y')
                     ->sortable()
                     ->searchable(isIndividual: true),
-                    
+
                 Tables\Columns\TextColumn::make('actual_date')
                     ->label('Actual Date')
                     ->date('M j, Y')
                     ->sortable()
                     ->placeholder('Not set'),
-                    
+
                 Tables\Columns\TextColumn::make('method')
                     ->label('Method')
                     ->searchable(isIndividual: true)
                     ->sortable()
                     ->badge()
                     ->placeholder('Not specified'),
-                    
+
                 Tables\Columns\TextColumn::make('reference_no')
                     ->label('Reference')
                     ->searchable(isIndividual: true)
                     ->limit(20)
                     ->placeholder('No reference'),
-                    
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->searchable(isIndividual: true)
                     ->sortable()
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'completed' => 'success',
                         'pending' => 'warning',
                         'cancelled' => 'danger',
                         default => 'gray',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('note')
                     ->label('Note')
                     ->searchable(isIndividual: true)
@@ -147,19 +147,19 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                     ->relationship('user', 'full_name')
                     ->searchable()
                     ->preload(),
-                    
+
                 Tables\Filters\SelectFilter::make('transaction_type')
                     ->label('Transaction Type')
                     ->options(UserTransaction::getAvailableTransactionTypes()),
-                    
+
                 Tables\Filters\SelectFilter::make('method')
                     ->label('Method')
                     ->options(UserTransaction::getAvailableMethods()),
-                    
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options(UserTransaction::getAvailableStatuses()),
-                    
+
                 Tables\Filters\Filter::make('amount_range')
                     ->form([
                         Forms\Components\Grid::make(2)
@@ -178,11 +178,11 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                         return $query
                             ->when(
                                 $data['amount_from'],
-                                fn (Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
+                                fn(Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
                             )
                             ->when(
                                 $data['amount_to'],
-                                fn (Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
+                                fn(Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
@@ -195,7 +195,7 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                         }
                         return $indicators;
                     }),
-                    
+
                 Tables\Filters\Filter::make('transaction_date_range')
                     ->form([
                         Forms\Components\Grid::make(2)
@@ -210,11 +210,11 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                         return $query
                             ->when(
                                 $data['transaction_date_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('transaction_date', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '>=', $date),
                             )
                             ->when(
                                 $data['transaction_date_to'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('transaction_date', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
@@ -227,6 +227,74 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                         }
                         return $indicators;
                     }),
+            ])
+            ->headerActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('New User Transaction')
+                    ->icon('heroicon-o-plus')
+                    ->form([
+                        Forms\Components\Section::make('Transaction Details')
+                            ->schema([
+                                Forms\Components\Select::make('user_id')
+                                    ->relationship('user', 'full_name')
+                                    ->searchable(['full_name', 'email'])
+                                    ->preload()
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Select::make('transaction_type')
+                                    ->label('Type')
+                                    ->options(fn() => UserTransaction::getAvailableTransactionTypes())
+                                    ->required(),
+
+                                Forms\Components\TextInput::make('amount')
+                                    ->numeric()
+                                    ->prefix('EGP')
+                                    ->step(0.01)
+                                    ->required()
+                                    ->rules(['min:0.01']),
+                            ])
+                            ->columns(2),
+
+                        Forms\Components\Section::make('Payment Information')
+                            ->schema([
+                                Forms\Components\Select::make('method')
+                                    ->options(fn() => UserTransaction::getAvailableMethods())
+                                    ->nullable()
+                                    ->searchable(),
+
+                                Forms\Components\TextInput::make('reference_no')
+                                    ->label('Reference Number')
+                                    ->maxLength(255)
+                                    ->nullable(),
+
+                                Forms\Components\Select::make('status')
+                                    ->options(fn() => UserTransaction::getAvailableStatuses())
+                                    ->default('pending')
+                                    ->required(),
+                            ])
+                            ->columns(3),
+
+                        Forms\Components\Section::make('Date Information')
+                            ->schema([
+                                Forms\Components\DatePicker::make('transaction_date')
+                                    ->required()
+                                    ->default(today()),
+
+                                Forms\Components\DatePicker::make('actual_date')
+                                    ->nullable()
+                                    ->helperText('Date when transaction was actually processed'),
+                            ])
+                            ->columns(2),
+
+                        Forms\Components\Section::make('Additional Information')
+                            ->schema([
+                                Forms\Components\Textarea::make('note')
+                                    ->maxLength(65535)
+                                    ->nullable()
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
@@ -321,13 +389,13 @@ class UserTransactionTable extends Component implements HasTable, HasForms
             // Get the current page records from the table
             $table = $this->getTable();
             $records = $table->getRecords();
-            
+
             // Calculate from current page records only
             $recordCount = $records->count();
             $totalAmount = $records->sum('amount');
             $totalDeposit = $records->where('transaction_type', 'deposit')->sum('amount');
             $totalWithdraw = $records->where('transaction_type', 'withdraw')->sum('amount');
-            
+
             return [
                 'total_records' => $recordCount,
                 'total_amount' => $totalAmount,
@@ -345,13 +413,13 @@ class UserTransactionTable extends Component implements HasTable, HasForms
             ];
         }
     }
-    
+
     public function getSelectedSummary(): array
     {
         try {
             // Get selected records using efficient database queries
             $selectedIds = [];
-            
+
             // Try multiple approaches to get selected record IDs
             if (!empty($this->customSelectedRecords)) {
                 $selectedIds = $this->customSelectedRecords;
@@ -366,7 +434,7 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                     $selectedIds = [];
                 }
             }
-            
+
             if (empty($selectedIds)) {
                 return [
                     'selected_records' => 0,
@@ -376,14 +444,14 @@ class UserTransactionTable extends Component implements HasTable, HasForms
                     'selected_net' => 0,
                 ];
             }
-            
+
             // Use database aggregation for better performance
             $query = UserTransaction::whereIn('id', $selectedIds);
             $selectedCount = $query->count();
             $selectedAmount = $query->sum('amount');
             $selectedDeposit = $query->where('transaction_type', 'deposit')->sum('amount');
             $selectedWithdraw = $query->where('transaction_type', 'withdraw')->sum('amount');
-            
+
             return [
                 'selected_records' => $selectedCount,
                 'selected_amount' => $selectedAmount,
