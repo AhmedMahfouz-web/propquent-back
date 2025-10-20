@@ -230,7 +230,69 @@ class UserTransactionTable extends Component implements HasTable, HasForms
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->color('primary'),
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\Section::make('Transaction Details')
+                            ->schema([
+                                Forms\Components\Select::make('user_id')
+                                    ->relationship('user', 'full_name')
+                                    ->searchable(['full_name', 'email'])
+                                    ->preload()
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Select::make('transaction_type')
+                                    ->label('Type')
+                                    ->options(fn() => UserTransaction::getAvailableTransactionTypes())
+                                    ->required(),
+
+                                Forms\Components\TextInput::make('amount')
+                                    ->numeric()
+                                    ->prefix('EGP')
+                                    ->step(0.01)
+                                    ->required()
+                                    ->rules(['min:0.01']),
+                            ])
+                            ->columns(2),
+
+                        Forms\Components\Section::make('Payment Information')
+                            ->schema([
+                                Forms\Components\Select::make('method')
+                                    ->options(fn() => UserTransaction::getAvailableMethods())
+                                    ->nullable()
+                                    ->searchable(),
+
+                                Forms\Components\TextInput::make('reference_no')
+                                    ->label('Reference Number')
+                                    ->maxLength(255)
+                                    ->nullable(),
+
+                                Forms\Components\Select::make('status')
+                                    ->options(fn() => UserTransaction::getAvailableStatuses())
+                                    ->required(),
+                            ])
+                            ->columns(3),
+
+                        Forms\Components\Section::make('Date Information')
+                            ->schema([
+                                Forms\Components\DatePicker::make('transaction_date')
+                                    ->required()
+                                    ->default(today()),
+
+                                Forms\Components\DatePicker::make('actual_date')
+                                    ->nullable()
+                                    ->helperText('Date when transaction was actually processed'),
+                            ])
+                            ->columns(2),
+
+                        Forms\Components\Section::make('Additional Information')
+                            ->schema([
+                                Forms\Components\Textarea::make('note')
+                                    ->maxLength(65535)
+                                    ->nullable()
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
                 Tables\Actions\DeleteAction::make()
                     ->color('danger'),
             ])
