@@ -846,7 +846,7 @@
                                         <div class="section-expanded-content">
                                             <div class="sub-header-grid equity-grid">
                                                 <span class="content-value text-purple-600 dark:text-purple-400 font-medium">
-                                                    ${{ number_format($assetExpenses - ($projectData['asset_revenue'] ?? 0), 0) }}
+                                                    ${{ number_format($projectData['asset_evaluation'] ?? 0, 0) }}
                                                 </span>
                                                 <span class="content-value text-blue-600 dark:text-blue-400 font-medium">
                                                     ${{ number_format($projectData['value_corrections'] ?? 0, 0) }}
