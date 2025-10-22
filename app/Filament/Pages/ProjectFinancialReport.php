@@ -371,13 +371,17 @@ class ProjectFinancialReport extends Page implements HasForms
         // This ensures correct cumulative calculations regardless of filtered date range
         $assetEvaluations = \App\Models\MonthlyProjectEvaluation::getProjectEvaluations($project->key, $allMonths);
         
-        // Get the INITIAL asset evaluation (before any transactions) to calculate cumulative profit
-        // This should be 0 since profit = current evaluation - initial evaluation (which is 0)
-        // The asset evaluation already represents cumulative value from the beginning
-        $initialAssetEvaluation = 0;
-        
         // Process months in chronological order (oldest first) for profit calculations
         $monthsChronological = array_reverse($allMonths);
+        
+        // Get the asset evaluation from the month BEFORE our filtered range starts
+        // This ensures correct asset profit calculation from the beginning, not just filtered months
+        $firstMonth = end($monthsChronological); // Get the chronologically first month
+        $previousMonth = \Carbon\Carbon::parse($firstMonth)->subMonth()->format('Y-m-01');
+        $previousAssetEvaluation = \App\Models\MonthlyProjectEvaluation::getAssetEvaluation($project->key, $previousMonth);
+        
+        // Initialize cumulative profit tracking
+        $cumulativeAssetProfit = 0;
 
         foreach ($monthsChronological as $monthIndex => $month) {
             // Get Value Correction from database
@@ -393,13 +397,24 @@ class ProjectFinancialReport extends Page implements HasForms
             // Calculate derived profit metrics
             $data['months'][$month]['profit_operation'] = $data['months'][$month]['revenue_operation'] - $data['months'][$month]['expense_operation'];
 
-            // Calculate CUMULATIVE Profit Asset from the beginning of the project:
-            // Profit Asset = Current month Asset Evaluation - Initial Project Asset Evaluation
-            // This shows total profit accumulated from the first transaction to current month
+            // Calculate monthly Profit Asset using your formula:
+            // Monthly Profit = Asset Evaluation This Month - Asset Evaluation Previous Month + Revenue Asset This Month - Expense Asset This Month
             $currentAssetEvaluation = $data['months'][$month]['evaluation_asset'];
-            $data['months'][$month]['profit_asset'] = $currentAssetEvaluation - $initialAssetEvaluation;
+            $currentRevenueAsset = $data['months'][$month]['revenue_asset'] ?? 0;
+            $currentExpenseAsset = $data['months'][$month]['expense_asset'] ?? 0;
+            
+            $monthlyAssetProfit = $currentAssetEvaluation - $previousAssetEvaluation + $currentRevenueAsset - $currentExpenseAsset;
+            
+            // Add monthly profit to cumulative total
+            $cumulativeAssetProfit += $monthlyAssetProfit;
+            
+            // Store CUMULATIVE profit (total from beginning to this month)
+            $data['months'][$month]['profit_asset'] = $cumulativeAssetProfit;
 
             $data['months'][$month]['total_profit'] = $data['months'][$month]['profit_operation'] + $data['months'][$month]['profit_asset'];
+
+            // Store current evaluation as previous for next iteration
+            $previousAssetEvaluation = $currentAssetEvaluation;
         }
 
         // Calculate totals using cumulative data from the beginning, not just filtered months
