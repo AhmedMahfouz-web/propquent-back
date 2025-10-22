@@ -377,7 +377,7 @@ class ProjectFinancialReport extends Page implements HasForms
         
         // Get the asset evaluation from the month BEFORE our filtered range starts
         // This ensures correct asset profit calculation from the beginning, not just filtered months
-        $firstMonth = end($monthsChronological); // Get the chronologically first month
+        $firstMonth = reset($monthsChronological); // Get the chronologically first (oldest) month
         $previousMonth = \Carbon\Carbon::parse($firstMonth)->subMonth()->format('Y-m-01');
         $previousAssetEvaluation = \App\Models\MonthlyProjectEvaluation::getAssetEvaluation($project->key, $previousMonth);
         
