@@ -372,6 +372,7 @@ class ProjectFinancialReport extends Page implements HasForms
         $assetEvaluations = \App\Models\MonthlyProjectEvaluation::getProjectEvaluations($project->key, $allMonths);
         
         // Process months in chronological order (oldest first) for profit calculations
+        // Note: $allMonths is already in reverse order (newer first), so we need to reverse it to get oldest first
         $monthsChronological = array_reverse($allMonths);
         
         // Get the asset evaluation from the month BEFORE our filtered range starts
