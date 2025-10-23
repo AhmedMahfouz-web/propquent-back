@@ -99,6 +99,42 @@
                             </div>
                         @endif
                         
+                        {{-- New Debug Sections for Cash and Equity Calculations --}}
+                        @if (isset($debugInfo['cash_calculations']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Cash Calculations by Month:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['cash_calculations'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['company_equity_calculations']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Company Equity Calculations by Month:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['company_equity_calculations'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['profit_calculations']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">User Profit Calculations:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['profit_calculations'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        {{-- Show sample user data for debugging --}}
+                        @if (!empty($userFinancialData))
+                            @php
+                                $firstUser = array_values($userFinancialData)[0] ?? null;
+                                $firstUserId = array_keys($userFinancialData)[0] ?? null;
+                            @endphp
+                            @if ($firstUser)
+                                <div>
+                                    <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Sample User Data (User ID: {{ $firstUserId }}):</h4>
+                                    <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($firstUser, JSON_PRETTY_PRINT) }}</pre>
+                                </div>
+                            @endif
+                        @endif
+                        
                         @if (isset($debugInfo['user_transactions_for_company']))
                             <div>
                                 <h4 class="font-medium text-yellow-700 dark:text-yellow-300">User Transactions for Company:</h4>

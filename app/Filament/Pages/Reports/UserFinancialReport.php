@@ -410,6 +410,7 @@ class UserFinancialReport extends Page implements HasForms
             'userFinancialData' => $userFinancialData,
             'allMonths' => $allMonths,
             'companyData' => $companyData,
+            'debugInfo' => $this->debugInfo,
         ];
     }
 
