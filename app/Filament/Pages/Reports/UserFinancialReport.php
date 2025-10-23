@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use App\Models\User;
 use App\Models\UserTransaction;
 use App\Models\ProjectTransaction;
+use App\Models\MonthlyProjectEvaluation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
@@ -375,8 +376,11 @@ class UserFinancialReport extends Page implements HasForms
             $userFinancialData[$user->id] = $this->calculateUserFinancialData($user, $allMonths, $companyData);
         }
 
-        // Calculate total users equity for each month and update equity percentages
-        $this->updateEquityPercentages($userFinancialData, $allMonths);
+        // Calculate company profit for each month
+        $companyProfitByMonth = $this->calculateCompanyProfitByMonth($allMonths);
+
+        // Calculate total users equity for each month and update equity percentages and user profits
+        $this->updateEquityPercentagesAndProfits($userFinancialData, $allMonths, $companyProfitByMonth);
 
         // Apply financial sorting if needed
         if (in_array($this->sortBy, ['total_deposits', 'total_equity', 'total_profit'])) {
@@ -570,9 +574,51 @@ class UserFinancialReport extends Page implements HasForms
     }
 
     /**
-     * Update equity percentages for all users based on total users equity
+     * Calculate company profit for each month (sum of all projects' profit)
      */
-    private function updateEquityPercentages(array &$userFinancialData, array $allMonths): void
+    private function calculateCompanyProfitByMonth(array $allMonths): array
+    {
+        $companyProfitByMonth = [];
+        
+        foreach ($allMonths as $month) {
+            // Get all projects' total profit for this month using the same calculation as Project Financial Report
+            $monthlyProjectEvaluations = \App\Models\MonthlyProjectEvaluation::where('month_date', $month)->get();
+            
+            $totalCompanyProfit = 0;
+            
+            foreach ($monthlyProjectEvaluations as $evaluation) {
+                // Calculate profit operation for this project this month
+                $profitOperation = (float) $evaluation->profit_operation;
+                
+                // Calculate profit asset for this project this month using the formula
+                // We need to get the previous month's asset evaluation for this project
+                $previousMonthEvaluation = \App\Models\MonthlyProjectEvaluation::where('project_key', $evaluation->project_key)
+                    ->where('month_date', '<', $month)
+                    ->orderBy('month_date', 'desc')
+                    ->first();
+                    
+                $previousAssetEvaluation = $previousMonthEvaluation ? (float) $previousMonthEvaluation->asset_evaluation : 0;
+                $currentAssetEvaluation = (float) $evaluation->asset_evaluation;
+                $revenueAsset = (float) $evaluation->revenue_asset;
+                $expenseAsset = (float) $evaluation->expense_asset;
+                
+                $profitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+                
+                // Total project profit = profit operation + profit asset
+                $projectTotalProfit = $profitOperation + $profitAsset;
+                $totalCompanyProfit += $projectTotalProfit;
+            }
+            
+            $companyProfitByMonth[$month] = $totalCompanyProfit;
+        }
+        
+        return $companyProfitByMonth;
+    }
+
+    /**
+     * Update equity percentages and calculate user profits based on previous month equity percentage
+     */
+    private function updateEquityPercentagesAndProfits(array &$userFinancialData, array $allMonths, array $companyProfitByMonth): void
     {
         // Calculate total users equity for each month
         $totalUsersEquity = [];
@@ -583,23 +629,47 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Update equity percentages for each user
+        // Update equity percentages and calculate user profits
         foreach ($userFinancialData as $userId => &$userData) {
-            foreach ($allMonths as $month) {
+            $previousEquityPercentage = 0;
+            
+            foreach ($allMonths as $monthIndex => $month) {
                 $userEquity = $userData['equity'][$month] ?? 0;
                 $totalEquity = $totalUsersEquity[$month] ?? 0;
                 
+                // Calculate equity percentage
                 if ($totalEquity > 0) {
                     $userData['equity_percentage'][$month] = ($userEquity / $totalEquity) * 100;
                 } else {
                     $userData['equity_percentage'][$month] = 0;
                 }
 
+                // Calculate user profit: Equity % of user (previous month) * Company profit This month
+                $companyProfitThisMonth = $companyProfitByMonth[$month] ?? 0;
+                
+                // For the first month, use 0% equity from previous month
+                $equityPercentageToUse = $previousEquityPercentage / 100; // Convert percentage to decimal
+                
+                // Calculate profit asset and profit operation based on equity percentage
+                $userTotalProfit = $equityPercentageToUse * $companyProfitThisMonth;
+                
+                // For simplicity, we'll split the profit equally between asset and operation
+                // You can adjust this logic if you want different allocation
+                $userData['profit_asset'][$month] = $userTotalProfit * 0.5;
+                $userData['profit_operation'][$month] = $userTotalProfit * 0.5;
+                $userData['total_profit'][$month] = $userTotalProfit;
+
+                // Store current equity percentage for next month's calculation
+                $previousEquityPercentage = $userData['equity_percentage'][$month];
+
                 // Debug logging
                 $this->debugInfo['equity_calculations'][$month][$userId] = [
                     'user_equity' => $userEquity,
                     'total_users_equity' => $totalEquity,
                     'equity_percentage' => $userData['equity_percentage'][$month],
+                    'previous_equity_percentage' => $equityPercentageToUse * 100,
+                    'company_profit' => $companyProfitThisMonth,
+                    'user_total_profit' => $userTotalProfit,
                 ];
             }
         }
