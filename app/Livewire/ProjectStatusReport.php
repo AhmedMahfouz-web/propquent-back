@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use App\Models\ValueCorrection;
+use App\Models\MonthlyProjectEvaluation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
@@ -607,6 +608,9 @@ class ProjectStatusReport extends Component
         $data['asset_evaluation'] = $this->calculateAssetEvaluation($project);
         $data['value_corrections'] = $this->calculateAssetCorrection($project);
 
+        // Calculate total profit using the same formula as Project Financial Report
+        $data['total_profit'] = $this->calculateTotalProfit($project);
+
         return $data;
     }
 
@@ -629,6 +633,43 @@ class ProjectStatusReport extends Component
     private function calculateAssetCorrection($project)
     {
         return $project->valueCorrections()->sum('correction_amount') ?? 0;
+    }
+
+    private function calculateTotalProfit($project)
+    {
+        // Calculate total profit using the same formula as Project Financial Report
+        // Total Profit = Profit Operation + Profit Asset
+        
+        // Get all monthly data from database
+        $allMonthlyData = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->orderBy('month_date', 'asc')
+            ->get();
+            
+        if ($allMonthlyData->isEmpty()) {
+            return 0;
+        }
+        
+        // Calculate profit operation (sum of all months)
+        $profitOperation = $allMonthlyData->sum('profit_operation');
+        
+        // Calculate profit asset using the formula for each month and sum them
+        $totalProfitAsset = 0;
+        $previousAssetEvaluation = 0;
+        
+        foreach ($allMonthlyData as $monthData) {
+            // Profit Asset = Asset Evaluation this month - Asset Evaluation Previous month + Revenue Asset This month - Expense Asset This Month
+            $currentAssetEvaluation = (float) $monthData->asset_evaluation;
+            $revenueAsset = (float) $monthData->revenue_asset;
+            $expenseAsset = (float) $monthData->expense_asset;
+            
+            $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+            $totalProfitAsset += $monthlyProfitAsset;
+            
+            $previousAssetEvaluation = $currentAssetEvaluation;
+        }
+        
+        // Total Profit = Profit Operation + Profit Asset
+        return $profitOperation + $totalProfitAsset;
     }
 
     public function render()
