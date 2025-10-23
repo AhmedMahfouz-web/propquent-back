@@ -461,8 +461,8 @@ class UserFinancialReport extends Page implements HasForms
             )
             ->where('pt.status', 'done')
             ->whereBetween('pt.transaction_date', [
-                $monthsToShow[0], // Oldest month (first in array)
-                Carbon::parse(end($monthsToShow))->endOfMonth(), // Newest month (last in array)
+                end($monthsToShow), // Last element = oldest month
+                Carbon::parse($monthsToShow[0])->endOfMonth(), // First element = newest month
             ])
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
             ->orderBy('month_date', 'desc')
