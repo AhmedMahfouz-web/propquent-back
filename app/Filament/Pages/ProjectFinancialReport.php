@@ -319,7 +319,15 @@ class ProjectFinancialReport extends Page implements HasForms
                 return \Carbon\Carbon::parse($item->month_date)->format('Y-m-01');
             });
 
-        // Populate monthly data from database
+        // Populate monthly data from database and calculate monthly profit asset using formula
+        $allProjectMonthlyData = MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->orderBy('month_date', 'asc')
+            ->get()
+            ->keyBy(function($item) {
+                return \Carbon\Carbon::parse($item->month_date)->format('Y-m-01');
+            });
+            
+        $previousAssetEvaluation = 0;
         foreach ($allMonths as $month) {
             $evaluation = $monthlyData->get($month);
             if ($evaluation) {
@@ -330,10 +338,27 @@ class ProjectFinancialReport extends Page implements HasForms
                 $data['months'][$month]['expense_operation'] = (float) $evaluation->expense_operation;
                 $data['months'][$month]['revenue_operation'] = (float) $evaluation->revenue_operation;
                 $data['months'][$month]['profit_operation'] = (float) $evaluation->profit_operation;
-                $data['months'][$month]['profit_asset'] = (float) $evaluation->profit_asset_cumulative;
                 $data['months'][$month]['expense_total'] = (float) $evaluation->expense_total;
                 $data['months'][$month]['revenue_total'] = (float) $evaluation->revenue_total;
-                $data['months'][$month]['total_profit'] = (float) $evaluation->total_profit_cumulative;
+                
+                // Calculate monthly profit asset using formula: Asset Evaluation this month - Asset Evaluation Previous month + Revenue Asset This month - Expense Asset This Month
+                $currentAssetEvaluation = (float) $evaluation->asset_evaluation;
+                $revenueAsset = (float) $evaluation->revenue_asset;
+                $expenseAsset = (float) $evaluation->expense_asset;
+                
+                // Get previous month's asset evaluation
+                $previousMonthData = null;
+                $monthsArray = array_keys($allProjectMonthlyData->toArray());
+                $currentIndex = array_search($month, $monthsArray);
+                if ($currentIndex > 0) {
+                    $previousMonth = $monthsArray[$currentIndex - 1];
+                    $previousMonthData = $allProjectMonthlyData->get($previousMonth);
+                }
+                $previousAssetEval = $previousMonthData ? (float) $previousMonthData->asset_evaluation : 0;
+                
+                $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEval + $revenueAsset - $expenseAsset;
+                $data['months'][$month]['profit_asset'] = $monthlyProfitAsset;
+                $data['months'][$month]['total_profit'] = $data['months'][$month]['profit_operation'] + $monthlyProfitAsset;
             }
         }
 
