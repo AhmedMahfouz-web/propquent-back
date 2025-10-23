@@ -711,6 +711,13 @@ class UserFinancialReport extends Page implements HasForms
             ->get();
 
 
+        // Debug: Log user transactions query results
+        $this->debugInfo['user_transactions_query'] = [
+            'total_found' => $userTransactions->count(),
+            'months_to_show' => $monthsToShow,
+            'transactions' => $userTransactions->toArray()
+        ];
+
         foreach ($userTransactions as $transaction) {
             $month = $transaction->month_date;
             if (in_array($month, $monthsToShow)) {
@@ -719,6 +726,9 @@ class UserFinancialReport extends Page implements HasForms
                 $userFinancials['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
             }
         }
+
+        // Debug: Log final user financials
+        $this->debugInfo['user_financials_calculated'] = $userFinancials;
 
         // Calculate Evaluation (Expense - Revenue for each serving)
         $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
