@@ -337,42 +337,29 @@ class ProjectFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate totals using database data from the last month (which contains cumulative totals)
+        // Calculate totals by summing all filtered months (not cumulative, just the displayed months)
+        foreach ($data['months'] as $month => $monthData) {
+            $data['totals']['expense_asset'] += $monthData['expense_asset'] ?? 0;
+            $data['totals']['revenue_asset'] += $monthData['revenue_asset'] ?? 0;
+            $data['totals']['value_correction'] += $monthData['value_correction'] ?? 0;
+            $data['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
+            $data['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
+            $data['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
+        }
+
+        // For asset evaluation and profit_asset, use the last month's value (these are cumulative by nature)
         $monthKeys = array_keys($data['months']);
         $lastMonth = reset($monthKeys); // Get the first month in display order (chronologically newest)
-
+        
         if ($lastMonth && isset($data['months'][$lastMonth])) {
-            // Use the last month's data for totals (contains cumulative values)
-            $lastMonthData = $data['months'][$lastMonth];
-            
-            // For totals, use cumulative data from database
-            $data['totals']['evaluation_asset'] = $lastMonthData['evaluation_asset'];
-            $data['totals']['profit_asset'] = $lastMonthData['profit_asset'];
-            $data['totals']['total_profit'] = $lastMonthData['total_profit'];
-            
-            // Get cumulative totals from database up to the last month
-            $cumulativeTotals = MonthlyProjectEvaluation::where('project_key', $project->key)
-                ->where('month_date', '<=', $lastMonth)
-                ->selectRaw('
-                    SUM(expense_asset) as total_expense_asset,
-                    SUM(revenue_asset) as total_revenue_asset,
-                    SUM(value_correction) as total_value_correction,
-                    SUM(expense_operation) as total_expense_operation,
-                    SUM(revenue_operation) as total_revenue_operation
-                ')
-                ->first();
-
-            if ($cumulativeTotals) {
-                $data['totals']['expense_asset'] = (float) $cumulativeTotals->total_expense_asset;
-                $data['totals']['revenue_asset'] = (float) $cumulativeTotals->total_revenue_asset;
-                $data['totals']['value_correction'] = (float) $cumulativeTotals->total_value_correction;
-                $data['totals']['expense_operation'] = (float) $cumulativeTotals->total_expense_operation;
-                $data['totals']['revenue_operation'] = (float) $cumulativeTotals->total_revenue_operation;
-                $data['totals']['profit_operation'] = $data['totals']['revenue_operation'] - $data['totals']['expense_operation'];
-                $data['totals']['expense_total'] = $data['totals']['expense_asset'] + $data['totals']['expense_operation'];
-                $data['totals']['revenue_total'] = $data['totals']['revenue_asset'] + $data['totals']['revenue_operation'];
-            }
+            $data['totals']['evaluation_asset'] = $data['months'][$lastMonth]['evaluation_asset'] ?? 0;
+            $data['totals']['profit_asset'] = $data['months'][$lastMonth]['profit_asset'] ?? 0;
         }
+
+        // Calculate derived totals
+        $data['totals']['expense_total'] = $data['totals']['expense_asset'] + $data['totals']['expense_operation'];
+        $data['totals']['revenue_total'] = $data['totals']['revenue_asset'] + $data['totals']['revenue_operation'];
+        $data['totals']['total_profit'] = $data['totals']['profit_operation'] + $data['totals']['profit_asset'];
 
         return $data;
     }
@@ -438,44 +425,23 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['months'][$month]['total_profit'] = $summary['months'][$month]['profit_operation'] + $summary['months'][$month]['profit_asset'];
         }
 
-        // Calculate company totals using cumulative data from the beginning, not just filtered months
+        // Calculate company totals by summing all filtered months (not cumulative, just displayed months)
+        foreach ($summary['months'] as $month => $monthData) {
+            $summary['totals']['expense_asset'] += $monthData['expense_asset'] ?? 0;
+            $summary['totals']['revenue_asset'] += $monthData['revenue_asset'] ?? 0;
+            $summary['totals']['value_correction'] += $monthData['value_correction'] ?? 0;
+            $summary['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
+            $summary['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
+            $summary['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
+        }
+
+        // For asset evaluation and profit_asset, use the last month's value (these are cumulative by nature)
         $summaryMonthKeys = array_keys($summary['months']);
-        $lastSummaryMonth = reset($summaryMonthKeys); // Get the first month in display order (which is the chronologically newest/end month)
-
-        // For asset evaluation, use the last month's value
-        $summary['totals']['evaluation_asset'] = $summary['months'][$lastSummaryMonth]['evaluation_asset'] ?? 0;
-
-        // For asset expenses and revenues, get cumulative totals from database
-        $cumulativeCompanyData = \App\Models\MonthlyProjectEvaluation::where('month_date', '<=', $lastSummaryMonth)
-            ->selectRaw('
-                SUM(expense_asset) as total_expense_asset,
-                SUM(revenue_asset) as total_revenue_asset,
-                SUM(value_correction) as total_value_correction
-            ')
-            ->first();
-
-        if ($cumulativeCompanyData) {
-            $summary['totals']['expense_asset'] = (float) $cumulativeCompanyData->total_expense_asset;
-            $summary['totals']['revenue_asset'] = (float) $cumulativeCompanyData->total_revenue_asset;
-            $summary['totals']['value_correction'] = (float) $cumulativeCompanyData->total_value_correction;
-        }
-
-        // For company operation totals, sum each project's cumulative operation totals (not filtered months)
-        $summary['totals']['expense_operation'] = 0;
-        $summary['totals']['revenue_operation'] = 0;
-        foreach ($projectsData as $projectData) {
-            $summary['totals']['expense_operation'] += $projectData['totals']['expense_operation'] ?? 0;
-            $summary['totals']['revenue_operation'] += $projectData['totals']['revenue_operation'] ?? 0;
-        }
-        $summary['totals']['profit_operation'] = $summary['totals']['revenue_operation'] - $summary['totals']['expense_operation'];
+        $lastSummaryMonth = reset($summaryMonthKeys); // Get the first month in display order (chronologically newest)
         
-        // For company profit_asset total, sum each project's cumulative profit from their last month
-        // (not sum of filtered months, but sum of each project's total cumulative profit)
-        $summary['totals']['profit_asset'] = 0;
-        foreach ($projectsData as $projectData) {
-            $projectMonthKeys = array_keys($projectData['months']);
-            $projectLastMonth = reset($projectMonthKeys); // Get the chronologically newest month for this project
-            $summary['totals']['profit_asset'] += $projectData['months'][$projectLastMonth]['profit_asset'] ?? 0;
+        if ($lastSummaryMonth && isset($summary['months'][$lastSummaryMonth])) {
+            $summary['totals']['evaluation_asset'] = $summary['months'][$lastSummaryMonth]['evaluation_asset'] ?? 0;
+            $summary['totals']['profit_asset'] = $summary['months'][$lastSummaryMonth]['profit_asset'] ?? 0;
         }
 
         // Calculate derived totals
