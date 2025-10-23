@@ -107,6 +107,20 @@
                             </div>
                         @endif
                         
+                        @if (isset($debugInfo['user_transactions_query_params']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">User Transactions Query Parameters:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['user_transactions_query_params'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
+                        @if (isset($debugInfo['total_user_transactions_in_db']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Total User Transactions in DB:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ $debugInfo['total_user_transactions_in_db'] }}</pre>
+                            </div>
+                        @endif
+                        
                         @if (isset($debugInfo['user_transactions_query']))
                             <div>
                                 <h4 class="font-medium text-yellow-700 dark:text-yellow-300">User Transactions Query Results:</h4>

@@ -696,6 +696,18 @@ class UserFinancialReport extends Page implements HasForms
             $userFinancials['net'][$month] = 0;
         }
 
+        // Debug: Log the query parameters
+        $startDate = $monthsToShow[0];
+        $endDate = Carbon::parse(end($monthsToShow))->endOfMonth();
+        
+        $this->debugInfo['user_transactions_query_params'] = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'deposit_type' => UserTransaction::TYPE_DEPOSIT,
+            'withdrawal_type' => UserTransaction::TYPE_WITHDRAWAL,
+            'status_done' => UserTransaction::STATUS_DONE
+        ];
+
         $userTransactions = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
@@ -703,12 +715,13 @@ class UserFinancialReport extends Page implements HasForms
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
             )
             ->where('status', UserTransaction::STATUS_DONE)
-            ->whereBetween('transaction_date', [
-                $monthsToShow[0], // Oldest month (first in array)
-                Carbon::parse(end($monthsToShow))->endOfMonth(), // Newest month (last in array)
-            ])
+            ->whereBetween('transaction_date', [$startDate, $endDate])
             ->groupBy('month_date')
             ->get();
+
+        // Debug: Also check total user transactions without date filter
+        $totalUserTransactions = UserTransaction::where('status', UserTransaction::STATUS_DONE)->count();
+        $this->debugInfo['total_user_transactions_in_db'] = $totalUserTransactions;
 
 
         // Debug: Log user transactions query results
