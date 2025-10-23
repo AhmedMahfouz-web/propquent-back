@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
+use App\Models\MonthlyProjectEvaluation;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Filament\Notifications\Notification;
@@ -377,19 +378,13 @@ class ProjectFinancialReport extends Page implements HasForms
     }
 
     private function calculateFinancialSummary($projectsQuery, array $allMonths): array
-                
-                $cumulativeEvaluation = $cumulativeEvaluation + $monthExpenseAsset - $monthRevenueAsset + $monthValueCorrection;
-                $assetEvaluations[$month] = $cumulativeEvaluation;
-            }
+    {
+        $summary = ['totals' => array_fill_keys(['evaluation_asset', 'value_correction', 'expense_operation', 'expense_asset', 'expense_total', 'revenue_operation', 'revenue_asset', 'revenue_total', 'profit_operation', 'profit_asset', 'total_profit'], 0), 'months' => []];
+        foreach ($allMonths as $month) {
+            $summary['months'][$month] = $summary['totals'];
         }
-        
-        // Process months in chronological order (oldest first) for profit calculations
-        // Note: $allMonths is already in reverse order (newer first), so we need to reverse it to get oldest first
-        $monthsChronological = array_reverse($allMonths);
-        
-        // Get the asset evaluation from the month BEFORE our filtered range starts
 
-        // Get all projects with their data to calculate cumulative asset evaluations
+        // Get all projects with their data using database-only approach
         $projects = (clone $projectsQuery)->with(['transactions', 'valueCorrections'])->get();
 
         // Calculate individual project data for each month
