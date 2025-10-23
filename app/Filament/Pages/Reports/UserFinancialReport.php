@@ -740,19 +740,26 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate Cash using the EXACT same method as Company Financial Report
+        // Calculate Cash using MonthlyProjectEvaluation data (same as company profit calculation)
         $cash = [];
         $previousMonthCash = 0;
 
-        // Process months in chronological order (oldest first) - SAME as Company Financial Report
+        // Process months in chronological order (oldest first)
         foreach (array_reverse($monthsToShow) as $month) {
-            // Use the same revenue/expense data as Company Financial Report
-            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
-            $expense = $monthlyTotals['expense'][$month] ?? 0;
+            // Get revenue and expense from MonthlyProjectEvaluation (same source as company profit)
+            $monthlyData = MonthlyProjectEvaluation::where('month_date', $month)
+                ->selectRaw('
+                    SUM(revenue_asset + revenue_operation) as total_revenue,
+                    SUM(expense_asset + expense_operation) as total_expense
+                ')
+                ->first();
+                
+            $revenue = $monthlyData ? (float) $monthlyData->total_revenue : 0;
+            $expense = $monthlyData ? (float) $monthlyData->total_expense : 0;
             $deposits = $userFinancials['deposits'][$month] ?? 0;
             $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
 
-            // EXACT same formula as Company Financial Report line 217
+            // Same formula as Company Financial Report
             $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
             $previousMonthCash = $cash[$month];
             
