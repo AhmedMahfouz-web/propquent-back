@@ -697,8 +697,9 @@ class UserFinancialReport extends Page implements HasForms
         }
 
         // Debug: Log the query parameters
-        $startDate = $monthsToShow[0];
-        $endDate = Carbon::parse(end($monthsToShow))->endOfMonth();
+        // Fix: monthsToShow is in reverse order (newest first), so we need to reverse the logic
+        $startDate = end($monthsToShow); // Last element = oldest month
+        $endDate = Carbon::parse($monthsToShow[0])->endOfMonth(); // First element = newest month
         
         $this->debugInfo['user_transactions_query_params'] = [
             'start_date' => $startDate,
