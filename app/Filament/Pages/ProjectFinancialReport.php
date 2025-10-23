@@ -318,10 +318,20 @@ class ProjectFinancialReport extends Page implements HasForms
 
         $hasPreCalculatedData = $monthlyEvaluations->count() > 0;
 
+        // DEBUG: Get ALL months that exist in database for this project
+        $allDbMonths = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->orderBy('month_date', 'asc')
+            ->pluck('month_date')
+            ->map(function($date) {
+                return \Carbon\Carbon::parse($date)->format('Y-m-01');
+            })
+            ->toArray();
+
         // DEBUG: Add debug information
         $data['debug_info'] = [
             'project_key' => $project->key,
             'filtered_months' => $allMonths,
+            'actual_db_months' => $allDbMonths,
             'monthly_evaluations_count' => $monthlyEvaluations->count(),
             'has_pre_calculated_data' => $hasPreCalculatedData,
             'monthly_evaluations_data' => [],

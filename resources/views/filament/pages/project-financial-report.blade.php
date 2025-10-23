@@ -43,6 +43,7 @@
                             <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                 <p><strong>Project Key:</strong> {{ $debugInfo['project_key'] }}</p>
                                 <p><strong>Filtered Months:</strong> {{ implode(', ', $debugInfo['filtered_months']) }}</p>
+                                <p><strong>Actual DB Months:</strong> {{ implode(', ', $debugInfo['actual_db_months'] ?? []) }}</p>
                                 <p><strong>Monthly Evaluations Count:</strong> {{ $debugInfo['monthly_evaluations_count'] }}</p>
                                 <p><strong>Has Pre-calculated Data:</strong> {{ $debugInfo['has_pre_calculated_data'] ? 'YES' : 'NO' }}</p>
                                 
