@@ -367,10 +367,26 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['totals']['evaluation_asset'] = (float) $latestEvaluation->asset_evaluation;
         }
 
-        // For profit_asset, use the latest cumulative value (which represents sum of ALL months)
-        if ($latestEvaluation) {
-            $data['totals']['profit_asset'] = (float) $latestEvaluation->profit_asset_cumulative;
+        // For profit_asset, calculate using the formula for each month and sum them
+        $totalProfitAsset = 0;
+        $allMonthlyData = MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->orderBy('month_date', 'asc')
+            ->get();
+            
+        $previousAssetEvaluation = 0;
+        foreach ($allMonthlyData as $monthData) {
+            // Profit Asset = Asset Evaluation this month - Asset Evaluation Previous month + Revenue Asset This month - Expense Asset This Month
+            $currentAssetEvaluation = (float) $monthData->asset_evaluation;
+            $revenueAsset = (float) $monthData->revenue_asset;
+            $expenseAsset = (float) $monthData->expense_asset;
+            
+            $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+            $totalProfitAsset += $monthlyProfitAsset;
+            
+            $previousAssetEvaluation = $currentAssetEvaluation;
         }
+        
+        $data['totals']['profit_asset'] = $totalProfitAsset;
 
         // Calculate derived totals
         $data['totals']['expense_total'] = $data['totals']['expense_asset'] + $data['totals']['expense_operation'];
@@ -461,10 +477,9 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['totals']['profit_operation'] = (float) $companyAllTimeTotals->total_profit_operation;
         }
 
-        // For asset evaluation and profit_asset, use the latest month's cumulative values from database
+        // For asset evaluation, use the latest month's values from database
         $latestCompanyEvaluation = MonthlyProjectEvaluation::selectRaw('
-                SUM(asset_evaluation) as total_asset_evaluation,
-                SUM(profit_asset_cumulative) as total_profit_asset_cumulative
+                SUM(asset_evaluation) as total_asset_evaluation
             ')
             ->whereIn('month_date', function($query) {
                 $query->select(DB::raw('MAX(month_date)'))
@@ -475,7 +490,12 @@ class ProjectFinancialReport extends Page implements HasForms
             
         if ($latestCompanyEvaluation) {
             $summary['totals']['evaluation_asset'] = (float) $latestCompanyEvaluation->total_asset_evaluation;
-            $summary['totals']['profit_asset'] = (float) $latestCompanyEvaluation->total_profit_asset_cumulative;
+        }
+
+        // For company profit_asset, sum all individual project profit_asset totals (calculated using the formula)
+        $summary['totals']['profit_asset'] = 0;
+        foreach ($projectsData as $projectData) {
+            $summary['totals']['profit_asset'] += $projectData['totals']['profit_asset'] ?? 0;
         }
 
         // Calculate derived totals
