@@ -30,6 +30,38 @@
                     }
                 }
             @endphp
+
+            {{-- DEBUG SECTION --}}
+            <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900 dark:border-yellow-700">
+                <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-3">🐛 Debug Information</h3>
+                
+                @foreach($projects as $project)
+                    @if(isset($projectsData[$project->key]['debug_info']))
+                        @php $debugInfo = $projectsData[$project->key]['debug_info']; @endphp
+                        <div class="mb-4 p-3 bg-white rounded border dark:bg-gray-800">
+                            <h4 class="font-medium text-gray-900 dark:text-gray-100">Project: {{ $project->title }}</h4>
+                            <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                <p><strong>Project Key:</strong> {{ $debugInfo['project_key'] }}</p>
+                                <p><strong>Filtered Months:</strong> {{ implode(', ', $debugInfo['filtered_months']) }}</p>
+                                <p><strong>Monthly Evaluations Count:</strong> {{ $debugInfo['monthly_evaluations_count'] }}</p>
+                                <p><strong>Has Pre-calculated Data:</strong> {{ $debugInfo['has_pre_calculated_data'] ? 'YES' : 'NO' }}</p>
+                                
+                                <div class="mt-2">
+                                    <strong>Monthly Evaluations Data:</strong>
+                                    <pre class="mt-1 p-2 bg-gray-100 rounded text-xs dark:bg-gray-700">{{ json_encode($debugInfo['monthly_evaluations_data'], JSON_PRETTY_PRINT) }}</pre>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <strong>Final Month Data (expense_asset, revenue_asset):</strong>
+                                    @foreach($debugInfo['filtered_months'] as $month)
+                                        <p>{{ $month }}: expense_asset={{ $projectsData[$project->key]['months'][$month]['expense_asset'] ?? 'N/A' }}, revenue_asset={{ $projectsData[$project->key]['months'][$month]['revenue_asset'] ?? 'N/A' }}</p>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
             <div class="mt-6 overflow-x-auto bg-white rounded-lg shadow-sm dark:bg-gray-800">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm compact-table">
                     <thead class="bg-gray-50 dark:bg-gray-700">

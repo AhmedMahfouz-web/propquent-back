@@ -310,18 +310,71 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['months'][$month] = array_fill_keys(array_keys($data['totals']), 0);
         }
 
-        // Use pre-calculated data from MonthlyProjectEvaluation for transaction totals
-        // This ensures we get cumulative data from the beginning, not just filtered months
+        // Try to use pre-calculated data from MonthlyProjectEvaluation first
         $monthlyEvaluations = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
             ->whereIn('month_date', $allMonths)
             ->get()
             ->keyBy('month_date');
 
-        foreach ($allMonths as $month) {
-            $evaluation = $monthlyEvaluations->get($month);
-            if ($evaluation) {
-                $data['months'][$month]['expense_asset'] = (float) $evaluation->expense_asset;
-                $data['months'][$month]['revenue_asset'] = (float) $evaluation->revenue_asset;
+        $hasPreCalculatedData = $monthlyEvaluations->count() > 0;
+
+        // DEBUG: Add debug information
+        $data['debug_info'] = [
+            'project_key' => $project->key,
+            'filtered_months' => $allMonths,
+            'monthly_evaluations_count' => $monthlyEvaluations->count(),
+            'has_pre_calculated_data' => $hasPreCalculatedData,
+            'monthly_evaluations_data' => [],
+        ];
+
+        if ($hasPreCalculatedData) {
+            // Use pre-calculated data if available
+            foreach ($allMonths as $month) {
+                $evaluation = $monthlyEvaluations->get($month);
+                if ($evaluation) {
+                    $data['months'][$month]['expense_asset'] = (float) $evaluation->expense_asset;
+                    $data['months'][$month]['revenue_asset'] = (float) $evaluation->revenue_asset;
+                    
+                    // DEBUG: Store evaluation data
+                    $data['debug_info']['monthly_evaluations_data'][$month] = [
+                        'expense_asset' => (float) $evaluation->expense_asset,
+                        'revenue_asset' => (float) $evaluation->revenue_asset,
+                        'asset_evaluation' => (float) $evaluation->asset_evaluation,
+                        'value_correction' => (float) $evaluation->value_correction,
+                    ];
+                } else {
+                    // DEBUG: No evaluation found for this month
+                    $data['debug_info']['monthly_evaluations_data'][$month] = 'NO_DATA_FOUND';
+                }
+            }
+        } else {
+            // Fallback: Calculate asset transactions directly from ProjectTransaction table
+            $today = now()->startOfDay();
+            foreach ($project->transactions as $transaction) {
+                // Only include done asset transactions
+                if ($transaction->status === 'done' && $transaction->serving === 'asset') {
+                    $dateToUse = null;
+                    $transactionDate = \Carbon\Carbon::parse($transaction->transaction_date)->startOfDay();
+                    $actualDate = $transaction->actual_date ? \Carbon\Carbon::parse($transaction->actual_date)->startOfDay() : null;
+
+                    if ($actualDate && $actualDate->lte($today)) {
+                        $dateToUse = $transaction->actual_date;
+                    } elseif (!$actualDate && $transactionDate->lte($today)) {
+                        $dateToUse = $transaction->transaction_date;
+                    } else {
+                        continue; // Skip future transactions
+                    }
+
+                    $month = date('Y-m-01', strtotime($dateToUse));
+                    
+                    if (isset($data['months'][$month])) {
+                        $key = $transaction->financial_type . '_asset';
+                        if (!isset($data['months'][$month][$key])) {
+                            $data['months'][$month][$key] = 0;
+                        }
+                        $data['months'][$month][$key] += $transaction->amount;
+                    }
+                }
             }
         }
 
@@ -367,9 +420,24 @@ class ProjectFinancialReport extends Page implements HasForms
             $exitMonth = \Carbon\Carbon::parse($project->exit_date)->format('Y-m');
         }
 
-        // Use pre-calculated asset evaluations from database (MonthlyProjectEvaluation)
-        // This ensures correct cumulative calculations regardless of filtered date range
-        $assetEvaluations = \App\Models\MonthlyProjectEvaluation::getProjectEvaluations($project->key, $allMonths);
+        // Use pre-calculated asset evaluations from database if available, otherwise calculate manually
+        $assetEvaluations = [];
+        if ($hasPreCalculatedData) {
+            $assetEvaluations = \App\Models\MonthlyProjectEvaluation::getProjectEvaluations($project->key, $allMonths);
+        } else {
+            // Fallback: Calculate asset evaluations manually from transaction data
+            $cumulativeEvaluation = 0;
+            $monthsChronologicalForEval = array_reverse($allMonths);
+            
+            foreach ($monthsChronologicalForEval as $month) {
+                $monthExpenseAsset = $data['months'][$month]['expense_asset'] ?? 0;
+                $monthRevenueAsset = $data['months'][$month]['revenue_asset'] ?? 0;
+                $monthValueCorrection = \App\Models\ValueCorrection::getCorrectionForMonth($project->key, $month);
+                
+                $cumulativeEvaluation = $cumulativeEvaluation + $monthExpenseAsset - $monthRevenueAsset + $monthValueCorrection;
+                $assetEvaluations[$month] = $cumulativeEvaluation;
+            }
+        }
         
         // Process months in chronological order (oldest first) for profit calculations
         // Note: $allMonths is already in reverse order (newer first), so we need to reverse it to get oldest first
@@ -379,7 +447,14 @@ class ProjectFinancialReport extends Page implements HasForms
         // This ensures correct asset profit calculation from the beginning, not just filtered months
         $firstMonth = reset($monthsChronological); // Get the chronologically first (oldest) month
         $previousMonth = \Carbon\Carbon::parse($firstMonth)->subMonth()->format('Y-m-01');
-        $previousAssetEvaluation = \App\Models\MonthlyProjectEvaluation::getAssetEvaluation($project->key, $previousMonth);
+        
+        if ($hasPreCalculatedData) {
+            $previousAssetEvaluation = \App\Models\MonthlyProjectEvaluation::getAssetEvaluation($project->key, $previousMonth);
+        } else {
+            // Fallback: Calculate previous month evaluation manually
+            $previousAssetEvaluation = 0; // Start from 0 if no pre-calculated data
+            // TODO: Could calculate from all transactions before filtered range if needed
+        }
         
         // Initialize cumulative profit tracking
         $cumulativeAssetProfit = 0;
