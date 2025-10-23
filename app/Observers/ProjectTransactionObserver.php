@@ -36,8 +36,8 @@ class ProjectTransactionObserver
      */
     private function updateEvaluations(ProjectTransaction $projectTransaction): void
     {
-        // Only update for asset transactions
-        if ($projectTransaction->serving !== 'asset') {
+        // Update for both asset and operation transactions
+        if (!in_array($projectTransaction->serving, ['asset', 'operation'])) {
             return;
         }
 

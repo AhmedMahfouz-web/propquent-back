@@ -157,12 +157,14 @@ class CalculateMonthlyEvaluations extends Command
         $monthEnd = Carbon::parse($month)->endOfMonth();
         $today = now()->startOfDay();
 
-        // Get expense asset transactions for this month
+        // Get asset and operation transactions for this month
         $expenseAsset = 0;
         $revenueAsset = 0;
+        $expenseOperation = 0;
+        $revenueOperation = 0;
 
         foreach ($project->transactions as $transaction) {
-            if ($transaction->status !== 'done' || $transaction->serving !== 'asset') {
+            if ($transaction->status !== 'done') {
                 continue;
             }
 
@@ -186,10 +188,18 @@ class CalculateMonthlyEvaluations extends Command
             $transactionMonth = date('Y-m-01', strtotime($dateToUse));
 
             if ($transactionMonth === $month) {
-                if ($transaction->financial_type === 'expense') {
-                    $expenseAsset += $transaction->amount;
-                } elseif ($transaction->financial_type === 'revenue') {
-                    $revenueAsset += $transaction->amount;
+                if ($transaction->serving === 'asset') {
+                    if ($transaction->financial_type === 'expense') {
+                        $expenseAsset += $transaction->amount;
+                    } elseif ($transaction->financial_type === 'revenue') {
+                        $revenueAsset += $transaction->amount;
+                    }
+                } elseif ($transaction->serving === 'operation') {
+                    if ($transaction->financial_type === 'expense') {
+                        $expenseOperation += $transaction->amount;
+                    } elseif ($transaction->financial_type === 'revenue') {
+                        $revenueOperation += $transaction->amount;
+                    }
                 }
             }
         }
@@ -208,6 +218,32 @@ class CalculateMonthlyEvaluations extends Command
         // Asset Evaluation = Previous Month + Asset Expense + Value Correction - Asset Revenue
         $assetEvaluation = $isAfterExit ? 0 : ($previousEvaluation + $expenseAsset + $valueCorrection - $revenueAsset);
 
+        // Calculate operation profit for this month
+        $profitOperation = $revenueOperation - $expenseOperation;
+
+        // Get cumulative profits from previous month
+        $previousMonth = Carbon::parse($month)->subMonth()->format('Y-m-01');
+        $previousData = MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->where('month_date', $previousMonth)
+            ->first();
+
+        $previousAssetEvaluation = $previousData ? $previousData->asset_evaluation : 0;
+        $previousProfitAssetCumulative = $previousData ? $previousData->profit_asset_cumulative : 0;
+        $previousProfitOperationCumulative = $previousData ? $previousData->profit_operation_cumulative : 0;
+
+        // Calculate monthly asset profit using your formula:
+        // Monthly Asset Profit = Current Asset Evaluation - Previous Asset Evaluation + Revenue Asset - Expense Asset
+        $monthlyAssetProfit = $assetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+
+        // Calculate cumulative profits
+        $profitAssetCumulative = $previousProfitAssetCumulative + $monthlyAssetProfit;
+        $profitOperationCumulative = $previousProfitOperationCumulative + $profitOperation;
+        $totalProfitCumulative = $profitAssetCumulative + $profitOperationCumulative;
+
+        // Calculate totals
+        $expenseTotal = $expenseAsset + $expenseOperation;
+        $revenueTotal = $revenueAsset + $revenueOperation;
+
         // Store the evaluation
         $evaluation = MonthlyProjectEvaluation::updateOrCreate(
             [
@@ -221,6 +257,14 @@ class CalculateMonthlyEvaluations extends Command
                 'value_correction' => $valueCorrection,
                 'previous_evaluation' => $previousEvaluation,
                 'is_after_exit' => $isAfterExit,
+                'expense_operation' => $expenseOperation,
+                'revenue_operation' => $revenueOperation,
+                'profit_operation' => $profitOperation,
+                'profit_asset_cumulative' => $profitAssetCumulative,
+                'profit_operation_cumulative' => $profitOperationCumulative,
+                'total_profit_cumulative' => $totalProfitCumulative,
+                'expense_total' => $expenseTotal,
+                'revenue_total' => $revenueTotal,
             ]
         );
 

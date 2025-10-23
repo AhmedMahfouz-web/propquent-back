@@ -19,6 +19,14 @@ class MonthlyProjectEvaluation extends Model
         'value_correction',
         'previous_evaluation',
         'is_after_exit',
+        'expense_operation',
+        'revenue_operation',
+        'profit_operation',
+        'profit_asset_cumulative',
+        'profit_operation_cumulative',
+        'total_profit_cumulative',
+        'expense_total',
+        'revenue_total',
     ];
 
     protected $casts = [
@@ -29,6 +37,14 @@ class MonthlyProjectEvaluation extends Model
         'value_correction' => 'decimal:2',
         'previous_evaluation' => 'decimal:2',
         'is_after_exit' => 'boolean',
+        'expense_operation' => 'decimal:2',
+        'revenue_operation' => 'decimal:2',
+        'profit_operation' => 'decimal:2',
+        'profit_asset_cumulative' => 'decimal:2',
+        'profit_operation_cumulative' => 'decimal:2',
+        'total_profit_cumulative' => 'decimal:2',
+        'expense_total' => 'decimal:2',
+        'revenue_total' => 'decimal:2',
     ];
 
     public function project(): BelongsTo
