@@ -498,12 +498,34 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['totals']['value_correction'] = (float) $cumulativeAssetData->total_value_correction;
         }
 
-        // For operation data, sum only the filtered months (as these are not cumulative)
-        foreach ($data['months'] as $month => $monthData) {
-            $data['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
-            $data['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
-            $data['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
-        }
+        // For operation data, get cumulative totals from ALL transactions (not just filtered months)
+        // to show total from project start
+        $today = now()->startOfDay();
+        $cumulativeOperationData = $project->transactions()
+            ->where('serving', 'operation')
+            ->where('status', 'done')
+            ->where(function($query) use ($today) {
+                $query->where(function($q) use ($today) {
+                    // Done with actual_date in past/present
+                    $q->whereNotNull('actual_date')
+                      ->whereRaw('DATE(actual_date) <= ?', [$today->format('Y-m-d')]);
+                })->orWhere(function($q) use ($today) {
+                    // Done without actual_date but transaction_date in past/present
+                    $q->whereNull('actual_date')
+                      ->whereRaw('DATE(transaction_date) <= ?', [$today->format('Y-m-d')]);
+                });
+            })
+            ->selectRaw('
+                financial_type,
+                SUM(amount) as total_amount
+            ')
+            ->groupBy('financial_type')
+            ->get()
+            ->keyBy('financial_type');
+
+        $data['totals']['expense_operation'] = (float) ($cumulativeOperationData->get('expense')->total_amount ?? 0);
+        $data['totals']['revenue_operation'] = (float) ($cumulativeOperationData->get('revenue')->total_amount ?? 0);
+        $data['totals']['profit_operation'] = $data['totals']['revenue_operation'] - $data['totals']['expense_operation'];
         
         // For profit_asset, use the last month's cumulative value (not sum of filtered months)
         // The last month already contains the total cumulative profit from project start
@@ -601,12 +623,14 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['totals']['value_correction'] = (float) $cumulativeCompanyData->total_value_correction;
         }
 
-        // For operation data, sum only the filtered months (as these are not cumulative)
-        foreach ($summary['months'] as $month => $monthData) {
-            $summary['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
-            $summary['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
-            $summary['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
+        // For company operation totals, sum each project's cumulative operation totals (not filtered months)
+        $summary['totals']['expense_operation'] = 0;
+        $summary['totals']['revenue_operation'] = 0;
+        foreach ($projectsData as $projectData) {
+            $summary['totals']['expense_operation'] += $projectData['totals']['expense_operation'] ?? 0;
+            $summary['totals']['revenue_operation'] += $projectData['totals']['revenue_operation'] ?? 0;
         }
+        $summary['totals']['profit_operation'] = $summary['totals']['revenue_operation'] - $summary['totals']['expense_operation'];
         
         // For company profit_asset total, sum each project's cumulative profit from their last month
         // (not sum of filtered months, but sum of each project's total cumulative profit)
