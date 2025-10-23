@@ -491,6 +491,8 @@ class UserFinancialReport extends Page implements HasForms
             $monthlyTotals[$type][$month] += $transaction->total_amount;
         }
 
+        // Debug: Add monthlyTotals to debug info
+        $this->debugInfo['monthly_totals'] = $monthlyTotals;
 
         return compact('reportData', 'monthlyTotals');
     }

@@ -100,6 +100,13 @@
                         @endif
                         
                         {{-- New Debug Sections for Cash and Equity Calculations --}}
+                        @if (isset($debugInfo['monthly_totals']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Monthly Totals (Revenue/Expense):</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['monthly_totals'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
                         @if (isset($debugInfo['cash_calculations']))
                             <div>
                                 <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Cash Calculations by Month:</h4>
