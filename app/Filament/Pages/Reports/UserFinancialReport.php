@@ -459,7 +459,6 @@ class UserFinancialReport extends Page implements HasForms
                 'pt.serving as serving_name',
                 DB::raw('SUM(pt.amount) as total_amount'),
             )
-            ->where('pt.status', 'done')
             ->whereBetween('pt.transaction_date', [
                 end($monthsToShow), // Last element = oldest month
                 Carbon::parse($monthsToShow[0])->endOfMonth(), // First element = newest month
