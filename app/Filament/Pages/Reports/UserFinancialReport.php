@@ -375,6 +375,9 @@ class UserFinancialReport extends Page implements HasForms
             $userFinancialData[$user->id] = $this->calculateUserFinancialData($user, $allMonths, $companyData);
         }
 
+        // Calculate total users equity for each month and update equity percentages
+        $this->updateEquityPercentages($userFinancialData, $allMonths);
+
         // Apply financial sorting if needed
         if (in_array($this->sortBy, ['total_deposits', 'total_equity', 'total_profit'])) {
             $sortedUsers = $users->getCollection()->sortBy(function ($user) use ($userFinancialData) {
@@ -524,6 +527,9 @@ class UserFinancialReport extends Page implements HasForms
 
         // Calculate company total equity for each month (cash + evaluation)
         $companyTotalEquity = $this->calculateCompanyTotalEquity($monthsToShow, $companyData);
+        
+        // We'll calculate total users equity after processing all users
+        $totalUsersEquity = [];
 
         // Calculate equity and profits (simplified version)
         $previousEquity = 0;
@@ -554,27 +560,49 @@ class UserFinancialReport extends Page implements HasForms
             // Calculate equity: previous equity + deposits - withdrawals
             $userData['equity'][$month] = $previousEquity + $deposits - $withdrawals;
 
-            // Calculate equity percentage: investor equity / total company equity * 100
-            $totalEquity = $companyTotalEquity[$month] ?? 0;
-            if ($totalEquity > 0) {
-                $userData['equity_percentage'][$month] = ($userData['equity'][$month] / $totalEquity) * 100;
-            } else {
-                $userData['equity_percentage'][$month] = 0;
-            }
-
-            // Debug logging
-            $this->debugInfo['equity_calculations'][$month] = [
-                'user_equity' => $userData['equity'][$month],
-                'total_equity' => $totalEquity,
-                'equity_percentage' => $userData['equity_percentage'][$month],
-                'deposits' => $deposits,
-                'withdrawals' => $withdrawals
-            ];
+            // Equity percentage will be calculated later after all users are processed
+            $userData['equity_percentage'][$month] = 0;
 
             $previousEquity = $userData['equity'][$month];
         }
 
         return $userData;
+    }
+
+    /**
+     * Update equity percentages for all users based on total users equity
+     */
+    private function updateEquityPercentages(array &$userFinancialData, array $allMonths): void
+    {
+        // Calculate total users equity for each month
+        $totalUsersEquity = [];
+        foreach ($allMonths as $month) {
+            $totalUsersEquity[$month] = 0;
+            foreach ($userFinancialData as $userData) {
+                $totalUsersEquity[$month] += $userData['equity'][$month] ?? 0;
+            }
+        }
+
+        // Update equity percentages for each user
+        foreach ($userFinancialData as $userId => &$userData) {
+            foreach ($allMonths as $month) {
+                $userEquity = $userData['equity'][$month] ?? 0;
+                $totalEquity = $totalUsersEquity[$month] ?? 0;
+                
+                if ($totalEquity > 0) {
+                    $userData['equity_percentage'][$month] = ($userEquity / $totalEquity) * 100;
+                } else {
+                    $userData['equity_percentage'][$month] = 0;
+                }
+
+                // Debug logging
+                $this->debugInfo['equity_calculations'][$month][$userId] = [
+                    'user_equity' => $userEquity,
+                    'total_users_equity' => $totalEquity,
+                    'equity_percentage' => $userData['equity_percentage'][$month],
+                ];
+            }
+        }
     }
 
     /**
