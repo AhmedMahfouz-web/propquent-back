@@ -358,13 +358,17 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['totals']['profit_operation'] = (float) $allTimeTotals->total_profit_operation;
         }
 
-        // For asset evaluation and profit_asset, use the latest month's cumulative value from database
+        // For asset evaluation, use the latest month's cumulative value from database
         $latestEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
             ->orderBy('month_date', 'desc')
             ->first();
             
         if ($latestEvaluation) {
             $data['totals']['evaluation_asset'] = (float) $latestEvaluation->asset_evaluation;
+        }
+
+        // For profit_asset, use the latest cumulative value (which represents sum of ALL months)
+        if ($latestEvaluation) {
             $data['totals']['profit_asset'] = (float) $latestEvaluation->profit_asset_cumulative;
         }
 
