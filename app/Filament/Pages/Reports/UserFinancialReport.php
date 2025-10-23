@@ -737,29 +737,41 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate Cash
+        // Calculate Cash using the same method as Company Financial Report
+        // Cash = Cumulative (Deposits + Revenue - Withdrawals - Expenses)
         $cash = [];
-        $previousMonthCash = 0;
+        $cumulativeCash = 0;
 
+        // Process months in chronological order (oldest first)
         foreach (array_reverse($monthsToShow) as $month) {
-            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
-            $expense = $monthlyTotals['expense'][$month] ?? 0;
+            // Get user transactions for this month
             $deposits = $userFinancials['deposits'][$month] ?? 0;
             $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
+            
+            // Get company transactions for this month from MonthlyProjectEvaluation
+            $monthlyData = MonthlyProjectEvaluation::where('month_date', $month)
+                ->selectRaw('
+                    SUM(revenue_asset + revenue_operation) as total_revenue,
+                    SUM(expense_asset + expense_operation) as total_expense
+                ')
+                ->first();
+                
+            $revenue = $monthlyData ? (float) $monthlyData->total_revenue : 0;
+            $expense = $monthlyData ? (float) $monthlyData->total_expense : 0;
 
-            $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+            // Calculate cumulative cash
+            $cumulativeCash = $cumulativeCash + $deposits + $revenue - $withdrawals - $expense;
+            $cash[$month] = $cumulativeCash;
             
             // Debug: Log cash calculation for each month
             $this->debugInfo['cash_calculations'][$month] = [
-                'previous_month_cash' => $previousMonthCash,
+                'cumulative_cash_before' => $cumulativeCash - $deposits - $revenue + $withdrawals + $expense,
                 'deposits' => $deposits,
                 'revenue' => $revenue,
                 'withdrawals' => $withdrawals,
                 'expense' => $expense,
                 'calculated_cash' => $cash[$month]
             ];
-            
-            $previousMonthCash = $cash[$month];
         }
 
         // Calculate Total Company Equity (Cash + Asset Evaluation)
