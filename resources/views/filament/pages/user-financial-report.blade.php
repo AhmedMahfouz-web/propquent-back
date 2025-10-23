@@ -135,6 +135,13 @@
                             </div>
                         @endif
                         
+                        @if (isset($debugInfo['comparison_with_company_report']))
+                            <div>
+                                <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Comparison with Company Report:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['comparison_with_company_report'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
                         @if (isset($debugInfo['cash_calculations']))
                             <div>
                                 <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Cash Calculations by Month:</h4>

@@ -743,6 +743,15 @@ class UserFinancialReport extends Page implements HasForms
 
         // Debug: Log final user financials
         $this->debugInfo['user_financials_calculated'] = $userFinancials;
+        
+        // Debug: Compare with what Company Financial Report should get
+        $this->debugInfo['comparison_with_company_report'] = [
+            'user_report_deposits_oct' => $userFinancials['deposits']['2025-10-01'] ?? 0,
+            'user_report_withdrawals_oct' => $userFinancials['withdrawals']['2025-10-01'] ?? 0,
+            'user_report_deposits_sep' => $userFinancials['deposits']['2025-09-01'] ?? 0,
+            'user_report_withdrawals_sep' => $userFinancials['withdrawals']['2025-09-01'] ?? 0,
+            'expected_company_report_values' => 'Should match the Company Financial Report exactly'
+        ];
 
         // Calculate Evaluation (Expense - Revenue for each serving)
         $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
