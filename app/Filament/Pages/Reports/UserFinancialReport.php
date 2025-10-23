@@ -738,35 +738,25 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate Cash using the same method as Company Financial Report
-        // Cash = Cumulative (Deposits + Revenue - Withdrawals - Expenses)
+        // Calculate Cash using the EXACT same method as Company Financial Report
         $cash = [];
-        $cumulativeCash = 0;
+        $previousMonthCash = 0;
 
-        // Process months in chronological order (oldest first)
+        // Process months in chronological order (oldest first) - SAME as Company Financial Report
         foreach (array_reverse($monthsToShow) as $month) {
-            // Get user transactions for this month
+            // Use the same revenue/expense data as Company Financial Report
+            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+            $expense = $monthlyTotals['expense'][$month] ?? 0;
             $deposits = $userFinancials['deposits'][$month] ?? 0;
             $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
-            
-            // Get company transactions for this month from MonthlyProjectEvaluation
-            $monthlyData = MonthlyProjectEvaluation::where('month_date', $month)
-                ->selectRaw('
-                    SUM(revenue_asset + revenue_operation) as total_revenue,
-                    SUM(expense_asset + expense_operation) as total_expense
-                ')
-                ->first();
-                
-            $revenue = $monthlyData ? (float) $monthlyData->total_revenue : 0;
-            $expense = $monthlyData ? (float) $monthlyData->total_expense : 0;
 
-            // Calculate cumulative cash
-            $cumulativeCash = $cumulativeCash + $deposits + $revenue - $withdrawals - $expense;
-            $cash[$month] = $cumulativeCash;
+            // EXACT same formula as Company Financial Report line 217
+            $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+            $previousMonthCash = $cash[$month];
             
             // Debug: Log cash calculation for each month
             $this->debugInfo['cash_calculations'][$month] = [
-                'cumulative_cash_before' => $cumulativeCash - $deposits - $revenue + $withdrawals + $expense,
+                'previous_month_cash' => $previousMonthCash - $deposits - $revenue + $withdrawals + $expense,
                 'deposits' => $deposits,
                 'revenue' => $revenue,
                 'withdrawals' => $withdrawals,
