@@ -379,8 +379,11 @@ class UserFinancialReport extends Page implements HasForms
         // Calculate company profit for each month
         $companyProfitByMonth = $this->calculateCompanyProfitByMonth($allMonths);
 
-        // Calculate total users equity for each month and update equity percentages and user profits
-        $this->updateEquityPercentagesAndProfits($userFinancialData, $allMonths, $companyProfitByMonth);
+        // Calculate total company equity from company data
+        $totalCompanyEquity = $this->calculateCompanyTotalEquity($allMonths, $companyData);
+
+        // Update equity percentages and user profits using total company equity
+        $this->updateEquityPercentagesAndProfits($userFinancialData, $allMonths, $companyProfitByMonth, $totalCompanyEquity);
 
         // Apply financial sorting if needed
         if (in_array($this->sortBy, ['total_deposits', 'total_equity', 'total_profit'])) {
@@ -618,29 +621,20 @@ class UserFinancialReport extends Page implements HasForms
     /**
      * Update equity percentages and calculate user profits based on previous month equity percentage
      */
-    private function updateEquityPercentagesAndProfits(array &$userFinancialData, array $allMonths, array $companyProfitByMonth): void
+    private function updateEquityPercentagesAndProfits(array &$userFinancialData, array $allMonths, array $companyProfitByMonth, array $totalCompanyEquity): void
     {
-        // Calculate total users equity for each month
-        $totalUsersEquity = [];
-        foreach ($allMonths as $month) {
-            $totalUsersEquity[$month] = 0;
-            foreach ($userFinancialData as $userData) {
-                $totalUsersEquity[$month] += $userData['equity'][$month] ?? 0;
-            }
-        }
-
         // Convert months to chronological order (oldest first) for proper calculation
         $monthsChronological = array_reverse($allMonths);
         
-        // Update equity percentages first
+        // Update equity percentages using total company equity
         foreach ($userFinancialData as $userId => &$userData) {
             foreach ($allMonths as $month) {
                 $userEquity = $userData['equity'][$month] ?? 0;
-                $totalEquity = $totalUsersEquity[$month] ?? 0;
+                $companyEquity = $totalCompanyEquity[$month] ?? 0;
                 
-                // Calculate equity percentage
-                if ($totalEquity > 0) {
-                    $userData['equity_percentage'][$month] = ($userEquity / $totalEquity) * 100;
+                // Calculate equity percentage: user's equity / total company equity * 100
+                if ($companyEquity > 0) {
+                    $userData['equity_percentage'][$month] = ($userEquity / $companyEquity) * 100;
                 } else {
                     $userData['equity_percentage'][$month] = 0;
                 }
