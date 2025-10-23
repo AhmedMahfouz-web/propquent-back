@@ -222,7 +222,8 @@
                                         <td class="px-4 py-2 whitespace-nowrap text-right font-bold {{ $totalColorClasses['bg'] }} metric-total-{{ $config['color'] ?? 'gray' }}">
                                             <span class="text-sm {{ $totalColorClasses['text'] }}">
                                                 @if ($key === 'equity_percentage')
-                                                    {{ number_format(array_sum($userData[$key]), 2) }}%
+                                                    {{-- For equity percentage, show the most recent month's value instead of sum --}}
+                                                    {{ number_format(!empty($userData[$key]) ? reset($userData[$key]) : 0, 2) }}%
                                                 @elseif ($key === 'equity')
                                                     {{-- For equity, show the most recent month's value instead of sum --}}
                                                     ${{ number_format(!empty($userData[$key]) ? reset($userData[$key]) : 0, 2) }}
