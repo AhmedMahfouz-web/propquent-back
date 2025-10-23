@@ -388,7 +388,7 @@ class ProjectFinancialReport extends Page implements HasForms
 
             // Only collect operation transactions here (asset transactions come from database)
             if (isset($data['months'][$month]) && $transaction->financial_type && $transaction->serving === 'operation') {
-                $key = $transaction->financial_type . '_' . $transaction->serving;
+                $key = $transaction->financial_type . '_operation'; // Use correct key format
                 if (!isset($data['months'][$month][$key])) {
                     $data['months'][$month][$key] = 0;
                 }
@@ -498,21 +498,25 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['totals']['value_correction'] = (float) $cumulativeAssetData->total_value_correction;
         }
 
-        // For operation data, get cumulative totals from ALL transactions (not just filtered months)
-        // to show total from project start
+        // For operation totals, get cumulative data from ALL transactions up to the last filtered month
+        // This ensures totals show cumulative data from project start to the end of filtered period
         $today = now()->startOfDay();
-        $cumulativeOperationData = $project->transactions()
+        $lastMonthDate = \Carbon\Carbon::parse($lastMonth)->endOfMonth();
+        
+        $cumulativeOperationTotals = $project->transactions()
             ->where('serving', 'operation')
             ->where('status', 'done')
-            ->where(function($query) use ($today) {
-                $query->where(function($q) use ($today) {
-                    // Done with actual_date in past/present
+            ->where(function($query) use ($today, $lastMonthDate) {
+                $query->where(function($q) use ($today, $lastMonthDate) {
+                    // Done with actual_date in past/present and within our date range
                     $q->whereNotNull('actual_date')
-                      ->whereRaw('DATE(actual_date) <= ?', [$today->format('Y-m-d')]);
-                })->orWhere(function($q) use ($today) {
-                    // Done without actual_date but transaction_date in past/present
+                      ->whereRaw('DATE(actual_date) <= ?', [$today->format('Y-m-d')])
+                      ->whereRaw('DATE(actual_date) <= ?', [$lastMonthDate->format('Y-m-d')]);
+                })->orWhere(function($q) use ($today, $lastMonthDate) {
+                    // Done without actual_date but transaction_date in past/present and within range
                     $q->whereNull('actual_date')
-                      ->whereRaw('DATE(transaction_date) <= ?', [$today->format('Y-m-d')]);
+                      ->whereRaw('DATE(transaction_date) <= ?', [$today->format('Y-m-d')])
+                      ->whereRaw('DATE(transaction_date) <= ?', [$lastMonthDate->format('Y-m-d')]);
                 });
             })
             ->selectRaw('
@@ -523,8 +527,8 @@ class ProjectFinancialReport extends Page implements HasForms
             ->get()
             ->keyBy('financial_type');
 
-        $data['totals']['expense_operation'] = (float) ($cumulativeOperationData->get('expense')->total_amount ?? 0);
-        $data['totals']['revenue_operation'] = (float) ($cumulativeOperationData->get('revenue')->total_amount ?? 0);
+        $data['totals']['expense_operation'] = (float) ($cumulativeOperationTotals->get('expense')->total_amount ?? 0);
+        $data['totals']['revenue_operation'] = (float) ($cumulativeOperationTotals->get('revenue')->total_amount ?? 0);
         $data['totals']['profit_operation'] = $data['totals']['revenue_operation'] - $data['totals']['expense_operation'];
         
         // For profit_asset, use the last month's cumulative value (not sum of filtered months)
