@@ -770,16 +770,9 @@ class UserFinancialReport extends Page implements HasForms
 
         // Process months in chronological order (oldest first)
         foreach (array_reverse($monthsToShow) as $month) {
-            // Get revenue and expense from MonthlyProjectEvaluation (same source as company profit)
-            $monthlyData = MonthlyProjectEvaluation::where('month_date', $month)
-                ->selectRaw('
-                    SUM(revenue_asset + revenue_operation) as total_revenue,
-                    SUM(expense_asset + expense_operation) as total_expense
-                ')
-                ->first();
-                
-            $revenue = $monthlyData ? (float) $monthlyData->total_revenue : 0;
-            $expense = $monthlyData ? (float) $monthlyData->total_expense : 0;
+            // Use the SAME Monthly Totals data as Company Financial Report
+            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+            $expense = $monthlyTotals['expense'][$month] ?? 0;
             $deposits = $userFinancials['deposits'][$month] ?? 0;
             $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
 
