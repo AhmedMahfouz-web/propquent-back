@@ -762,17 +762,24 @@ class UserFinancialReport extends Page implements HasForms
             $previousMonthCash = $cash[$month];
         }
 
-        // Calculate Total Equity (Just Cash - no double counting of expenses)
-        // Note: evaluation = expense - revenue, which is already subtracted from cash
-        // So company equity = cash position only (expenses already deducted)
+        // Calculate Total Company Equity (Cash + Asset Evaluation)
+        // This should match the company financial data calculation
         $equityTotal = [];
+        
+        // Get asset evaluation from MonthlyProjectEvaluation for each month
         foreach ($monthsToShow as $month) {
-            $equityTotal[$month] = $cash[$month] ?? 0;
+            $cashAmount = $cash[$month] ?? 0;
+            
+            // Get total asset evaluation for this month from all projects
+            $assetEvaluation = MonthlyProjectEvaluation::where('month_date', $month)
+                ->sum('asset_evaluation');
+            
+            $equityTotal[$month] = $cashAmount + $assetEvaluation;
             
             // Debug logging
             $this->debugInfo['company_equity_calculations'][$month] = [
-                'evaluation' => $evaluation['total'][$month] ?? 0,
-                'cash' => $cash[$month] ?? 0,
+                'cash' => $cashAmount,
+                'asset_evaluation' => $assetEvaluation,
                 'total_equity' => $equityTotal[$month]
             ];
         }
