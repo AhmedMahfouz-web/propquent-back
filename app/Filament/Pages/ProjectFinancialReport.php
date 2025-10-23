@@ -503,8 +503,11 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
             $data['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
             $data['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
-            $data['totals']['profit_asset'] += $monthData['profit_asset'] ?? 0;
         }
+        
+        // For profit_asset, use the last month's cumulative value (not sum of filtered months)
+        // The last month already contains the total cumulative profit from project start
+        $data['totals']['profit_asset'] = $data['months'][$lastMonth]['profit_asset'] ?? 0;
 
         // Calculate derived totals
         $data['totals']['expense_total'] = $data['totals']['expense_asset'] + $data['totals']['expense_operation'];
@@ -603,7 +606,15 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
             $summary['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
             $summary['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
-            $summary['totals']['profit_asset'] += $monthData['profit_asset'] ?? 0;
+        }
+        
+        // For company profit_asset total, sum each project's cumulative profit from their last month
+        // (not sum of filtered months, but sum of each project's total cumulative profit)
+        $summary['totals']['profit_asset'] = 0;
+        foreach ($projectsData as $projectData) {
+            $projectMonthKeys = array_keys($projectData['months']);
+            $projectLastMonth = reset($projectMonthKeys); // Get the chronologically newest month for this project
+            $summary['totals']['profit_asset'] += $projectData['months'][$projectLastMonth]['profit_asset'] ?? 0;
         }
 
         // Calculate derived totals
