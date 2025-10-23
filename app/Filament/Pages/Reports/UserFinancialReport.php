@@ -629,11 +629,12 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Update equity percentages and calculate user profits
+        // Convert months to chronological order (oldest first) for proper calculation
+        $monthsChronological = array_reverse($allMonths);
+        
+        // Update equity percentages first
         foreach ($userFinancialData as $userId => &$userData) {
-            $previousEquityPercentage = 0;
-            
-            foreach ($allMonths as $monthIndex => $month) {
+            foreach ($allMonths as $month) {
                 $userEquity = $userData['equity'][$month] ?? 0;
                 $totalEquity = $totalUsersEquity[$month] ?? 0;
                 
@@ -643,34 +644,39 @@ class UserFinancialReport extends Page implements HasForms
                 } else {
                     $userData['equity_percentage'][$month] = 0;
                 }
-
-                // Calculate user profit: Equity % of user (previous month) * Company profit This month
+            }
+        }
+        
+        // Now calculate user profits using previous month's equity percentage
+        foreach ($userFinancialData as $userId => &$userData) {
+            $previousMonth = null;
+            
+            foreach ($monthsChronological as $month) {
                 $companyProfitThisMonth = $companyProfitByMonth[$month] ?? 0;
                 
-                // For the first month, use 0% equity from previous month
-                $equityPercentageToUse = $previousEquityPercentage / 100; // Convert percentage to decimal
+                // Get previous month's equity percentage (0 if no previous month)
+                $previousEquityPercentage = 0;
+                if ($previousMonth && isset($userData['equity_percentage'][$previousMonth])) {
+                    $previousEquityPercentage = $userData['equity_percentage'][$previousMonth];
+                }
                 
-                // Calculate profit asset and profit operation based on equity percentage
-                $userTotalProfit = $equityPercentageToUse * $companyProfitThisMonth;
+                // Simple calculation: Equity % of user (previous month) * Company profit (this month)
+                $userTotalProfit = ($previousEquityPercentage / 100) * $companyProfitThisMonth;
                 
-                // For simplicity, we'll split the profit equally between asset and operation
-                // You can adjust this logic if you want different allocation
+                // Set all profit values
                 $userData['profit_asset'][$month] = $userTotalProfit * 0.5;
                 $userData['profit_operation'][$month] = $userTotalProfit * 0.5;
                 $userData['total_profit'][$month] = $userTotalProfit;
 
-                // Store current equity percentage for next month's calculation
-                $previousEquityPercentage = $userData['equity_percentage'][$month];
-
                 // Debug logging
-                $this->debugInfo['equity_calculations'][$month][$userId] = [
-                    'user_equity' => $userEquity,
-                    'total_users_equity' => $totalEquity,
-                    'equity_percentage' => $userData['equity_percentage'][$month],
-                    'previous_equity_percentage' => $equityPercentageToUse * 100,
-                    'company_profit' => $companyProfitThisMonth,
+                $this->debugInfo['profit_calculations'][$month][$userId] = [
+                    'previous_month' => $previousMonth,
+                    'previous_equity_percentage' => $previousEquityPercentage,
+                    'company_profit_this_month' => $companyProfitThisMonth,
                     'user_total_profit' => $userTotalProfit,
                 ];
+                
+                $previousMonth = $month;
             }
         }
     }
