@@ -684,13 +684,29 @@
 
                                     $totalExpenses = $projectData['total_expenses'] ?? 0;
                                     $totalRevenues = $projectData['total_revenues'] ?? 0;
-                                    $netProfit = $totalRevenues - $totalExpenses;
                                     
-                                    // Calculate individual profit components
+                                    // Use the calculated total profit from the component (same as Project Financial Report)
+                                    $netProfit = $projectData['total_profit'] ?? 0;
+                                    
+                                    // Get individual profit components from database calculation
                                     $assetRevenue = $projectData['asset_revenue'] ?? 0;
                                     $operationRevenue = $projectData['operation_revenue'] ?? 0;
-                                    $profitAsset = $assetRevenue - $assetExpenses;
-                                    $profitOperation = $operationRevenue - $operationExpenses;
+                                    
+                                    // Calculate profit operation from database data
+                                    $allMonthlyData = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)->get();
+                                    $profitOperation = $allMonthlyData->sum('profit_operation');
+                                    
+                                    // Calculate profit asset using the same formula as Project Financial Report
+                                    $profitAsset = 0;
+                                    $previousAssetEvaluation = 0;
+                                    foreach ($allMonthlyData->sortBy('month_date') as $monthData) {
+                                        $currentAssetEvaluation = (float) $monthData->asset_evaluation;
+                                        $revenueAsset = (float) $monthData->revenue_asset;
+                                        $expenseAsset = (float) $monthData->expense_asset;
+                                        $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+                                        $profitAsset += $monthlyProfitAsset;
+                                        $previousAssetEvaluation = $currentAssetEvaluation;
+                                    }
                                 @endphp
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <!-- Fixed Project Column -->
