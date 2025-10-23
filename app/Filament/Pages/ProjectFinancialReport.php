@@ -337,7 +337,7 @@ class ProjectFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate totals by summing all filtered months (not cumulative, just the displayed months)
+        // Calculate totals by summing ALL filtered months
         foreach ($data['months'] as $month => $monthData) {
             $data['totals']['expense_asset'] += $monthData['expense_asset'] ?? 0;
             $data['totals']['revenue_asset'] += $monthData['revenue_asset'] ?? 0;
@@ -345,21 +345,12 @@ class ProjectFinancialReport extends Page implements HasForms
             $data['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
             $data['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
             $data['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
+            $data['totals']['evaluation_asset'] += $monthData['evaluation_asset'] ?? 0;
+            $data['totals']['profit_asset'] += $monthData['profit_asset'] ?? 0;
+            $data['totals']['expense_total'] += $monthData['expense_total'] ?? 0;
+            $data['totals']['revenue_total'] += $monthData['revenue_total'] ?? 0;
+            $data['totals']['total_profit'] += $monthData['total_profit'] ?? 0;
         }
-
-        // For asset evaluation and profit_asset, use the last month's value (these are cumulative by nature)
-        $monthKeys = array_keys($data['months']);
-        $lastMonth = reset($monthKeys); // Get the first month in display order (chronologically newest)
-        
-        if ($lastMonth && isset($data['months'][$lastMonth])) {
-            $data['totals']['evaluation_asset'] = $data['months'][$lastMonth]['evaluation_asset'] ?? 0;
-            $data['totals']['profit_asset'] = $data['months'][$lastMonth]['profit_asset'] ?? 0;
-        }
-
-        // Calculate derived totals
-        $data['totals']['expense_total'] = $data['totals']['expense_asset'] + $data['totals']['expense_operation'];
-        $data['totals']['revenue_total'] = $data['totals']['revenue_asset'] + $data['totals']['revenue_operation'];
-        $data['totals']['total_profit'] = $data['totals']['profit_operation'] + $data['totals']['profit_asset'];
 
         return $data;
     }
@@ -425,7 +416,7 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['months'][$month]['total_profit'] = $summary['months'][$month]['profit_operation'] + $summary['months'][$month]['profit_asset'];
         }
 
-        // Calculate company totals by summing all filtered months (not cumulative, just displayed months)
+        // Calculate company totals by summing ALL filtered months
         foreach ($summary['months'] as $month => $monthData) {
             $summary['totals']['expense_asset'] += $monthData['expense_asset'] ?? 0;
             $summary['totals']['revenue_asset'] += $monthData['revenue_asset'] ?? 0;
@@ -433,21 +424,12 @@ class ProjectFinancialReport extends Page implements HasForms
             $summary['totals']['expense_operation'] += $monthData['expense_operation'] ?? 0;
             $summary['totals']['revenue_operation'] += $monthData['revenue_operation'] ?? 0;
             $summary['totals']['profit_operation'] += $monthData['profit_operation'] ?? 0;
+            $summary['totals']['evaluation_asset'] += $monthData['evaluation_asset'] ?? 0;
+            $summary['totals']['profit_asset'] += $monthData['profit_asset'] ?? 0;
+            $summary['totals']['expense_total'] += $monthData['expense_total'] ?? 0;
+            $summary['totals']['revenue_total'] += $monthData['revenue_total'] ?? 0;
+            $summary['totals']['total_profit'] += $monthData['total_profit'] ?? 0;
         }
-
-        // For asset evaluation and profit_asset, use the last month's value (these are cumulative by nature)
-        $summaryMonthKeys = array_keys($summary['months']);
-        $lastSummaryMonth = reset($summaryMonthKeys); // Get the first month in display order (chronologically newest)
-        
-        if ($lastSummaryMonth && isset($summary['months'][$lastSummaryMonth])) {
-            $summary['totals']['evaluation_asset'] = $summary['months'][$lastSummaryMonth]['evaluation_asset'] ?? 0;
-            $summary['totals']['profit_asset'] = $summary['months'][$lastSummaryMonth]['profit_asset'] ?? 0;
-        }
-
-        // Calculate derived totals
-        $summary['totals']['expense_total'] = $summary['totals']['expense_asset'] + $summary['totals']['expense_operation'];
-        $summary['totals']['revenue_total'] = $summary['totals']['revenue_asset'] + $summary['totals']['revenue_operation'];
-        $summary['totals']['total_profit'] = $summary['totals']['profit_operation'] + $summary['totals']['profit_asset'];
 
         return $summary;
     }
