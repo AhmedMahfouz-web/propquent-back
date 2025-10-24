@@ -29,5 +29,9 @@ class AppServiceProvider extends ServiceProvider
         // Register observers for automatic asset evaluation updates
         \App\Models\ProjectTransaction::observe(\App\Observers\ProjectTransactionObserver::class);
         \App\Models\ValueCorrection::observe(\App\Observers\ValueCorrectionObserver::class);
+        
+        // Register observers for automatic cash balance cache updates
+        \App\Models\ProjectTransaction::observe(\App\Observers\ProjectTransactionCashObserver::class);
+        \App\Models\UserTransaction::observe(\App\Observers\UserTransactionCashObserver::class);
     }
 }

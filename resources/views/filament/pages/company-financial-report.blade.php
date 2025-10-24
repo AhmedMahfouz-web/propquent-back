@@ -63,6 +63,7 @@
                 $reportData['expense']['asset'][$month] = 0;
             }
 
+            // Query ALL transactions from beginning of time to calculate correct cash balance
             $projectTransactions = DB::table('project_transactions as pt')
                 ->select(
                     DB::raw("DATE_FORMAT(pt.transaction_date, '%Y-%m-01') as month_date"),
@@ -70,12 +71,9 @@
                     'pt.serving as serving_name',
                     DB::raw('SUM(pt.amount) as total_amount'),
                 )
-                ->whereBetween('pt.transaction_date', [
-                    $monthsToShow->last(),
-                    Illuminate\Support\Carbon::parse($monthsToShow->first())->endOfMonth(),
-                ])
+                ->where('pt.transaction_date', '<=', Illuminate\Support\Carbon::parse($monthsToShow->first())->endOfMonth())
                 ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
-                ->orderBy('month_date', 'desc')
+                ->orderBy('month_date', 'asc') // Start from oldest
                 ->cursor(); // Use a cursor to process results one by one
 
             // Structure data for the view
@@ -88,22 +86,27 @@
                 $servingName = $transaction->serving_name;
                 $month = $transaction->month_date;
 
-                // Ensure the month from the transaction is one of the selected months to show
-                if (!$monthsToShow->contains($month)) {
-                    continue;
+                // Initialize monthlyTotals for this month if it doesn't exist (for ALL months)
+                if (!isset($monthlyTotals[$type][$month])) {
+                    $monthlyTotals[$type][$month] = 0;
                 }
+                
+                // Add to monthly totals for ALL months (needed for cash calculation)
+                $monthlyTotals[$type][$month] += $transaction->total_amount;
 
-                // Initialize the serving array for the type if it doesn't exist
-        if (!isset($reportData[$type][$servingName])) {
-            // Initialize all months for this new serving to 0
-            foreach ($monthsToShow as $m) {
-                $reportData[$type][$servingName][$m] = 0;
-            }
-        }
+                // Only add to reportData if month is in the filtered range (for display)
+                if ($monthsToShow->contains($month)) {
+                    // Initialize the serving array for the type if it doesn't exist
+                    if (!isset($reportData[$type][$servingName])) {
+                        // Initialize all months for this new serving to 0
+                        foreach ($monthsToShow as $m) {
+                            $reportData[$type][$servingName][$m] = 0;
+                        }
+                    }
 
-        // Assign the amount and add to monthly totals
-        $reportData[$type][$servingName][$month] = $transaction->total_amount;
-        $monthlyTotals[$type][$month] += $transaction->total_amount;
+                    // Assign the amount
+                    $reportData[$type][$servingName][$month] = $transaction->total_amount;
+                }
     }
 
     $userFinancials = ['deposits' => [], 'withdrawals' => [], 'net' => []];
@@ -114,6 +117,7 @@
         $userFinancials['withdrawals'][$month] = 0;
         $userFinancials['net'][$month] = 0;
     }
+    // Query ALL user transactions from beginning of time to calculate correct cash balance
     $userTransactions = App\Models\UserTransaction::query()
         ->select(
             DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
@@ -129,13 +133,22 @@
             ),
         )
         ->where('status', App\Models\UserTransaction::STATUS_DONE)
-        ->whereBetween('transaction_date', [
-            $monthsToShow->last(), // Earliest month
-            Illuminate\Support\Carbon::parse($monthsToShow->first())->endOfMonth(), // End of the latest month
-        ])
+        ->where('transaction_date', '<=', Illuminate\Support\Carbon::parse($monthsToShow->first())->endOfMonth())
         ->groupBy('month_date')
+        ->orderBy('month_date', 'asc') // Start from oldest
         ->get();
 
+    // Build a complete array of ALL user transactions (not just filtered months)
+    $allUserFinancials = [];
+    foreach ($userTransactions as $transaction) {
+        $month = $transaction->month_date;
+        $allUserFinancials[$month] = [
+            'deposits' => $transaction->total_deposits,
+            'withdrawals' => $transaction->total_withdrawals
+        ];
+    }
+
+    // Store only filtered months in the display array
     foreach ($userTransactions as $transaction) {
         $month = $transaction->month_date;
         if ($monthsToShow->contains($month)) {
@@ -204,15 +217,23 @@
                 $evaluation['total'][$month] = $evaluation['asset'][$month];
             }
 
-            // 6. Calculate Cash
+            // 6. Calculate Cash - Process ALL months from beginning
             $cash = [];
             $previousMonthCash = 0;
+            
+            // Get ALL unique months from both project transactions and user transactions
+            $allMonths = collect(array_keys($monthlyTotals['revenue'] ?? []))
+                ->merge(array_keys($allUserFinancials))
+                ->unique()
+                ->sort()
+                ->values();
 
-            foreach (array_reverse($monthsToShow->toArray()) as $month) {
+            // Process ALL months in chronological order to get correct cumulative cash
+            foreach ($allMonths as $month) {
                 $revenue = $monthlyTotals['revenue'][$month] ?? 0;
                 $expense = $monthlyTotals['expense'][$month] ?? 0;
-                $deposits = $userFinancials['deposits'][$month] ?? 0;
-                $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
+                $deposits = $allUserFinancials[$month]['deposits'] ?? 0;
+                $withdrawals = $allUserFinancials[$month]['withdrawals'] ?? 0;
 
                 $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
                 $previousMonthCash = $cash[$month];

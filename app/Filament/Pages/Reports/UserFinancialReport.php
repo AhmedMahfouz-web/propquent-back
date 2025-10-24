@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserTransaction;
 use App\Models\ProjectTransaction;
 use App\Models\MonthlyProjectEvaluation;
+use App\Models\MonthlyCashBalance;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
@@ -435,6 +436,102 @@ class UserFinancialReport extends Page implements HasForms
         return array_reverse($months); // Show latest first
     }
 
+    /**
+     * Get cash balances - tries cached database first, calculates if not available
+     */
+    private function getCashBalances(array $monthsToShow, array $monthlyTotals, array $allUserFinancials): array
+    {
+        // Try to get from cache first
+        $cachedBalances = MonthlyCashBalance::whereIn('month_date', $monthsToShow)
+            ->pluck('cash_balance', 'month_date')
+            ->toArray();
+        
+        // Check if all filtered months are cached
+        $allCached = true;
+        foreach ($monthsToShow as $month) {
+            if (!isset($cachedBalances[$month])) {
+                $allCached = false;
+                break;
+            }
+        }
+        
+        if ($allCached) {
+            // All months are cached - use database values
+            $this->debugInfo['cash_calculation_note'] = [
+                'source' => 'database_cache',
+                'filtered_months_displayed' => count($monthsToShow),
+                'note' => 'Using pre-calculated cash balances from database for optimal performance'
+            ];
+            
+            // Add debug info for filtered months
+            foreach ($monthsToShow as $month) {
+                $this->debugInfo['cash_calculations'][$month] = [
+                    'calculated_cash' => $cachedBalances[$month],
+                    'source' => 'database_cache',
+                    'note' => 'Retrieved from monthly_cash_balances table'
+                ];
+            }
+            
+            return $cachedBalances;
+        }
+        
+        // Cache miss - calculate manually
+        $this->debugInfo['cash_calculation_note'] = [
+            'source' => 'manual_calculation',
+            'cached_months' => count($cachedBalances),
+            'missing_months' => count($monthsToShow) - count($cachedBalances),
+            'note' => 'Some months not cached - calculating manually. Run: php artisan cash:calculate'
+        ];
+        
+        return $this->calculateCashManually($monthsToShow, $monthlyTotals, $allUserFinancials);
+    }
+    
+    /**
+     * Manually calculate cash balances (fallback when cache not available)
+     */
+    private function calculateCashManually(array $monthsToShow, array $monthlyTotals, array $allUserFinancials): array
+    {
+        $cash = [];
+        $previousMonthCash = 0;
+        
+        // Get ALL unique months from both project transactions and user transactions
+        $allMonths = collect(array_keys($monthlyTotals['revenue'] ?? []))
+            ->merge(array_keys($allUserFinancials))
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        // Process ALL months in chronological order to get correct cumulative cash
+        foreach ($allMonths as $month) {
+            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+            $expense = $monthlyTotals['expense'][$month] ?? 0;
+            $deposits = $allUserFinancials[$month]['deposits'] ?? 0;
+            $withdrawals = $allUserFinancials[$month]['withdrawals'] ?? 0;
+
+            // Same formula as Company Financial Report
+            $currentCash = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+            $cash[$month] = $currentCash;
+            $previousMonthCash = $currentCash;
+            
+            // Debug: Only log cash calculation for FILTERED months
+            if (in_array($month, $monthsToShow)) {
+                $this->debugInfo['cash_calculations'][$month] = [
+                    'previous_month_cash' => $previousMonthCash - $deposits - $revenue + $withdrawals + $expense,
+                    'deposits' => $deposits,
+                    'revenue' => $revenue,
+                    'withdrawals' => $withdrawals,
+                    'expense' => $expense,
+                    'calculated_cash' => $currentCash,
+                    'source' => 'manual_calculation',
+                    'note' => 'Calculated from ALL historical transactions'
+                ];
+            }
+        }
+        
+        return $cash;
+    }
+
     private function calculateCompanyFinancialData(array $monthsToShow): array
     {
         // This is the same logic from the original blade file for company financial calculations
@@ -786,50 +883,8 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate Cash - Process ALL months from beginning but only store filtered months
-        $cash = [];
-        $previousMonthCash = 0;
-        
-        // Get ALL unique months from both project transactions and user transactions
-        $allMonths = collect(array_keys($monthlyTotals['revenue'] ?? []))
-            ->merge(array_keys($allUserFinancials))
-            ->unique()
-            ->sort()
-            ->values()
-            ->toArray();
-        
-        // Debug: Show how many months we're processing vs displaying
-        $this->debugInfo['cash_calculation_note'] = [
-            'total_months_processed' => count($allMonths),
-            'filtered_months_displayed' => count($monthsToShow),
-            'note' => 'Cash is calculated from ALL ' . count($allMonths) . ' historical months, but only ' . count($monthsToShow) . ' months are displayed in the report'
-        ];
-
-        // Process ALL months in chronological order to get correct cumulative cash
-        foreach ($allMonths as $month) {
-            $revenue = $monthlyTotals['revenue'][$month] ?? 0;
-            $expense = $monthlyTotals['expense'][$month] ?? 0;
-            $deposits = $allUserFinancials[$month]['deposits'] ?? 0;
-            $withdrawals = $allUserFinancials[$month]['withdrawals'] ?? 0;
-
-            // Same formula as Company Financial Report
-            $currentCash = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
-            $cash[$month] = $currentCash;
-            $previousMonthCash = $currentCash;
-            
-            // Debug: Only log cash calculation for FILTERED months
-            if (in_array($month, $monthsToShow)) {
-                $this->debugInfo['cash_calculations'][$month] = [
-                    'previous_month_cash' => $previousMonthCash - $deposits - $revenue + $withdrawals + $expense,
-                    'deposits' => $deposits,
-                    'revenue' => $revenue,
-                    'withdrawals' => $withdrawals,
-                    'expense' => $expense,
-                    'calculated_cash' => $currentCash,
-                    'note' => 'Calculated from ALL historical transactions'
-                ];
-            }
-        }
+        // Calculate Cash - Try to use cached values first for performance
+        $cash = $this->getCashBalances($monthsToShow, $monthlyTotals, $allUserFinancials);
 
         // Calculate Total Company Equity (Cash + Asset Evaluation)
         // This should match the company financial data calculation
