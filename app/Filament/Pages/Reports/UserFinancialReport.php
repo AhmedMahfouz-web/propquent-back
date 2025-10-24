@@ -156,10 +156,8 @@ class UserFinancialReport extends Page implements HasForms
     {
         $today = now()->format('Y-m-d');
 
-
-        // Use same logic as CompanyFinancialReport - only done transactions with transaction_date
-        $projectMonths = ProjectTransaction::where('status', 'done')
-            ->select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
+        // Get ALL transaction months (no status filter to match Company Financial Report and cash calculation)
+        $projectMonths = ProjectTransaction::select(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m-01") as month_date'))
             ->whereNotNull('transaction_date')
             ->distinct();
 

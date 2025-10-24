@@ -1,8 +1,31 @@
 <x-filament-panels::page>
     @php
 
-        // 1. Generate all possible months from 2 years ago to 2 years in the future
-        $startDate = now()->subYears(2)->startOfYear();
+        // 1. Generate all possible months from earliest transaction to 2 years in the future
+        
+        // Get earliest transaction date from both project and user transactions
+        $earliestProjectTx = DB::table('project_transactions')
+            ->selectRaw("MIN(DATE_FORMAT(transaction_date, '%Y-%m-01')) as min_month")
+            ->value('min_month');
+        
+        $earliestUserTx = DB::table('user_transactions')
+            ->selectRaw("MIN(DATE_FORMAT(transaction_date, '%Y-%m-01')) as min_month")
+            ->value('min_month');
+        
+        // Use earliest of the two, or default to 2 years ago if no transactions
+        $earliestMonth = null;
+        if ($earliestProjectTx && $earliestUserTx) {
+            $earliestMonth = min($earliestProjectTx, $earliestUserTx);
+        } elseif ($earliestProjectTx) {
+            $earliestMonth = $earliestProjectTx;
+        } elseif ($earliestUserTx) {
+            $earliestMonth = $earliestUserTx;
+        }
+        
+        $startDate = $earliestMonth 
+            ? \Carbon\Carbon::parse($earliestMonth)->startOfMonth()
+            : now()->subYears(2)->startOfYear();
+        
         $endDate = now()->addYears(2)->endOfYear();
 
         $allMonths = collect();
