@@ -12,6 +12,14 @@
             ->selectRaw("MIN(DATE_FORMAT(transaction_date, '%Y-%m-01')) as min_month")
             ->value('min_month');
         
+        // Debug: Check what dates we're finding
+        $debugEarliestDates = [
+            'earliest_project_tx' => $earliestProjectTx,
+            'earliest_user_tx' => $earliestUserTx,
+            'project_tx_count' => DB::table('project_transactions')->count(),
+            'user_tx_count' => DB::table('user_transactions')->count(),
+        ];
+        
         // Use earliest of the two, or default to 2 years ago if no transactions
         $earliestMonth = null;
         if ($earliestProjectTx && $earliestUserTx) {
@@ -22,9 +30,13 @@
             $earliestMonth = $earliestUserTx;
         }
         
+        $debugEarliestDates['calculated_earliest'] = $earliestMonth;
+        
         $startDate = $earliestMonth 
             ? \Carbon\Carbon::parse($earliestMonth)->startOfMonth()
             : now()->subYears(2)->startOfYear();
+        
+        $debugEarliestDates['start_date_used'] = $startDate->format('Y-m-d');
         
         $endDate = now()->addYears(2)->endOfYear();
 
@@ -39,8 +51,9 @@
         // Reverse to show latest months first
         $allMonths = $allMonths->reverse();
 
-        // 2. Get the selected months from the request, or default to current year.
-        $selectedStartMonth = request('start_month', now()->startOfYear()->format('Y-m-01')); // Default to January of current year
+        // 2. Get the selected months from the request, or default to earliest month to current month
+        // This ensures all historical data is shown by default
+        $selectedStartMonth = request('start_month', $earliestMonth ?? now()->startOfYear()->format('Y-m-01')); // Default to earliest transaction month
         $selectedEndMonth = request('end_month', now()->format('Y-m-01')); // Default to current month
 
         // 3. Filter months to show only those between start and end month (inclusive)
@@ -421,6 +434,15 @@
     @endphp
 
     {{-- Debug Section --}}
+    <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+        <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">🔍 Month Range Debug Info:</h3>
+        <pre class="text-xs bg-white dark:bg-gray-800 p-2 rounded overflow-x-auto">{{ json_encode($debugEarliestDates, JSON_PRETTY_PRINT) }}</pre>
+        <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+            Available months in dropdown: {{ $allMonths->count() }} months 
+            (from {{ $allMonths->last() }} to {{ $allMonths->first() }})
+        </p>
+    </div>
+    
     {{-- Month Selection Form --}}
     <form action="{{ route('filament.admin.pages.company-financial-report') }}" method="GET"
         class="mb-6 p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800">
