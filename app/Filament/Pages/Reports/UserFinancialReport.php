@@ -637,46 +637,73 @@ class UserFinancialReport extends Page implements HasForms
     }
 
     /**
-     * Calculate company profit for each month (sum of all projects' profit)
+     * Calculate company profit for each month - MUST match Company Financial Report exactly
      * Returns array with 'asset', 'operation', and 'total' profit breakdown
      */
     private function calculateCompanyProfitByMonth(array $allMonths): array
     {
         $companyProfitByMonth = [];
         
+        // Initialize all months with zero
         foreach ($allMonths as $month) {
-            // Get all projects' total profit for this month using the same calculation as Project Financial Report
-            $monthlyProjectEvaluations = \App\Models\MonthlyProjectEvaluation::where('month_date', $month)->get();
-            
-            $totalAssetProfit = 0;
-            $totalOperationProfit = 0;
-            
-            foreach ($monthlyProjectEvaluations as $evaluation) {
-                // Calculate profit operation for this project this month
-                $profitOperation = (float) $evaluation->profit_operation;
-                $totalOperationProfit += $profitOperation;
-                
-                // Calculate profit asset for this project this month using the formula
-                // We need to get the previous month's asset evaluation for this project
-                $previousMonthEvaluation = \App\Models\MonthlyProjectEvaluation::where('project_key', $evaluation->project_key)
-                    ->where('month_date', '<', $month)
-                    ->orderBy('month_date', 'desc')
-                    ->first();
-                    
-                $previousAssetEvaluation = $previousMonthEvaluation ? (float) $previousMonthEvaluation->asset_evaluation : 0;
-                $currentAssetEvaluation = (float) $evaluation->asset_evaluation;
-                $revenueAsset = (float) $evaluation->revenue_asset;
-                $expenseAsset = (float) $evaluation->expense_asset;
-                
-                $profitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
-                $totalAssetProfit += $profitAsset;
-            }
-            
             $companyProfitByMonth[$month] = [
-                'asset' => $totalAssetProfit,
-                'operation' => $totalOperationProfit,
-                'total' => $totalAssetProfit + $totalOperationProfit
+                'asset' => 0,
+                'operation' => 0,
+                'total' => 0
             ];
+        }
+        
+        // Get company financial data from the same source as Company Financial Report
+        $companyData = $this->calculateCompanyFinancialData($allMonths);
+        $reportData = $companyData['reportData'];
+        
+        // Calculate Operation Profit for each month (simple: Revenue - Expense)
+        foreach ($allMonths as $month) {
+            $revenueOperation = $reportData['revenue']['operation'][$month] ?? 0;
+            $expenseOperation = $reportData['expense']['operation'][$month] ?? 0;
+            $companyProfitByMonth[$month]['operation'] = $revenueOperation - $expenseOperation;
+        }
+        
+        // Calculate Asset Profit for each project, then sum
+        $projects = \App\Models\Project::all();
+        
+        foreach ($projects as $project) {
+            // Track previous evaluation for this project across all months
+            $previousAssetEvaluation = 0;
+            
+            // Sort months chronologically for correct calculation
+            $monthsChronological = collect($allMonths)->sort()->values()->toArray();
+            
+            foreach ($monthsChronological as $month) {
+                // Get evaluation data from MonthlyProjectEvaluation
+                $evaluation = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
+                    ->where('month_date', $month)
+                    ->first();
+                
+                if ($evaluation) {
+                    $currentAssetEvaluation = (float) $evaluation->asset_evaluation;
+                    $revenueAsset = (float) $evaluation->revenue_asset;
+                    $expenseAsset = (float) $evaluation->expense_asset;
+                    
+                    // Profit Asset Formula: Current Evaluation - Previous Evaluation + Revenue - Expense
+                    $profitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+                    
+                    $companyProfitByMonth[$month]['asset'] += $profitAsset;
+                    
+                    // Update previous evaluation for next month
+                    $previousAssetEvaluation = $currentAssetEvaluation;
+                } else {
+                    // No evaluation data for this month - profit asset is 0
+                    // Previous evaluation stays the same for next month
+                }
+            }
+        }
+        
+        // Calculate total profit
+        foreach ($allMonths as $month) {
+            $companyProfitByMonth[$month]['total'] = 
+                $companyProfitByMonth[$month]['asset'] + 
+                $companyProfitByMonth[$month]['operation'];
         }
         
         return $companyProfitByMonth;
