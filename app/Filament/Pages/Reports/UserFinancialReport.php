@@ -724,9 +724,11 @@ class UserFinancialReport extends Page implements HasForms
                 $companyEquity = $totalCompanyEquity[$month] ?? 0;
                 
                 // Calculate equity percentage: user's equity / total company equity * 100
-                if ($companyEquity > 0) {
+                // Allow negative percentages when company equity is negative
+                if ($companyEquity != 0) {
                     $userData['equity_percentage'][$month] = ($userEquity / $companyEquity) * 100;
                 } else {
+                    // Only set to 0 when company equity is exactly 0 (avoid division by zero)
                     $userData['equity_percentage'][$month] = 0;
                 }
             }
