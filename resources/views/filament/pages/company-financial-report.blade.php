@@ -51,9 +51,8 @@
         // Reverse to show latest months first
         $allMonths = $allMonths->reverse();
 
-        // 2. Get the selected months from the request, or default to earliest month to current month
-        // This ensures all historical data is shown by default
-        $selectedStartMonth = request('start_month', $earliestMonth ?? now()->startOfYear()->format('Y-m-01')); // Default to earliest transaction month
+        // 2. Get the selected months from the request, or default to start of current year
+        $selectedStartMonth = request('start_month', now()->startOfYear()->format('Y-m-01')); // Default to January of current year
         $selectedEndMonth = request('end_month', now()->format('Y-m-01')); // Default to current month
 
         // 3. Filter months to show only those between start and end month (inclusive)
@@ -253,26 +252,49 @@
                 $evaluation['total'][$month] = $evaluation['asset'][$month];
             }
 
-            // 6. Calculate Cash - Process ALL months from beginning
+            // 6. Calculate Cash - Use database cache for performance
             $cash = [];
-            $previousMonthCash = 0;
             
-            // Get ALL unique months from both project transactions and user transactions
-            $allMonths = collect(array_keys($monthlyTotals['revenue'] ?? []))
-                ->merge(array_keys($allUserFinancials))
-                ->unique()
-                ->sort()
-                ->values();
+            // Try to get cash balances from database cache first
+            $cachedBalances = \App\Models\MonthlyCashBalance::whereIn('month_date', $monthsToShow->toArray())
+                ->pluck('cash_balance', 'month_date')
+                ->toArray();
+            
+            // Check if all filtered months are cached
+            $allCached = true;
+            foreach ($monthsToShow as $month) {
+                if (!isset($cachedBalances[$month])) {
+                    $allCached = false;
+                    break;
+                }
+            }
+            
+            if ($allCached) {
+                // All months cached - use database values (FAST!)
+                $cash = $cachedBalances;
+                $cashSource = 'database_cache';
+            } else {
+                // Cache incomplete - calculate manually (SLOW - need to run: php artisan cash:calculate)
+                $cashSource = 'manual_calculation';
+                $previousMonthCash = 0;
+                
+                // Get ALL unique months from both project transactions and user transactions
+                $allMonths = collect(array_keys($monthlyTotals['revenue'] ?? []))
+                    ->merge(array_keys($allUserFinancials))
+                    ->unique()
+                    ->sort()
+                    ->values();
 
-            // Process ALL months in chronological order to get correct cumulative cash
-            foreach ($allMonths as $month) {
-                $revenue = $monthlyTotals['revenue'][$month] ?? 0;
-                $expense = $monthlyTotals['expense'][$month] ?? 0;
-                $deposits = $allUserFinancials[$month]['deposits'] ?? 0;
-                $withdrawals = $allUserFinancials[$month]['withdrawals'] ?? 0;
+                // Process ALL months in chronological order to get correct cumulative cash
+                foreach ($allMonths as $month) {
+                    $revenue = $monthlyTotals['revenue'][$month] ?? 0;
+                    $expense = $monthlyTotals['expense'][$month] ?? 0;
+                    $deposits = $allUserFinancials[$month]['deposits'] ?? 0;
+                    $withdrawals = $allUserFinancials[$month]['withdrawals'] ?? 0;
 
-                $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
-                $previousMonthCash = $cash[$month];
+                    $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+                    $previousMonthCash = $cash[$month];
+                }
             }
 
             // 7. Calculate Equity Total (Asset Evaluation + Cash)
@@ -435,12 +457,36 @@
 
     {{-- Debug Section --}}
     <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
-        <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">🔍 Month Range Debug Info:</h3>
-        <pre class="text-xs bg-white dark:bg-gray-800 p-2 rounded overflow-x-auto">{{ json_encode($debugEarliestDates, JSON_PRETTY_PRINT) }}</pre>
-        <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
-            Available months in dropdown: {{ $allMonths->count() }} months 
-            (from {{ $allMonths->last() }} to {{ $allMonths->first() }})
-        </p>
+        <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">🔍 Debug Info:</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h4 class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">Month Range:</h4>
+                <pre class="text-xs bg-white dark:bg-gray-800 p-2 rounded overflow-x-auto">{{ json_encode($debugEarliestDates, JSON_PRETTY_PRINT) }}</pre>
+                <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                    Available: {{ $allMonths->count() }} months ({{ $allMonths->last() }} to {{ $allMonths->first() }})
+                </p>
+            </div>
+            
+            <div>
+                <h4 class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">Cash Calculation:</h4>
+                <div class="text-xs bg-white dark:bg-gray-800 p-2 rounded">
+                    <p><strong>Source:</strong> 
+                        @if($cashSource === 'database_cache')
+                            <span class="text-green-600 dark:text-green-400">✅ Database Cache (Fast)</span>
+                        @else
+                            <span class="text-red-600 dark:text-red-400">⚠️ Manual Calculation (Slow)</span>
+                        @endif
+                    </p>
+                    <p class="mt-1"><strong>Filtered Months:</strong> {{ $monthsToShow->count() }}</p>
+                    @if($cashSource === 'manual_calculation')
+                        <p class="mt-2 text-red-600 dark:text-red-400">
+                            ⚠️ Run: <code class="bg-gray-100 dark:bg-gray-700 px-1">php artisan cash:calculate</code>
+                        </p>
+                    @endif
+                </div>
+            </div>
+        </div>
     </div>
     
     {{-- Month Selection Form --}}

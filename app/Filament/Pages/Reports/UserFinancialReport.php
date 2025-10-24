@@ -70,12 +70,9 @@ class UserFinancialReport extends Page implements HasForms
 
     public function mount(): void
     {
-        // Set default date range: earliest transaction to current month
+        // Set default date range: start of current year to current month
         if (empty($this->startMonth)) {
-            // Get earliest transaction month
-            $availableMonths = $this->getAvailableMonthsProperty();
-            $earliestMonth = !empty($availableMonths) ? array_key_first($availableMonths) : now()->subMonths(11)->format('Y-m-01');
-            $this->startMonth = $earliestMonth;
+            $this->startMonth = now()->startOfYear()->format('Y-m-01'); // January of current year
         }
         if (empty($this->endMonth)) {
             $this->endMonth = now()->format('Y-m-01'); // Current month
