@@ -451,7 +451,8 @@ class UserFinancialReport extends Page implements HasForms
             $monthlyTotals['expense'][$month] = 0;
         }
 
-
+        // Query ALL transactions from the beginning of time to calculate correct cash balance
+        // But only aggregate for the filtered months to display
         $projectTransactions = DB::table('project_transactions as pt')
             ->select(
                 DB::raw("DATE_FORMAT(pt.transaction_date, '%Y-%m-01') as month_date"),
@@ -459,12 +460,9 @@ class UserFinancialReport extends Page implements HasForms
                 'pt.serving as serving_name',
                 DB::raw('SUM(pt.amount) as total_amount'),
             )
-            ->whereBetween('pt.transaction_date', [
-                end($monthsToShow), // Last element = oldest month
-                Carbon::parse($monthsToShow[0])->endOfMonth(), // First element = newest month
-            ])
+            ->where('pt.transaction_date', '<=', Carbon::parse($monthsToShow[0])->endOfMonth()) // All transactions up to newest month
             ->groupBy('month_date', 'pt.financial_type', 'pt.serving')
-            ->orderBy('month_date', 'desc')
+            ->orderBy('month_date', 'asc') // Start from oldest
             ->cursor();
 
         foreach ($projectTransactions as $transaction) {
@@ -476,18 +474,23 @@ class UserFinancialReport extends Page implements HasForms
             $servingName = $transaction->serving_name;
             $month = $transaction->month_date;
 
-            if (!in_array($month, $monthsToShow)) {
-                continue;
+            // Initialize monthlyTotals for this month if it doesn't exist
+            if (!isset($monthlyTotals[$type][$month])) {
+                $monthlyTotals[$type][$month] = 0;
             }
 
-            if (!isset($reportData[$type][$servingName])) {
-                foreach ($monthsToShow as $m) {
-                    $reportData[$type][$servingName][$m] = 0;
-                }
-            }
-
-            $reportData[$type][$servingName][$month] = $transaction->total_amount;
+            // Add to monthly totals for ALL months (needed for cash calculation)
             $monthlyTotals[$type][$month] += $transaction->total_amount;
+
+            // Only add to reportData if month is in the filtered range (for display)
+            if (in_array($month, $monthsToShow)) {
+                if (!isset($reportData[$type][$servingName])) {
+                    foreach ($monthsToShow as $m) {
+                        $reportData[$type][$servingName][$m] = 0;
+                    }
+                }
+                $reportData[$type][$servingName][$month] = $transaction->total_amount;
+            }
         }
 
         // Debug: Add monthlyTotals to debug info
@@ -695,14 +698,13 @@ class UserFinancialReport extends Page implements HasForms
             $userFinancials['net'][$month] = 0;
         }
 
-        // Debug: Log the query parameters
-        // Fix: monthsToShow is in reverse order (newest first), so we need to reverse the logic
-        $startDate = end($monthsToShow); // Last element = oldest month
+        // Query ALL user transactions from the beginning of time to calculate correct cash balance
+        // monthsToShow is in reverse order (newest first)
         $endDate = Carbon::parse($monthsToShow[0])->endOfMonth(); // First element = newest month
         
         $this->debugInfo['user_transactions_query_params'] = [
-            'start_date' => $startDate,
             'end_date' => $endDate,
+            'note' => 'Getting ALL transactions from beginning of time up to end date',
             'deposit_type' => UserTransaction::TYPE_DEPOSIT,
             'withdrawal_type' => UserTransaction::TYPE_WITHDRAWAL,
             'status_done' => UserTransaction::STATUS_DONE
@@ -715,8 +717,9 @@ class UserFinancialReport extends Page implements HasForms
                 DB::raw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as total_withdrawals"),
             )
             ->where('status', UserTransaction::STATUS_DONE)
-            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->where('transaction_date', '<=', $endDate) // Get ALL transactions up to end date
             ->groupBy('month_date')
+            ->orderBy('month_date', 'asc') // Start from oldest
             ->get();
 
         // Debug: Also check total user transactions without date filter
@@ -731,6 +734,17 @@ class UserFinancialReport extends Page implements HasForms
             'transactions' => $userTransactions->toArray()
         ];
 
+        // Build a complete array of ALL user transactions (not just filtered months)
+        $allUserFinancials = [];
+        foreach ($userTransactions as $transaction) {
+            $month = $transaction->month_date;
+            $allUserFinancials[$month] = [
+                'deposits' => $transaction->total_deposits,
+                'withdrawals' => $transaction->total_withdrawals
+            ];
+        }
+
+        // Store only filtered months in the display array
         foreach ($userTransactions as $transaction) {
             $month = $transaction->month_date;
             if (in_array($month, $monthsToShow)) {
@@ -772,31 +786,49 @@ class UserFinancialReport extends Page implements HasForms
             }
         }
 
-        // Calculate Cash using MonthlyProjectEvaluation data (same as company profit calculation)
+        // Calculate Cash - Process ALL months from beginning but only store filtered months
         $cash = [];
         $previousMonthCash = 0;
+        
+        // Get ALL unique months from both project transactions and user transactions
+        $allMonths = collect(array_keys($monthlyTotals['revenue'] ?? []))
+            ->merge(array_keys($allUserFinancials))
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+        
+        // Debug: Show how many months we're processing vs displaying
+        $this->debugInfo['cash_calculation_note'] = [
+            'total_months_processed' => count($allMonths),
+            'filtered_months_displayed' => count($monthsToShow),
+            'note' => 'Cash is calculated from ALL ' . count($allMonths) . ' historical months, but only ' . count($monthsToShow) . ' months are displayed in the report'
+        ];
 
-        // Process months in chronological order (oldest first)
-        foreach (array_reverse($monthsToShow) as $month) {
-            // Use the SAME Monthly Totals data as Company Financial Report
+        // Process ALL months in chronological order to get correct cumulative cash
+        foreach ($allMonths as $month) {
             $revenue = $monthlyTotals['revenue'][$month] ?? 0;
             $expense = $monthlyTotals['expense'][$month] ?? 0;
-            $deposits = $userFinancials['deposits'][$month] ?? 0;
-            $withdrawals = $userFinancials['withdrawals'][$month] ?? 0;
+            $deposits = $allUserFinancials[$month]['deposits'] ?? 0;
+            $withdrawals = $allUserFinancials[$month]['withdrawals'] ?? 0;
 
             // Same formula as Company Financial Report
-            $cash[$month] = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
-            $previousMonthCash = $cash[$month];
+            $currentCash = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
+            $cash[$month] = $currentCash;
+            $previousMonthCash = $currentCash;
             
-            // Debug: Log cash calculation for each month
-            $this->debugInfo['cash_calculations'][$month] = [
-                'previous_month_cash' => $previousMonthCash - $deposits - $revenue + $withdrawals + $expense,
-                'deposits' => $deposits,
-                'revenue' => $revenue,
-                'withdrawals' => $withdrawals,
-                'expense' => $expense,
-                'calculated_cash' => $cash[$month]
-            ];
+            // Debug: Only log cash calculation for FILTERED months
+            if (in_array($month, $monthsToShow)) {
+                $this->debugInfo['cash_calculations'][$month] = [
+                    'previous_month_cash' => $previousMonthCash - $deposits - $revenue + $withdrawals + $expense,
+                    'deposits' => $deposits,
+                    'revenue' => $revenue,
+                    'withdrawals' => $withdrawals,
+                    'expense' => $expense,
+                    'calculated_cash' => $currentCash,
+                    'note' => 'Calculated from ALL historical transactions'
+                ];
+            }
         }
 
         // Calculate Total Company Equity (Cash + Asset Evaluation)

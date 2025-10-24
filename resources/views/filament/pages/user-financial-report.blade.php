@@ -142,6 +142,13 @@
                             </div>
                         @endif
                         
+                        @if (isset($debugInfo['cash_calculation_note']))
+                            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded border border-blue-200 dark:border-blue-700">
+                                <h4 class="font-medium text-blue-700 dark:text-blue-300">💡 Cash Calculation Method:</h4>
+                                <pre class="text-sm bg-white dark:bg-gray-800 p-2 rounded mt-1 overflow-x-auto">{{ json_encode($debugInfo['cash_calculation_note'], JSON_PRETTY_PRINT) }}</pre>
+                            </div>
+                        @endif
+                        
                         @if (isset($debugInfo['cash_calculations']))
                             <div>
                                 <h4 class="font-medium text-yellow-700 dark:text-yellow-300">Cash Calculations by Month:</h4>
