@@ -348,7 +348,6 @@ class UserFinancialReport extends Page implements HasForms
         $this->resetPage();
     }
 
-    public $debugInfo = [];
 
     #[Computed]
     public function reportData(): array
@@ -409,7 +408,6 @@ class UserFinancialReport extends Page implements HasForms
             'userFinancialData' => $userFinancialData,
             'allMonths' => $allMonths,
             'companyData' => $companyData,
-            'debugInfo' => $this->debugInfo,
         ];
     }
 
@@ -455,31 +453,10 @@ class UserFinancialReport extends Page implements HasForms
         
         if ($allCached) {
             // All months are cached - use database values
-            $this->debugInfo['cash_calculation_note'] = [
-                'source' => 'database_cache',
-                'filtered_months_displayed' => count($monthsToShow),
-                'note' => 'Using pre-calculated cash balances from database for optimal performance'
-            ];
-            
-            // Add debug info for filtered months
-            foreach ($monthsToShow as $month) {
-                $this->debugInfo['cash_calculations'][$month] = [
-                    'calculated_cash' => $cachedBalances[$month],
-                    'source' => 'database_cache',
-                    'note' => 'Retrieved from monthly_cash_balances table'
-                ];
-            }
-            
             return $cachedBalances;
         }
         
         // Cache miss - calculate manually
-        $this->debugInfo['cash_calculation_note'] = [
-            'source' => 'manual_calculation',
-            'cached_months' => count($cachedBalances),
-            'missing_months' => count($monthsToShow) - count($cachedBalances),
-            'note' => 'Some months not cached - calculating manually. Run: php artisan cash:calculate'
-        ];
         
         return $this->calculateCashManually($monthsToShow, $monthlyTotals, $allUserFinancials);
     }
@@ -511,20 +488,6 @@ class UserFinancialReport extends Page implements HasForms
             $currentCash = $previousMonthCash + $deposits + $revenue - $withdrawals - $expense;
             $cash[$month] = $currentCash;
             $previousMonthCash = $currentCash;
-            
-            // Debug: Only log cash calculation for FILTERED months
-            if (in_array($month, $monthsToShow)) {
-                $this->debugInfo['cash_calculations'][$month] = [
-                    'previous_month_cash' => $previousMonthCash - $deposits - $revenue + $withdrawals + $expense,
-                    'deposits' => $deposits,
-                    'revenue' => $revenue,
-                    'withdrawals' => $withdrawals,
-                    'expense' => $expense,
-                    'calculated_cash' => $currentCash,
-                    'source' => 'manual_calculation',
-                    'note' => 'Calculated from ALL historical transactions'
-                ];
-            }
         }
         
         return $cash;
@@ -587,9 +550,6 @@ class UserFinancialReport extends Page implements HasForms
                 $reportData[$type][$servingName][$month] = $transaction->total_amount;
             }
         }
-
-        // Debug: Add monthlyTotals to debug info
-        $this->debugInfo['monthly_totals'] = $monthlyTotals;
 
         return compact('reportData', 'monthlyTotals');
     }
@@ -678,6 +638,7 @@ class UserFinancialReport extends Page implements HasForms
 
     /**
      * Calculate company profit for each month (sum of all projects' profit)
+     * Returns array with 'asset', 'operation', and 'total' profit breakdown
      */
     private function calculateCompanyProfitByMonth(array $allMonths): array
     {
@@ -687,11 +648,13 @@ class UserFinancialReport extends Page implements HasForms
             // Get all projects' total profit for this month using the same calculation as Project Financial Report
             $monthlyProjectEvaluations = \App\Models\MonthlyProjectEvaluation::where('month_date', $month)->get();
             
-            $totalCompanyProfit = 0;
+            $totalAssetProfit = 0;
+            $totalOperationProfit = 0;
             
             foreach ($monthlyProjectEvaluations as $evaluation) {
                 // Calculate profit operation for this project this month
                 $profitOperation = (float) $evaluation->profit_operation;
+                $totalOperationProfit += $profitOperation;
                 
                 // Calculate profit asset for this project this month using the formula
                 // We need to get the previous month's asset evaluation for this project
@@ -706,13 +669,14 @@ class UserFinancialReport extends Page implements HasForms
                 $expenseAsset = (float) $evaluation->expense_asset;
                 
                 $profitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
-                
-                // Total project profit = profit operation + profit asset
-                $projectTotalProfit = $profitOperation + $profitAsset;
-                $totalCompanyProfit += $projectTotalProfit;
+                $totalAssetProfit += $profitAsset;
             }
             
-            $companyProfitByMonth[$month] = $totalCompanyProfit;
+            $companyProfitByMonth[$month] = [
+                'asset' => $totalAssetProfit,
+                'operation' => $totalOperationProfit,
+                'total' => $totalAssetProfit + $totalOperationProfit
+            ];
         }
         
         return $companyProfitByMonth;
@@ -742,11 +706,12 @@ class UserFinancialReport extends Page implements HasForms
         }
         
         // Now calculate user profits using previous month's equity percentage
+        // Formula: User Profit = Equity % of user (previous month) * Company Profit (this month)
         foreach ($userFinancialData as $userId => &$userData) {
             $previousMonth = null;
             
             foreach ($monthsChronological as $month) {
-                $companyProfitThisMonth = $companyProfitByMonth[$month] ?? 0;
+                $companyProfitData = $companyProfitByMonth[$month] ?? ['asset' => 0, 'operation' => 0, 'total' => 0];
                 
                 // Get previous month's equity percentage (0 if no previous month)
                 $previousEquityPercentage = 0;
@@ -754,21 +719,12 @@ class UserFinancialReport extends Page implements HasForms
                     $previousEquityPercentage = $userData['equity_percentage'][$previousMonth];
                 }
                 
-                // Simple calculation: Equity % of user (previous month) * Company profit (this month)
-                $userTotalProfit = ($previousEquityPercentage / 100) * $companyProfitThisMonth;
+                // Calculate user profit: Equity % (previous month) * Company profit (this month)
+                $equityFraction = $previousEquityPercentage / 100;
                 
-                // Set all profit values
-                $userData['profit_asset'][$month] = $userTotalProfit * 0.5;
-                $userData['profit_operation'][$month] = $userTotalProfit * 0.5;
-                $userData['total_profit'][$month] = $userTotalProfit;
-
-                // Debug logging
-                $this->debugInfo['profit_calculations'][$month][$userId] = [
-                    'previous_month' => $previousMonth,
-                    'previous_equity_percentage' => $previousEquityPercentage,
-                    'company_profit_this_month' => $companyProfitThisMonth,
-                    'user_total_profit' => $userTotalProfit,
-                ];
+                $userData['profit_asset'][$month] = $equityFraction * $companyProfitData['asset'];
+                $userData['profit_operation'][$month] = $equityFraction * $companyProfitData['operation'];
+                $userData['total_profit'][$month] = $equityFraction * $companyProfitData['total'];
                 
                 $previousMonth = $month;
             }
@@ -797,14 +753,6 @@ class UserFinancialReport extends Page implements HasForms
         // monthsToShow is in reverse order (newest first)
         $endDate = Carbon::parse($monthsToShow[0])->endOfMonth(); // First element = newest month
         
-        $this->debugInfo['user_transactions_query_params'] = [
-            'end_date' => $endDate,
-            'note' => 'Getting ALL transactions from beginning of time up to end date',
-            'deposit_type' => UserTransaction::TYPE_DEPOSIT,
-            'withdrawal_type' => UserTransaction::TYPE_WITHDRAWAL,
-            'status_done' => UserTransaction::STATUS_DONE
-        ];
-
         $userTransactions = UserTransaction::query()
             ->select(
                 DB::raw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date"),
@@ -816,18 +764,6 @@ class UserFinancialReport extends Page implements HasForms
             ->groupBy('month_date')
             ->orderBy('month_date', 'asc') // Start from oldest
             ->get();
-
-        // Debug: Also check total user transactions without date filter
-        $totalUserTransactions = UserTransaction::where('status', UserTransaction::STATUS_DONE)->count();
-        $this->debugInfo['total_user_transactions_in_db'] = $totalUserTransactions;
-
-
-        // Debug: Log user transactions query results
-        $this->debugInfo['user_transactions_query'] = [
-            'total_found' => $userTransactions->count(),
-            'months_to_show' => $monthsToShow,
-            'transactions' => $userTransactions->toArray()
-        ];
 
         // Build a complete array of ALL user transactions (not just filtered months)
         $allUserFinancials = [];
@@ -848,18 +784,6 @@ class UserFinancialReport extends Page implements HasForms
                 $userFinancials['net'][$month] = $transaction->total_deposits - $transaction->total_withdrawals;
             }
         }
-
-        // Debug: Log final user financials
-        $this->debugInfo['user_financials_calculated'] = $userFinancials;
-        
-        // Debug: Compare with what Company Financial Report should get
-        $this->debugInfo['comparison_with_company_report'] = [
-            'user_report_deposits_oct' => $userFinancials['deposits']['2025-10-01'] ?? 0,
-            'user_report_withdrawals_oct' => $userFinancials['withdrawals']['2025-10-01'] ?? 0,
-            'user_report_deposits_sep' => $userFinancials['deposits']['2025-09-01'] ?? 0,
-            'user_report_withdrawals_sep' => $userFinancials['withdrawals']['2025-09-01'] ?? 0,
-            'expected_company_report_values' => 'Should match the Company Financial Report exactly'
-        ];
 
         // Calculate Evaluation (Expense - Revenue for each serving)
         $evaluation = ['asset' => [], 'operation' => [], 'total' => []];
@@ -897,13 +821,6 @@ class UserFinancialReport extends Page implements HasForms
                 ->sum('asset_evaluation');
             
             $equityTotal[$month] = $cashAmount + $assetEvaluation;
-            
-            // Debug logging
-            $this->debugInfo['company_equity_calculations'][$month] = [
-                'cash' => $cashAmount,
-                'asset_evaluation' => $assetEvaluation,
-                'total_equity' => $equityTotal[$month]
-            ];
         }
 
         return $equityTotal;

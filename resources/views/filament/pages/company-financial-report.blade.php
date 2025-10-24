@@ -455,40 +455,6 @@
 
     @endphp
 
-    {{-- Debug Section --}}
-    <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
-        <h3 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">🔍 Debug Info:</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <h4 class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">Month Range:</h4>
-                <pre class="text-xs bg-white dark:bg-gray-800 p-2 rounded overflow-x-auto">{{ json_encode($debugEarliestDates, JSON_PRETTY_PRINT) }}</pre>
-                <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                    Available: {{ $allMonths->count() }} months ({{ $allMonths->last() }} to {{ $allMonths->first() }})
-                </p>
-            </div>
-            
-            <div>
-                <h4 class="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">Cash Calculation:</h4>
-                <div class="text-xs bg-white dark:bg-gray-800 p-2 rounded">
-                    <p><strong>Source:</strong> 
-                        @if($cashSource === 'database_cache')
-                            <span class="text-green-600 dark:text-green-400">✅ Database Cache (Fast)</span>
-                        @else
-                            <span class="text-red-600 dark:text-red-400">⚠️ Manual Calculation (Slow)</span>
-                        @endif
-                    </p>
-                    <p class="mt-1"><strong>Filtered Months:</strong> {{ $monthsToShow->count() }}</p>
-                    @if($cashSource === 'manual_calculation')
-                        <p class="mt-2 text-red-600 dark:text-red-400">
-                            ⚠️ Run: <code class="bg-gray-100 dark:bg-gray-700 px-1">php artisan cash:calculate</code>
-                        </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-    
     {{-- Month Selection Form --}}
     <form action="{{ route('filament.admin.pages.company-financial-report') }}" method="GET"
         class="mb-6 p-4 bg-white rounded-lg shadow-sm dark:bg-gray-800">
