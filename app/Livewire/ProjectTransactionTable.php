@@ -458,29 +458,36 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
     public function getTableSummary(): array
     {
         try {
-            // Get base filtered query
+            // Get base filtered query with fallback
             $baseQuery = $this->getFilteredTableQuery();
+            
+            // If getFilteredTableQuery fails, use base query
+            if (!$baseQuery) {
+                $baseQuery = ProjectTransaction::query()->with('project.developer');
+            }
 
-            // Calculate totals from all filtered records - clone query for each calculation
+            // Calculate totals from all filtered records - use fresh queries for each calculation
             $recordCount = $baseQuery->count();
             $totalAmount = $baseQuery->sum('amount');
-            $totalRevenue = clone($baseQuery)->where('financial_type', 'revenue')->sum('amount');
-            $totalExpense = clone($baseQuery)->where('financial_type', 'expense')->sum('amount');
+            
+            // Create fresh queries for each calculation to avoid query state issues
+            $totalRevenue = $this->getFilteredTableQuery()->where('financial_type', 'revenue')->sum('amount');
+            $totalExpense = $this->getFilteredTableQuery()->where('financial_type', 'expense')->sum('amount');
 
             // Calculate serving breakdown for revenue
-            $revenueOperationTotal = clone($baseQuery)->where('financial_type', 'revenue')
+            $revenueOperationTotal = $this->getFilteredTableQuery()->where('financial_type', 'revenue')
                 ->where('serving', 'operation')->sum('amount');
-            $revenueAssetTotal = clone($baseQuery)->where('financial_type', 'revenue')
+            $revenueAssetTotal = $this->getFilteredTableQuery()->where('financial_type', 'revenue')
                 ->where('serving', 'asset')->sum('amount');
 
             // Calculate serving breakdown for expense
-            $expenseOperationTotal = clone($baseQuery)->where('financial_type', 'expense')
+            $expenseOperationTotal = $this->getFilteredTableQuery()->where('financial_type', 'expense')
                 ->where('serving', 'operation')->sum('amount');
-            $expenseAssetTotal = clone($baseQuery)->where('financial_type', 'expense')
+            $expenseAssetTotal = $this->getFilteredTableQuery()->where('financial_type', 'expense')
                 ->where('serving', 'asset')->sum('amount');
 
             // Get all records for status calculations
-            $allRecords = clone($baseQuery)->get();
+            $allRecords = $this->getFilteredTableQuery()->get();
 
             // Calculate status breakdown from the collection
             $doneTotalAmount = $allRecords->where('status', 'done')->sum('amount');
@@ -595,12 +602,11 @@ class ProjectTransactionTable extends Component implements HasTable, HasForms
                 ];
             }
 
-            // Use database aggregation for better performance
-            $baseQuery = ProjectTransaction::whereIn('id', $selectedIds);
-            $selectedCount = $baseQuery->count();
-            $selectedAmount = $baseQuery->sum('amount');
-            $selectedRevenue = clone($baseQuery)->where('financial_type', 'revenue')->sum('amount');
-            $selectedExpense = clone($baseQuery)->where('financial_type', 'expense')->sum('amount');
+            // Use database aggregation for better performance - create fresh queries
+            $selectedCount = ProjectTransaction::whereIn('id', $selectedIds)->count();
+            $selectedAmount = ProjectTransaction::whereIn('id', $selectedIds)->sum('amount');
+            $selectedRevenue = ProjectTransaction::whereIn('id', $selectedIds)->where('financial_type', 'revenue')->sum('amount');
+            $selectedExpense = ProjectTransaction::whereIn('id', $selectedIds)->where('financial_type', 'expense')->sum('amount');
 
             return [
                 'selected_records' => $selectedCount,
