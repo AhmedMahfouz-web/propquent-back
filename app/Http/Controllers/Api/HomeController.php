@@ -98,7 +98,6 @@ class HomeController extends Controller
                     ]
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -320,7 +319,7 @@ class HomeController extends Controller
             ->sum('amount');
 
         $withdrawals = UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', 'withdrawal')
+            ->where('transaction_type', 'withdraw')
             ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
@@ -349,7 +348,7 @@ class HomeController extends Controller
                 ->where('transaction_date', '<=', $endDate)
                 ->sum('amount');
 
-            $allWithdrawals = UserTransaction::where('transaction_type', 'withdrawal')
+            $allWithdrawals = UserTransaction::where('transaction_type', 'withdraw')
                 ->where('status', 'done')
                 ->where('transaction_date', '<=', $endDate)
                 ->sum('amount');
@@ -556,7 +555,6 @@ class HomeController extends Controller
                     ]
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -587,7 +585,7 @@ class HomeController extends Controller
             ->whereBetween('transaction_date', [$startMonth, $end->endOfMonth()])
             ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date")
             ->selectRaw("SUM(CASE WHEN transaction_type = 'deposit' THEN amount ELSE 0 END) as deposits")
-            ->selectRaw("SUM(CASE WHEN transaction_type = 'withdrawal' THEN amount ELSE 0 END) as withdrawals")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'withdraw' THEN amount ELSE 0 END) as withdrawals")
             ->groupBy('month_date')
             ->get()
             ->keyBy('month_date');
@@ -604,7 +602,7 @@ class HomeController extends Controller
             ->sum('amount');
 
         $withdrawalsBeforeStart = UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', 'withdrawal')
+            ->where('transaction_type', 'withdraw')
             ->where('status', 'done')
             ->where('transaction_date', '<', $startMonth)
             ->sum('amount');
@@ -672,7 +670,7 @@ class HomeController extends Controller
     private function calculateTotalWithdrawals(int $userId): float
     {
         return UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', 'withdrawal')
+            ->where('transaction_type', 'withdraw')
             ->where('status', 'done')
             ->sum('amount');
     }
