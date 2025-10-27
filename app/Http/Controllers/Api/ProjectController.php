@@ -50,7 +50,7 @@ class ProjectController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = $this->model::query()->with('media');
+            $query = $this->model::query()->with(['media', 'developer', 'compound']);
 
             // Apply search
             $this->applySearch($query, $request);
@@ -106,7 +106,7 @@ class ProjectController extends BaseApiController
     public function show(Request $request, $id): JsonResponse
     {
         try {
-            $resource = $this->model::with('media')->findOrFail($id);
+            $resource = $this->model::with(['media', 'developer', 'compound'])->findOrFail($id);
 
             $data = $this->resource ? new $this->resource($resource) : $resource;
 

@@ -15,28 +15,62 @@ class ProjectResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            // Primary identifiers
             'id' => $this->id,
             'project_key' => $this->project_key,
+            'key' => $this->key,
             'title' => $this->title,
-            'description' => $this->description,
-            'unit' => $this->unit,
+            
+            // Location information
+            'location' => $this->location,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'map_location' => $this->map_location,
+            
+            // Property details
+            'type' => $this->type,
+            'unit_no' => $this->unit_no,
+            'project' => $this->project,
             'area' => $this->area,
             'garden_area' => $this->garden_area,
-            'compound' => $this->compound,
+            'bedrooms' => $this->bedrooms,
+            'bathrooms' => $this->bathrooms,
+            'floor' => $this->floor,
+            
+            // Status and stage
             'status' => $this->status,
             'stage' => $this->stage,
-            'type' => $this->type,
-            'investment_type' => $this->investment_type,
+            'target_1' => $this->target_1,
+            'target_2' => $this->target_2,
+            
+            // Dates
+            'entry_date' => $this->entry_date?->toDateString(),
+            'exit_date' => $this->exit_date?->toDateString(),
             'reservation_date' => $this->reservation_date?->toDateString(),
             'contract_date' => $this->contract_date?->toDateString(),
+            
+            // Financial information
+            'investment_type' => $this->investment_type,
+            'years_of_installment' => $this->years_of_installment,
             'total_contract_value' => $this->total_contract_value,
-            'years' => $this->years,
+            
+            // Additional information
+            'document' => $this->document,
             'notes' => $this->notes,
+            
+            // Timestamps
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
             
             // Relationships (when loaded)
             'developer' => new DeveloperResource($this->whenLoaded('developer')),
+            'compound' => $this->whenLoaded('compound', function () {
+                return [
+                    'id' => $this->compound?->id,
+                    'name' => $this->compound?->name,
+                    'location' => $this->compound?->location,
+                ];
+            }),
             'transactions_count' => $this->whenCounted('transactions'),
             'transactions' => ProjectTransactionResource::collection($this->whenLoaded('transactions')),
             'evaluations' => ProjectEvaluationResource::collection($this->whenLoaded('evaluations')),
