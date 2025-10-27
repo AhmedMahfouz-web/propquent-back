@@ -199,7 +199,7 @@ class HomeController extends Controller
             ->sum('amount');
 
         $totalWithdrawals = UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', 'withdrawa')
+            ->where('transaction_type', 'withdraw')
             ->where('status', 'done')
             ->sum('amount');
 
