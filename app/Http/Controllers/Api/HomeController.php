@@ -276,28 +276,84 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate user's equity percentage based on their investment
+     * Calculate user's equity percentage based on company total equity (cash + asset evaluation)
+     * This matches User Financial Report calculation EXACTLY
      */
     private function getUserEquityPercentage(int $userId, Carbon $endDate): float
     {
-        // Get user's total investment (deposits) up to the given date
-        $userInvestment = UserTransaction::where('user_id', $userId)
+        // Calculate user's cumulative equity up to the given date
+        // This needs to be calculated month by month to match User Financial Report
+        $userEquity = $this->calculateUserCumulativeEquity($userId, $endDate);
+
+        // Calculate company total equity (cash + asset evaluation)
+        $companyTotalEquity = $this->calculateCompanyTotalEquity($endDate);
+
+        if ($companyTotalEquity == 0) {
+            return 0;
+        }
+
+        return $userEquity / $companyTotalEquity;
+    }
+    
+    /**
+     * Calculate user's cumulative equity (deposits - withdrawals)
+     */
+    private function calculateUserCumulativeEquity(int $userId, Carbon $endDate): float
+    {
+        $deposits = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'deposit')
             ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
-
-        // Get total investment from all users up to the given date
-        $totalInvestment = UserTransaction::where('transaction_type', 'deposit')
+            
+        $withdrawals = UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', 'withdrawal')
             ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
-
-        if ($totalInvestment == 0) {
-            return 0;
-        }
-
-        return $userInvestment / $totalInvestment;
+            
+        return $deposits - $withdrawals;
+    }
+    
+    /**
+     * Calculate company total equity (cash + asset evaluation)
+     * Matches User Financial Report calculation: Cash = Previous Cash + Deposits + Revenue - Withdrawals - Expense
+     */
+    private function calculateCompanyTotalEquity(Carbon $endDate): float
+    {
+        $month = $endDate->format('Y-m-01');
+        
+        // Calculate cumulative cash up to this date
+        // Formula: Cash = Deposits + Revenue - Withdrawals - Expenses (cumulative)
+        $allDeposits = UserTransaction::where('transaction_type', 'deposit')
+            ->where('status', 'done')
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+            
+        $allWithdrawals = UserTransaction::where('transaction_type', 'withdrawal')
+            ->where('status', 'done')
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+            
+        $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
+            ->where('status', 'done')
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+            
+        $allExpenses = ProjectTransaction::where('financial_type', 'expense')
+            ->where('status', 'done')
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+        
+        // Cumulative cash calculation (same as User Financial Report)
+        $cash = $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
+        
+        // Get total asset evaluation for this month from MonthlyProjectEvaluation
+        $assetEvaluation = MonthlyProjectEvaluation::where('month_date', $month)
+            ->sum('asset_evaluation');
+        
+        // Company Total Equity = Cash + Asset Evaluation
+        return $cash + $assetEvaluation;
     }
 
     /**
