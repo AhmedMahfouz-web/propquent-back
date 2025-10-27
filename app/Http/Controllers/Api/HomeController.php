@@ -140,18 +140,27 @@ class HomeController extends Controller
 
     /**
      * Calculate total profit for user (matches User Financial Report logic)
-     * Formula: User Profit = Previous Month Equity % × Current Month Company Profit
+     * Formula: User Profit = (Previous Month Equity % / 100) × Current Month Company Profit
      * 
      * Where Company Profit = Asset Profit + Operation Profit
      * - Asset Profit: (Current Evaluation - Previous Evaluation + Revenue - Expense)
      * - Operation Profit: (Revenue - Expense)
+     * 
+     * IMPORTANT: Uses PREVIOUS month's equity percentage (as a fraction, not percentage)
      */
     private function calculateTotalProfit(int $userId, Carbon $endDate): float
     {
-        $previousMonthEquity = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
+        // Get previous month's equity percentage
+        $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
+        
+        // Convert percentage to fraction (divide by 100)
+        $equityFraction = $previousMonthEquityPercentage / 100;
+        
+        // Get current month's company profit
         $currentMonthProjectsProfit = $this->getCurrentMonthProjectsProfit($endDate);
         
-        return $previousMonthEquity * $currentMonthProjectsProfit;
+        // User Profit = Equity Fraction × Company Profit
+        return $equityFraction * $currentMonthProjectsProfit;
     }
 
     /**
@@ -278,11 +287,11 @@ class HomeController extends Controller
     /**
      * Calculate user's equity percentage based on company total equity (cash + asset evaluation)
      * This matches User Financial Report calculation EXACTLY
+     * Returns as PERCENTAGE (e.g., 0.78 for 0.78%), not fraction
      */
     private function getUserEquityPercentage(int $userId, Carbon $endDate): float
     {
         // Calculate user's cumulative equity up to the given date
-        // This needs to be calculated month by month to match User Financial Report
         $userEquity = $this->calculateUserCumulativeEquity($userId, $endDate);
 
         // Calculate company total equity (cash + asset evaluation)
@@ -292,7 +301,9 @@ class HomeController extends Controller
             return 0;
         }
 
-        return $userEquity / $companyTotalEquity;
+        // Return as percentage (multiply by 100)
+        // e.g., if user has $150k and company has $19.2M, return 0.78 (not 0.0078)
+        return ($userEquity / $companyTotalEquity) * 100;
     }
     
     /**
@@ -429,25 +440,27 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate asset profit (previous month equity * current month asset projects profit)
+     * Calculate asset profit (previous month equity % / 100 * current month asset projects profit)
      */
     private function calculateAssetProfit(int $userId, Carbon $endDate): float
     {
-        $previousMonthEquity = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
+        $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
+        $equityFraction = $previousMonthEquityPercentage / 100;
         $currentMonthAssetProfit = $this->getCurrentMonthAssetProjectsProfit($endDate);
         
-        return $previousMonthEquity * $currentMonthAssetProfit;
+        return $equityFraction * $currentMonthAssetProfit;
     }
 
     /**
-     * Calculate operation profit (previous month equity * current month operation projects profit)
+     * Calculate operation profit (previous month equity % / 100 * current month operation projects profit)
      */
     private function calculateOperationProfit(int $userId, Carbon $endDate): float
     {
-        $previousMonthEquity = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
+        $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
+        $equityFraction = $previousMonthEquityPercentage / 100;
         $currentMonthOperationProfit = $this->getCurrentMonthOperationProjectsProfit($endDate);
         
-        return $previousMonthEquity * $currentMonthOperationProfit;
+        return $equityFraction * $currentMonthOperationProfit;
     }
 
     /**
