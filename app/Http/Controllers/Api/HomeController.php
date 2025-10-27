@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UserTransaction;
 use App\Models\ProjectTransaction;
 use App\Models\MonthlyProjectEvaluation;
+use App\Models\MonthlyCashBalance;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -329,36 +330,42 @@ class HomeController extends Controller
     
     /**
      * Calculate company total equity (cash + asset evaluation)
-     * Matches User Financial Report calculation: Cash = Previous Cash + Deposits + Revenue - Withdrawals - Expense
+     * Uses cached MonthlyCashBalance table when available, calculates manually as fallback
      */
     private function calculateCompanyTotalEquity(Carbon $endDate): float
     {
         $month = $endDate->format('Y-m-01');
         
-        // Calculate cumulative cash up to this date
-        // Formula: Cash = Deposits + Revenue - Withdrawals - Expenses (cumulative)
-        $allDeposits = UserTransaction::where('transaction_type', 'deposit')
-            ->where('status', 'done')
-            ->where('transaction_date', '<=', $endDate)
-            ->sum('amount');
-            
-        $allWithdrawals = UserTransaction::where('transaction_type', 'withdrawal')
-            ->where('status', 'done')
-            ->where('transaction_date', '<=', $endDate)
-            ->sum('amount');
-            
-        $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('status', 'done')
-            ->where('transaction_date', '<=', $endDate)
-            ->sum('amount');
-            
-        $allExpenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('status', 'done')
-            ->where('transaction_date', '<=', $endDate)
-            ->sum('amount');
+        // Try to get cached cash balance first
+        $cachedCash = MonthlyCashBalance::where('month_date', $month)->first();
         
-        // Cumulative cash calculation (same as User Financial Report)
-        $cash = $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
+        if ($cachedCash) {
+            // Use cached cash balance
+            $cash = (float) $cachedCash->cash_balance;
+        } else {
+            // Fallback: Calculate manually
+            $allDeposits = UserTransaction::where('transaction_type', 'deposit')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+                
+            $allWithdrawals = UserTransaction::where('transaction_type', 'withdrawal')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+                
+            $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+                
+            $allExpenses = ProjectTransaction::where('financial_type', 'expense')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+            
+            $cash = $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
+        }
         
         // Get total asset evaluation for this month from MonthlyProjectEvaluation
         $assetEvaluation = MonthlyProjectEvaluation::where('month_date', $month)
