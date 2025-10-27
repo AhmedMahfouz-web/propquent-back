@@ -112,7 +112,7 @@ class HomeController extends Controller
     {
         return UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'deposit')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
     }
@@ -178,12 +178,12 @@ class HomeController extends Controller
     {
         $totalDeposits = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'deposit')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->sum('amount');
 
         $totalWithdrawals = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'withdrawal')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->sum('amount');
 
         return [
@@ -271,13 +271,13 @@ class HomeController extends Controller
         // Get user's total investment (deposits) up to the given date
         $userInvestment = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'deposit')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
 
         // Get total investment from all users up to the given date
         $totalInvestment = UserTransaction::where('transaction_type', 'deposit')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
 
@@ -297,13 +297,13 @@ class HomeController extends Controller
 
         // Get revenue from project transactions for current month
         $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
         // Get expenses from project transactions for current month
         $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
@@ -342,14 +342,14 @@ class HomeController extends Controller
         // Get revenue from asset project transactions for current month
         $revenue = ProjectTransaction::where('financial_type', 'revenue')
             ->where('serving', 'asset')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
         // Get expenses from asset project transactions for current month
         $expenses = ProjectTransaction::where('financial_type', 'expense')
             ->where('serving', 'asset')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
@@ -366,14 +366,14 @@ class HomeController extends Controller
         // Get revenue from operation project transactions for current month
         $revenue = ProjectTransaction::where('financial_type', 'revenue')
             ->where('serving', 'operation')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
         // Get expenses from operation project transactions for current month
         $expenses = ProjectTransaction::where('financial_type', 'expense')
             ->where('serving', 'operation')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
@@ -447,7 +447,7 @@ class HomeController extends Controller
     {
         return UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'deposit')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->sum('amount');
     }
 
@@ -458,7 +458,7 @@ class HomeController extends Controller
     {
         return UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'withdrawal')
-            ->where('status', 'completed')
+            ->where('status', 'done')
             ->sum('amount');
     }
 }
