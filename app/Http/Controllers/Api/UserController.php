@@ -182,6 +182,65 @@ class UserController extends BaseApiController
     }
 
     /**
+     * Update authenticated user's profile
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            // Validate request
+            $validated = $request->validate([
+                'full_name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|unique:users,email,' . $user->id,
+                'phone_number' => 'sometimes|string|max:20',
+                'country' => 'sometimes|string|max:100',
+                'theme_color' => 'sometimes|nullable|string|max:50',
+                'custom_theme_color' => 'sometimes|nullable|string|max:7',
+                'password' => 'sometimes|string|min:8|confirmed',
+            ]);
+
+            // Update password if provided
+            if (isset($validated['password'])) {
+                $validated['password'] = Hash::make($validated['password']);
+            }
+
+            // Update user
+            $user->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'id' => $user->id,
+                    'full_name' => $user->full_name,
+                    'custom_id' => $user->custom_id,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'country' => $user->country,
+                    'profile_picture_url' => $user->profile_picture_url,
+                    'theme_color' => $user->theme_color,
+                    'custom_theme_color' => $user->custom_theme_color,
+                    'updated_at' => $user->updated_at
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Validate store request - Not used since store is disabled
      */
     protected function validateStoreRequest(Request $request): array

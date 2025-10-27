@@ -38,8 +38,9 @@ Route::middleware(['jwt.auth'])->group(function () {
     // Home Dashboard Route
     Route::get('/home/dashboard', [HomeController::class, 'dashboard'])->name('api.home.dashboard');
     
-    // User Profile Route
+    // User Profile Routes
     Route::get('/profile', [UserController::class, 'profile'])->name('api.profile');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('api.profile.update');
 
     // User Management Routes
     Route::apiResource('users', UserController::class);
