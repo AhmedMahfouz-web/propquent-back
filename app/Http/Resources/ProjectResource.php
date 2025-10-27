@@ -40,7 +40,23 @@ class ProjectResource extends JsonResource
             'transactions_count' => $this->whenCounted('transactions'),
             'transactions' => ProjectTransactionResource::collection($this->whenLoaded('transactions')),
             'evaluations' => ProjectEvaluationResource::collection($this->whenLoaded('evaluations')),
-            'images' => ProjectImageResource::collection($this->whenLoaded('images')),
+            
+            // Media/Images (Spatie Media Library)
+            'images' => $this->when($this->relationLoaded('media'), function () {
+                return $this->getMedia('images')->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'mime_type' => $media->mime_type,
+                        'size' => $media->size,
+                        'url' => $media->getUrl(),
+                        'thumbnail_url' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl(),
+                        'preview_url' => $media->hasGeneratedConversion('preview') ? $media->getUrl('preview') : $media->getUrl(),
+                        'created_at' => $media->created_at?->toISOString(),
+                    ];
+                });
+            }),
         ];
     }
 }

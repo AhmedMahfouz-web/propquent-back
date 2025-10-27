@@ -24,32 +24,32 @@ class HomeController extends Controller
         try {
             $user = Auth::user();
             $currentDate = Carbon::now();
-            
+
             // Main financial summary always uses current month (no date filtering)
             $capitalInvestment = $this->calculateCapitalInvestment($user->id, $currentDate);
             $capitalChangePercent = $this->calculateCapitalChangePercent($user->id, $currentDate);
-            
+
             $totalProfit = $this->calculateTotalProfit($user->id, $currentDate);
             $thisMonthProfit = $this->calculateThisMonthProfit($user->id, $currentDate);
             $assetProfit = $this->calculateAssetProfit($user->id, $currentDate);
             $operationProfit = $this->calculateOperationProfit($user->id, $currentDate);
-            
+
             $roi = $this->calculateROI($user->id, $currentDate);
-            
+
             $depositData = $this->calculateDepositData($user->id);
-            
+
             // Historical data: Get date range from request or default to last 12 months
-            $historicalEndDate = $request->has('end_date') 
-                ? Carbon::parse($request->end_date) 
+            $historicalEndDate = $request->has('end_date')
+                ? Carbon::parse($request->end_date)
                 : $currentDate;
-            
-            $historicalStartDate = $request->has('start_date') 
-                ? Carbon::parse($request->start_date) 
+
+            $historicalStartDate = $request->has('start_date')
+                ? Carbon::parse($request->start_date)
                 : $historicalEndDate->copy()->subMonths(12);
-            
+
             // Get historical data for charts (only capital and profit)
             $historicalData = $this->getHistoricalData($user->id, $historicalStartDate, $historicalEndDate);
-            
+
             // Get recent transactions
             $transactionsPerPage = $request->get('per_page', 10);
             $transactionsPage = $request->get('transactions_page', 1);
@@ -142,24 +142,24 @@ class HomeController extends Controller
     /**
      * Calculate total profit for user (matches User Financial Report logic)
      * Formula: User Profit = (Previous Month Equity % / 100) × Current Month Company Profit
-     * 
+     *
      * Where Company Profit = Asset Profit + Operation Profit
      * - Asset Profit: (Current Evaluation - Previous Evaluation + Revenue - Expense)
      * - Operation Profit: (Revenue - Expense)
-     * 
+     *
      * IMPORTANT: Uses PREVIOUS month's equity percentage (as a fraction, not percentage)
      */
     private function calculateTotalProfit(int $userId, Carbon $endDate): float
     {
         // Get previous month's equity percentage
         $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
-        
+
         // Convert percentage to fraction (divide by 100)
         $equityFraction = $previousMonthEquityPercentage / 100;
-        
+
         // Get current month's company profit
         $currentMonthProjectsProfit = $this->getCurrentMonthProjectsProfit($endDate);
-        
+
         // User Profit = Equity Fraction × Company Profit
         return $equityFraction * $currentMonthProjectsProfit;
     }
@@ -199,7 +199,7 @@ class HomeController extends Controller
             ->sum('amount');
 
         $totalWithdrawals = UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', 'withdrawal')
+            ->where('transaction_type', 'withdrawa')
             ->where('status', 'done')
             ->sum('amount');
 
@@ -307,7 +307,7 @@ class HomeController extends Controller
         // e.g., if user has $150k and company has $19.2M, return 0.78 (not 0.0078)
         return ($userEquity / $companyTotalEquity) * 100;
     }
-    
+
     /**
      * Calculate user's cumulative equity (deposits - withdrawals)
      */
@@ -318,16 +318,16 @@ class HomeController extends Controller
             ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
-            
+
         $withdrawals = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'withdrawal')
             ->where('status', 'done')
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
-            
+
         return $deposits - $withdrawals;
     }
-    
+
     /**
      * Calculate company total equity (cash + asset evaluation)
      * Uses cached MonthlyCashBalance table when available, calculates manually as fallback
@@ -335,10 +335,10 @@ class HomeController extends Controller
     private function calculateCompanyTotalEquity(Carbon $endDate): float
     {
         $month = $endDate->format('Y-m-01');
-        
+
         // Try to get cached cash balance first
         $cachedCash = MonthlyCashBalance::where('month_date', $month)->first();
-        
+
         if ($cachedCash) {
             // Use cached cash balance
             $cash = (float) $cachedCash->cash_balance;
@@ -348,29 +348,29 @@ class HomeController extends Controller
                 ->where('status', 'done')
                 ->where('transaction_date', '<=', $endDate)
                 ->sum('amount');
-                
+
             $allWithdrawals = UserTransaction::where('transaction_type', 'withdrawal')
                 ->where('status', 'done')
                 ->where('transaction_date', '<=', $endDate)
                 ->sum('amount');
-                
+
             $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
                 ->where('status', 'done')
                 ->where('transaction_date', '<=', $endDate)
                 ->sum('amount');
-                
+
             $allExpenses = ProjectTransaction::where('financial_type', 'expense')
                 ->where('status', 'done')
                 ->where('transaction_date', '<=', $endDate)
                 ->sum('amount');
-            
+
             $cash = $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
         }
-        
+
         // Get total asset evaluation for this month from MonthlyProjectEvaluation
         $assetEvaluation = MonthlyProjectEvaluation::where('month_date', $month)
             ->sum('asset_evaluation');
-        
+
         // Company Total Equity = Cash + Asset Evaluation
         return $cash + $assetEvaluation;
     }
@@ -382,10 +382,10 @@ class HomeController extends Controller
     {
         $assetProfit = $this->calculateCurrentMonthAssetProfit($endDate);
         $operationProfit = $this->calculateCurrentMonthOperationProfit($endDate);
-        
+
         return $assetProfit + $operationProfit;
     }
-    
+
     /**
      * Calculate current month's asset profit (using evaluation-based formula)
      */
@@ -393,36 +393,36 @@ class HomeController extends Controller
     {
         $currentMonth = $endDate->format('Y-m-01');
         $previousMonth = $endDate->copy()->subMonth()->format('Y-m-01');
-        
+
         $totalAssetProfit = 0;
         $projects = Project::all();
-        
+
         foreach ($projects as $project) {
             // Get current month evaluation
             $currentEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
                 ->where('month_date', $currentMonth)
                 ->first();
-            
+
             // Get previous month evaluation
             $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
                 ->where('month_date', $previousMonth)
                 ->first();
-            
+
             if ($currentEvaluation) {
                 $currentAssetEval = (float) $currentEvaluation->asset_evaluation;
                 $previousAssetEval = $previousEvaluation ? (float) $previousEvaluation->asset_evaluation : 0;
                 $revenueAsset = (float) $currentEvaluation->revenue_asset;
                 $expenseAsset = (float) $currentEvaluation->expense_asset;
-                
+
                 // Profit Asset Formula: Current Evaluation - Previous Evaluation + Revenue - Expense
                 $profitAsset = $currentAssetEval - $previousAssetEval + $revenueAsset - $expenseAsset;
                 $totalAssetProfit += $profitAsset;
             }
         }
-        
+
         return $totalAssetProfit;
     }
-    
+
     /**
      * Calculate current month's operation profit (simple revenue - expense)
      */
@@ -455,7 +455,7 @@ class HomeController extends Controller
         $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
         $equityFraction = $previousMonthEquityPercentage / 100;
         $currentMonthAssetProfit = $this->getCurrentMonthAssetProjectsProfit($endDate);
-        
+
         return $equityFraction * $currentMonthAssetProfit;
     }
 
@@ -467,7 +467,7 @@ class HomeController extends Controller
         $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $endDate->copy()->subMonth());
         $equityFraction = $previousMonthEquityPercentage / 100;
         $currentMonthOperationProfit = $this->getCurrentMonthOperationProjectsProfit($endDate);
-        
+
         return $equityFraction * $currentMonthOperationProfit;
     }
 
@@ -497,11 +497,11 @@ class HomeController extends Controller
             $currentDate = Carbon::now();
 
             // Get date range from request or default to last 12 months
-            $endMonth = $request->has('end_month') 
+            $endMonth = $request->has('end_month')
                 ? Carbon::parse($request->end_month)->format('Y-m-01')
                 : $currentDate->format('Y-m-01');
-            
-            $startMonth = $request->has('start_month') 
+
+            $startMonth = $request->has('start_month')
                 ? Carbon::parse($request->start_month)->format('Y-m-01')
                 : Carbon::parse($endMonth)->subMonths(11)->format('Y-m-01');
 
@@ -513,7 +513,7 @@ class HomeController extends Controller
             $totalDeposits = $this->calculateTotalDeposits($user->id);
             $totalWithdrawals = $this->calculateTotalWithdrawals($user->id);
             $currentEquity = $totalDeposits - $totalWithdrawals;
-            
+
             // Get current month profit
             $currentMonthProfit = $this->calculateTotalProfit($user->id, $currentDate);
             $currentAssetProfit = $this->calculateAssetProfit($user->id, $currentDate);
@@ -575,7 +575,7 @@ class HomeController extends Controller
         $months = [];
         $current = Carbon::parse($startMonth);
         $end = Carbon::parse($endMonth);
-        
+
         while ($current <= $end) {
             $months[] = $current->format('Y-m-01');
             $current->addMonth();
@@ -595,42 +595,42 @@ class HomeController extends Controller
         // Build monthly data
         $monthlyData = [];
         $previousEquity = 0;
-        
+
         // Get equity from before start month
         $depositsBeforeStart = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'deposit')
             ->where('status', 'done')
             ->where('transaction_date', '<', $startMonth)
             ->sum('amount');
-            
+
         $withdrawalsBeforeStart = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', 'withdrawal')
             ->where('status', 'done')
             ->where('transaction_date', '<', $startMonth)
             ->sum('amount');
-            
+
         $previousEquity = $depositsBeforeStart - $withdrawalsBeforeStart;
 
         foreach ($months as $month) {
             $monthEnd = Carbon::parse($month)->endOfMonth();
             $deposits = $transactions[$month]->deposits ?? 0;
             $withdrawals = $transactions[$month]->withdrawals ?? 0;
-            
+
             // Calculate cumulative equity
             $equity = $previousEquity + $deposits - $withdrawals;
-            
+
             // Get equity percentage for this month
             $equityPercentage = $this->getUserEquityPercentage($userId, $monthEnd);
-            
+
             // Get company profit for this month
             $companyProfit = $this->getCurrentMonthProjectsProfit($monthEnd);
-            
+
             // Calculate user profit using previous month's equity percentage
             $previousMonthEnd = Carbon::parse($month)->subMonth()->endOfMonth();
             $previousEquityPercentage = $this->getUserEquityPercentage($userId, $previousMonthEnd);
             $equityFraction = $previousEquityPercentage / 100;
             $totalProfit = $equityFraction * $companyProfit;
-            
+
             // Get asset and operation profit breakdown
             $assetCompanyProfit = $this->calculateCurrentMonthAssetProfit($monthEnd);
             $operationCompanyProfit = $this->calculateCurrentMonthOperationProfit($monthEnd);
@@ -648,7 +648,7 @@ class HomeController extends Controller
                 'profit_operation' => round($operationProfit, 2),
                 'total_profit' => round($totalProfit, 2)
             ];
-            
+
             $previousEquity = $equity;
         }
 

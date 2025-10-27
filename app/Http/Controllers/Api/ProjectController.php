@@ -45,6 +45,87 @@ class ProjectController extends BaseApiController
     ];
 
     /**
+     * Get all projects with images - Override parent to include media
+     */
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $query = $this->model::query()->with('media');
+
+            // Apply search
+            $this->applySearch($query, $request);
+
+            // Apply filters
+            $this->applyFilters($query, $request);
+
+            // Apply sorting
+            $this->applySorting($query, $request);
+
+            // Get pagination parameters
+            $perPage = min(
+                $request->get('per_page', $this->perPage),
+                $this->maxPerPage
+            );
+
+            // Paginate results
+            $results = $query->paginate($perPage);
+
+            // Transform using resource if available
+            if ($this->resource) {
+                $results->getCollection()->transform(function ($item) {
+                    return new $this->resource($item);
+                });
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resources retrieved successfully',
+                'data' => $results->items(),
+                'pagination' => [
+                    'current_page' => $results->currentPage(),
+                    'per_page' => $results->perPage(),
+                    'total' => $results->total(),
+                    'last_page' => $results->lastPage(),
+                    'from' => $results->firstItem(),
+                    'to' => $results->lastItem(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve resources',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show a specific project with images - Override parent to include media
+     */
+    public function show(Request $request, $id): JsonResponse
+    {
+        try {
+            $resource = $this->model::with('media')->findOrFail($id);
+
+            $data = $this->resource ? new $this->resource($resource) : $resource;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Resource retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Resource not found',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
      * Store method disabled - Projects can only be managed through Filament admin
      */
     public function store(Request $request): JsonResponse
@@ -114,8 +195,8 @@ class ProjectController extends BaseApiController
             // Get user's equity percentage
             $userEquity = $this->getUserEquityPercentage($user->id, $currentDate);
 
-            // Get all projects with their financial data
-            $projects = Project::with(['developer'])
+            // Get all projects with their financial data and images
+            $projects = Project::with(['developer', 'media'])
                 ->get()
                 ->map(function ($project) use ($userEquity) {
                     return $this->enrichProjectWithFinancialData($project, $userEquity);
@@ -176,6 +257,21 @@ class ProjectController extends BaseApiController
         $userInvestedAmount = $userEquity * $projectNetRevenue;
         $userProfitFromProject = $userEquity * $projectTotalProfit;
 
+        // Get project images with URLs
+        $images = $project->getMedia('images')->map(function ($media) {
+            return [
+                'id' => $media->id,
+                'name' => $media->name,
+                'file_name' => $media->file_name,
+                'mime_type' => $media->mime_type,
+                'size' => $media->size,
+                'url' => $media->getUrl(),
+                'thumbnail_url' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl(),
+                'preview_url' => $media->hasGeneratedConversion('preview') ? $media->getUrl('preview') : $media->getUrl(),
+                'created_at' => $media->created_at,
+            ];
+        });
+
         return [
             'id' => $project->id,
             'key' => $project->key,
@@ -198,6 +294,7 @@ class ProjectController extends BaseApiController
                 'id' => $project->developer->id ?? null,
                 'name' => $project->developer->name ?? null,
             ],
+            'images' => $images,
             'financial_data' => [
                 'project_revenue' => $projectRevenue,
                 'project_expenses' => $projectExpenses,
