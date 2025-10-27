@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Models\UserTransaction;
 use App\Models\ProjectTransaction;
+use App\Models\MonthlyProjectEvaluation;
+use App\Models\MonthlyCashBalance;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -194,21 +198,80 @@ class UserController extends BaseApiController
         return [];
     }
 
-    // Financial calculation methods (matches User Financial Report)
+    // Financial calculation methods (matches User Financial Report and HomeController)
     private function getUserEquityPercentage(int $userId, Carbon $endDate): float
     {
-        $userInvestment = UserTransaction::where('user_id', $userId)
+        // Calculate user's cumulative equity (deposits - withdrawals)
+        $userEquity = $this->calculateUserCumulativeEquity($userId, $endDate);
+        
+        // Calculate company total equity (cash + asset evaluation)
+        $companyTotalEquity = $this->calculateCompanyTotalEquity($endDate);
+        
+        if ($companyTotalEquity == 0) {
+            return 0;
+        }
+        
+        // Return as percentage (e.g., 0.78 for 0.78%)
+        return ($userEquity / $companyTotalEquity) * 100;
+    }
+    
+    private function calculateUserCumulativeEquity(int $userId, Carbon $endDate): float
+    {
+        $deposits = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', UserTransaction::TYPE_DEPOSIT)
             ->where('status', UserTransaction::STATUS_DONE)
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
 
-        $totalInvestment = UserTransaction::where('transaction_type', UserTransaction::TYPE_DEPOSIT)
+        $withdrawals = UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
             ->where('status', UserTransaction::STATUS_DONE)
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
 
-        return $totalInvestment == 0 ? 0 : ($userInvestment / $totalInvestment) * 100;
+        return $deposits - $withdrawals;
+    }
+    
+    private function calculateCompanyTotalEquity(Carbon $endDate): float
+    {
+        $month = $endDate->format('Y-m-01');
+        
+        // Try to get cached cash balance first
+        $cachedCash = MonthlyCashBalance::where('month_date', $month)->first();
+        
+        if ($cachedCash) {
+            $cash = (float) $cachedCash->cash_balance;
+        } else {
+            // Fallback: Calculate manually
+            $allDeposits = UserTransaction::where('transaction_type', UserTransaction::TYPE_DEPOSIT)
+                ->where('status', UserTransaction::STATUS_DONE)
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $allWithdrawals = UserTransaction::where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
+                ->where('status', UserTransaction::STATUS_DONE)
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $allExpenses = ProjectTransaction::where('financial_type', 'expense')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $cash = $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
+        }
+        
+        // Get total asset evaluation for this month from MonthlyProjectEvaluation
+        $assetEvaluation = MonthlyProjectEvaluation::where('month_date', $month)
+            ->sum('asset_evaluation');
+        
+        // Company Total Equity = Cash + Asset Evaluation
+        return $cash + $assetEvaluation;
     }
 
     private function calculateTotalDeposits(int $userId): float
@@ -256,57 +319,79 @@ class UserController extends BaseApiController
 
     private function getCurrentMonthProjectsProfit(Carbon $endDate): float
     {
-        $monthStart = $endDate->copy()->startOfMonth();
+        $assetProfit = $this->calculateCurrentMonthAssetProfit($endDate);
+        $operationProfit = $this->calculateCurrentMonthOperationProfit($endDate);
 
-        $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
+        return $assetProfit + $operationProfit;
+    }
 
-        $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
+    private function calculateCurrentMonthAssetProfit(Carbon $endDate): float
+    {
+        $currentMonth = $endDate->format('Y-m-01');
+        $previousMonth = $endDate->copy()->subMonth()->format('Y-m-01');
 
-        return $revenue - $expenses;
+        $totalAssetProfit = 0;
+        $projects = Project::all();
+
+        foreach ($projects as $project) {
+            // Get current month evaluation
+            $currentEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $currentMonth)
+                ->first();
+
+            // Get previous month evaluation
+            $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $previousMonth)
+                ->first();
+
+            if ($currentEvaluation) {
+                $currentAssetEval = (float) $currentEvaluation->asset_evaluation;
+                $previousAssetEval = $previousEvaluation ? (float) $previousEvaluation->asset_evaluation : 0;
+                $revenueAsset = (float) $currentEvaluation->revenue_asset;
+                $expenseAsset = (float) $currentEvaluation->expense_asset;
+
+                // Profit Asset Formula: Current Evaluation - Previous Evaluation + Revenue - Expense
+                $profitAsset = $currentAssetEval - $previousAssetEval + $revenueAsset - $expenseAsset;
+                $totalAssetProfit += $profitAsset;
+            }
+        }
+
+        return $totalAssetProfit;
+    }
+
+    private function calculateCurrentMonthOperationProfit(Carbon $endDate): float
+    {
+        $currentMonth = $endDate->format('Y-m-01');
+
+        $totalOperationProfit = 0;
+        $projects = Project::all();
+
+        foreach ($projects as $project) {
+            $evaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $currentMonth)
+                ->first();
+
+            if ($evaluation) {
+                $revenueOperation = (float) $evaluation->revenue_operation;
+                $expenseOperation = (float) $evaluation->expense_operation;
+
+                // Profit Operation Formula: Revenue - Expense
+                $profitOperation = $revenueOperation - $expenseOperation;
+                $totalOperationProfit += $profitOperation;
+            }
+        }
+
+        return $totalOperationProfit;
     }
 
     private function getCurrentMonthAssetProjectsProfit(Carbon $endDate): float
     {
-        $monthStart = $endDate->copy()->startOfMonth();
-
-        $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('serving', 'asset')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('serving', 'asset')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        return $revenue - $expenses;
+        return $this->calculateCurrentMonthAssetProfit($endDate);
     }
 
     private function getCurrentMonthOperationProjectsProfit(Carbon $endDate): float
     {
-        $monthStart = $endDate->copy()->startOfMonth();
-
-        $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('serving', 'operation')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('serving', 'operation')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        return $revenue - $expenses;
+        return $this->calculateCurrentMonthOperationProfit($endDate);
     }
 
     private function getRecentTransactions(int $userId, int $perPage = 10, int $page = 1): array
