@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\UserTransaction;
 use App\Models\ProjectTransaction;
+use App\Models\MonthlyProjectEvaluation;
+use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -137,7 +139,12 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate total profit for user (previous month equity * current month projects profit)
+     * Calculate total profit for user (matches User Financial Report logic)
+     * Formula: User Profit = Previous Month Equity % × Current Month Company Profit
+     * 
+     * Where Company Profit = Asset Profit + Operation Profit
+     * - Asset Profit: (Current Evaluation - Previous Evaluation + Revenue - Expense)
+     * - Operation Profit: (Revenue - Expense)
      */
     private function calculateTotalProfit(int $userId, Carbon $endDate): float
     {
@@ -207,11 +214,16 @@ class HomeController extends Controller
                 $monthEnd = $endDate;
             }
 
+            // Calculate profit for this month using the same formula
+            $previousMonthEquity = $this->getUserEquityPercentage($userId, $current->copy()->subMonth());
+            $currentMonthProfit = $this->getCurrentMonthProjectsProfit($monthEnd);
+            $userProfit = $previousMonthEquity * $currentMonthProfit;
+
             $monthData = [
                 'month' => $current->format('Y-m'),
                 'month_name' => $current->format('M Y'),
                 'capital_investment' => $this->calculateCapitalInvestment($userId, $monthEnd),
-                'profit' => $this->calculateTotalProfit($userId, $monthEnd)
+                'profit' => $userProfit
             ];
 
             $months[] = $monthData;
@@ -289,20 +301,70 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate current month's total projects profit (revenue - expenses)
+     * Calculate current month's total projects profit (matches User Financial Report logic)
      */
     private function getCurrentMonthProjectsProfit(Carbon $endDate): float
     {
+        $assetProfit = $this->calculateCurrentMonthAssetProfit($endDate);
+        $operationProfit = $this->calculateCurrentMonthOperationProfit($endDate);
+        
+        return $assetProfit + $operationProfit;
+    }
+    
+    /**
+     * Calculate current month's asset profit (using evaluation-based formula)
+     */
+    private function calculateCurrentMonthAssetProfit(Carbon $endDate): float
+    {
+        $currentMonth = $endDate->format('Y-m-01');
+        $previousMonth = $endDate->copy()->subMonth()->format('Y-m-01');
+        
+        $totalAssetProfit = 0;
+        $projects = Project::all();
+        
+        foreach ($projects as $project) {
+            // Get current month evaluation
+            $currentEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $currentMonth)
+                ->first();
+            
+            // Get previous month evaluation
+            $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $previousMonth)
+                ->first();
+            
+            if ($currentEvaluation) {
+                $currentAssetEval = (float) $currentEvaluation->asset_evaluation;
+                $previousAssetEval = $previousEvaluation ? (float) $previousEvaluation->asset_evaluation : 0;
+                $revenueAsset = (float) $currentEvaluation->revenue_asset;
+                $expenseAsset = (float) $currentEvaluation->expense_asset;
+                
+                // Profit Asset Formula: Current Evaluation - Previous Evaluation + Revenue - Expense
+                $profitAsset = $currentAssetEval - $previousAssetEval + $revenueAsset - $expenseAsset;
+                $totalAssetProfit += $profitAsset;
+            }
+        }
+        
+        return $totalAssetProfit;
+    }
+    
+    /**
+     * Calculate current month's operation profit (simple revenue - expense)
+     */
+    private function calculateCurrentMonthOperationProfit(Carbon $endDate): float
+    {
         $monthStart = $endDate->copy()->startOfMonth();
 
-        // Get revenue from project transactions for current month
+        // Get revenue from operation project transactions for current month
         $revenue = ProjectTransaction::where('financial_type', 'revenue')
+            ->where('serving', 'operation')
             ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
 
-        // Get expenses from project transactions for current month
+        // Get expenses from operation project transactions for current month
         $expenses = ProjectTransaction::where('financial_type', 'expense')
+            ->where('serving', 'operation')
             ->where('status', 'done')
             ->whereBetween('transaction_date', [$monthStart, $endDate])
             ->sum('amount');
@@ -333,51 +395,19 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate current month's asset projects profit
+     * Calculate current month's asset projects profit (using evaluation-based formula)
      */
     private function getCurrentMonthAssetProjectsProfit(Carbon $endDate): float
     {
-        $monthStart = $endDate->copy()->startOfMonth();
-
-        // Get revenue from asset project transactions for current month
-        $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('serving', 'asset')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        // Get expenses from asset project transactions for current month
-        $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('serving', 'asset')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        return $revenue - $expenses;
+        return $this->calculateCurrentMonthAssetProfit($endDate);
     }
 
     /**
-     * Calculate current month's operation projects profit
+     * Calculate current month's operation projects profit (simple revenue - expense)
      */
     private function getCurrentMonthOperationProjectsProfit(Carbon $endDate): float
     {
-        $monthStart = $endDate->copy()->startOfMonth();
-
-        // Get revenue from operation project transactions for current month
-        $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('serving', 'operation')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        // Get expenses from operation project transactions for current month
-        $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('serving', 'operation')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        return $revenue - $expenses;
+        return $this->calculateCurrentMonthOperationProfit($endDate);
     }
 
     /**
