@@ -224,9 +224,10 @@ class HomeController extends Controller
             }
 
             // Calculate profit for this month using the same formula
-            $previousMonthEquity = $this->getUserEquityPercentage($userId, $current->copy()->subMonth());
+            $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $current->copy()->subMonth());
+            $equityFraction = $previousMonthEquityPercentage / 100;
             $currentMonthProfit = $this->getCurrentMonthProjectsProfit($monthEnd);
-            $userProfit = $previousMonthEquity * $currentMonthProfit;
+            $userProfit = $equityFraction * $currentMonthProfit;
 
             $monthData = [
                 'month' => $current->format('Y-m'),
