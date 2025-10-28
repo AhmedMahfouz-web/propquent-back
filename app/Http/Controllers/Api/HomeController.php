@@ -26,8 +26,9 @@ class HomeController extends Controller
             $currentDate = Carbon::now();
 
             // Main financial summary always uses current month (no date filtering)
-            $capitalInvestment = $this->calculateCapitalInvestment($user->id, $currentDate);
-            $capitalChangePercent = $this->calculateCapitalChangePercent($user->id, $currentDate);
+            $equity = $this->calculateEquity($user->id, $currentDate);
+            $equityChangePercent = $this->calculateEquityChangePercent($user->id, $currentDate);
+            $equityPercentage = $this->getUserEquityPercentage($user->id, $currentDate);
 
             $totalProfit = $this->calculateTotalProfit($user->id, $currentDate);
             $thisMonthProfit = $this->calculateThisMonthProfit($user->id, $currentDate);
@@ -66,9 +67,10 @@ class HomeController extends Controller
                         'email' => $user->email
                     ],
                     'financial_summary' => [
-                        'capital_investment' => [
-                            'amount' => $capitalInvestment,
-                            'change_percent' => $capitalChangePercent,
+                        'equity' => [
+                            'amount' => $equity,
+                            'change_percent' => $equityChangePercent,
+                            'percentage' => round($equityPercentage, 2),
                             'currency' => 'USD'
                         ],
                         'profit' => [
@@ -108,34 +110,43 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate total capital investment for user
+     * Calculate user equity (deposits - withdrawals)
+     * Matches User Financial Report calculation
      */
-    private function calculateCapitalInvestment(int $userId, Carbon $endDate): float
+    private function calculateEquity(int $userId, Carbon $endDate): float
     {
-        return UserTransaction::where('user_id', $userId)
+        $deposits = UserTransaction::where('user_id', $userId)
             ->where('transaction_type', UserTransaction::TYPE_DEPOSIT)
             ->where('status', UserTransaction::STATUS_DONE)
             ->where('transaction_date', '<=', $endDate)
             ->sum('amount');
+
+        $withdrawals = UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+
+        return $deposits - $withdrawals;
     }
 
     /**
-     * Calculate capital investment change percentage from last month
+     * Calculate equity change percentage from last month
      */
-    private function calculateCapitalChangePercent(int $userId, Carbon $endDate): float
+    private function calculateEquityChangePercent(int $userId, Carbon $endDate): float
     {
         $currentMonthStart = $endDate->copy()->startOfMonth();
         $lastMonthStart = $endDate->copy()->subMonth()->startOfMonth();
         $lastMonthEnd = $endDate->copy()->subMonth()->endOfMonth();
 
-        $currentCapital = $this->calculateCapitalInvestment($userId, $endDate);
-        $lastMonthCapital = $this->calculateCapitalInvestment($userId, $lastMonthEnd);
+        $currentEquity = $this->calculateEquity($userId, $endDate);
+        $lastMonthEquity = $this->calculateEquity($userId, $lastMonthEnd);
 
-        if ($lastMonthCapital == 0) {
-            return $currentCapital > 0 ? 100 : 0;
+        if ($lastMonthEquity == 0) {
+            return $currentEquity > 0 ? 100 : 0;
         }
 
-        return round((($currentCapital - $lastMonthCapital) / $lastMonthCapital) * 100, 2);
+        return round((($currentEquity - $lastMonthEquity) / $lastMonthEquity) * 100, 2);
     }
 
     /**
@@ -177,14 +188,14 @@ class HomeController extends Controller
      */
     private function calculateROI(int $userId, Carbon $endDate): float
     {
-        $totalInvestment = $this->calculateCapitalInvestment($userId, $endDate);
+        $totalEquity = $this->calculateEquity($userId, $endDate);
         $totalProfit = $this->calculateTotalProfit($userId, $endDate);
 
-        if ($totalInvestment == 0) {
+        if ($totalEquity == 0) {
             return 0;
         }
 
-        return round(($totalProfit / $totalInvestment) * 100, 2);
+        return round(($totalProfit / $totalEquity) * 100, 2);
     }
 
     /**
@@ -232,7 +243,8 @@ class HomeController extends Controller
             $monthData = [
                 'month' => $current->format('Y-m'),
                 'month_name' => $current->format('M Y'),
-                'capital_investment' => $this->calculateCapitalInvestment($userId, $monthEnd),
+                'equity' => $this->calculateEquity($userId, $monthEnd),
+                'equity_percentage' => round($this->getUserEquityPercentage($userId, $monthEnd), 2),
                 'profit' => $userProfit
             ];
 
