@@ -78,10 +78,16 @@ class ProjectController extends BaseApiController
                 });
             }
 
+            // Calculate total asset value from current month's evaluations (sum of all projects)
+            $currentMonth = Carbon::now()->format('Y-m-01');
+            $assetValue = MonthlyProjectEvaluation::where('month_date', $currentMonth)
+                ->sum('asset_evaluation');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Resources retrieved successfully',
                 'data' => $results->items(),
+                'asset_value' => (float) $assetValue,
                 'pagination' => [
                     'current_page' => $results->currentPage(),
                     'per_page' => $results->perPage(),

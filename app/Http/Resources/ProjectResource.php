@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\MonthlyProjectEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -53,6 +54,7 @@ class ProjectResource extends JsonResource
             'investment_type' => $this->investment_type,
             'years_of_installment' => $this->years_of_installment,
             'total_contract_value' => $this->total_contract_value,
+            'asset_evaluation' => (float) MonthlyProjectEvaluation::getLatestAssetEvaluation($this->key),
             
             // Additional information
             'document' => $this->document,
