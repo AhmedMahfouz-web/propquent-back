@@ -6,6 +6,7 @@ use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Models\ProjectTransaction;
 use App\Models\UserTransaction;
+use App\Models\MonthlyProjectEvaluation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -191,6 +192,7 @@ class ProjectController extends BaseApiController
         try {
             $user = Auth::user();
             $currentDate = Carbon::now();
+            $currentMonth = $currentDate->format('Y-m-01');
 
             // Get user's equity percentage
             $userEquity = $this->getUserEquityPercentage($user->id, $currentDate);
@@ -198,12 +200,15 @@ class ProjectController extends BaseApiController
             // Get all projects with their financial data and images
             $projects = Project::with(['developer', 'media'])
                 ->get()
-                ->map(function ($project) use ($userEquity) {
-                    return $this->enrichProjectWithFinancialData($project, $userEquity);
+                ->map(function ($project) use ($userEquity, $currentMonth) {
+                    return $this->enrichProjectWithFinancialData($project, $userEquity, $currentMonth);
                 });
 
+            // Calculate total asset value from current month's evaluations (sum of all projects)
+            $totalAssetValue = MonthlyProjectEvaluation::where('month_date', $currentMonth)
+                ->sum('asset_evaluation');
+
             // Calculate summary financial data
-            $totalAssetValue = $this->calculateTotalAssetValue();
             $totalNonExitedProjectsAmount = $this->calculateTotalNonExitedProjectsAmount();
 
             return response()->json([
@@ -217,7 +222,7 @@ class ProjectController extends BaseApiController
                         'equity_percentage' => round($userEquity * 100, 2)
                     ],
                     'financial_summary' => [
-                        'total_asset_value' => $totalAssetValue,
+                        'asset_value' => (float) $totalAssetValue,
                         'total_non_exited_projects_amount' => $totalNonExitedProjectsAmount,
                         'currency' => 'USD'
                     ],
@@ -237,8 +242,11 @@ class ProjectController extends BaseApiController
     /**
      * Enrich project with user's financial data
      */
-    private function enrichProjectWithFinancialData(Project $project, float $userEquity): array
+    private function enrichProjectWithFinancialData(Project $project, float $userEquity, string $currentMonth): array
     {
+        // Get current month's asset evaluation from database (matches Project Financial Report)
+        $assetEvaluation = MonthlyProjectEvaluation::getLatestAssetEvaluation($project->key);
+
         // Calculate project's total revenue and expenses
         $projectRevenue = ProjectTransaction::where('project_key', $project->key)
             ->where('financial_type', 'revenue')
@@ -296,6 +304,7 @@ class ProjectController extends BaseApiController
             ],
             'images' => $images,
             'financial_data' => [
+                'asset_evaluation' => (float) $assetEvaluation,
                 'project_revenue' => $projectRevenue,
                 'project_expenses' => $projectExpenses,
                 'project_net_revenue' => $projectNetRevenue,
