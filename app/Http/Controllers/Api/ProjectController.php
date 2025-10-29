@@ -78,9 +78,12 @@ class ProjectController extends BaseApiController
                 });
             }
 
-            // Calculate total asset value from current month's evaluations (sum of all projects)
+            // Calculate total asset value from current month's evaluations (sum of ALL on-going projects, not just filtered/paginated)
             $currentMonth = Carbon::now()->format('Y-m-01');
             $assetValue = MonthlyProjectEvaluation::where('month_date', $currentMonth)
+                ->whereHas('project', function ($query) {
+                    $query->where('status', '!=', Project::STATUS_EXITED);
+                })
                 ->sum('asset_evaluation');
 
             return response()->json([
