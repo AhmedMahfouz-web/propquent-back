@@ -36,23 +36,12 @@ class HomeController extends Controller
             $previousMonthDate = Carbon::now()->subMonthNoOverflow();
             $previousMonth = $previousMonthDate->format('Y-m-01');
             
-            // Debug before calling method
-            $debugBeforeCall = [
-                'current_month_before' => $currentMonth,
-                'previous_month_before' => $previousMonth,
-                'now' => $now->toDateTimeString(),
-                'previous_date' => $previousMonthDate->toDateTimeString()
-            ];
-            
             $profitData = $this->calculateUserProfitForMonth($user->id, $currentMonth, $previousMonth);
             
             $totalProfit = $profitData['total_profit'];
             $thisMonthProfit = $profitData['total_profit'];
             $assetProfit = $profitData['profit_asset'];
             $operationProfit = $profitData['profit_operation'];
-            
-            // Debug data
-            $debugData = array_merge($debugBeforeCall, $profitData['debug']);
 
             $roi = $this->calculateROI($user->id, $currentDate);
 
@@ -116,8 +105,7 @@ class HomeController extends Controller
                         'start_date' => $historicalStartDate->format('Y-m-d'),
                         'end_date' => $historicalEndDate->format('Y-m-d'),
                         'months_count' => $historicalStartDate->diffInMonths($historicalEndDate)
-                    ],
-                    'debug' => $debugData
+                    ]
                 ]
             ]);
         } catch (\Exception $e) {
@@ -193,8 +181,7 @@ class HomeController extends Controller
         return [
             'profit_asset' => $equityFraction * $companyAssetProfit,
             'profit_operation' => $equityFraction * $companyOperationProfit,
-            'total_profit' => $equityFraction * $companyTotalProfit,
-            
+            'total_profit' => $equityFraction * $companyTotalProfit
         ];
     }
 

@@ -119,11 +119,15 @@ class ProjectController extends BaseApiController
             $resource = $this->model::with(['media', 'developer', 'compound'])->findOrFail($id);
 
             $data = $this->resource ? new $this->resource($resource) : $resource;
+            
+            // Add financial data (matches Project Financial Report calculations)
+            $financialData = $this->getProjectFinancialData($resource);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Resource retrieved successfully',
-                'data' => $data
+                'data' => $data,
+                'financial_data' => $financialData
             ]);
 
         } catch (\Exception $e) {
@@ -133,6 +137,63 @@ class ProjectController extends BaseApiController
                 'error' => $e->getMessage()
             ], 404);
         }
+    }
+    
+    /**
+     * Get financial data for a project (matches Project Financial Report calculations)
+     */
+    private function getProjectFinancialData($project): array
+    {
+        // Get all monthly evaluation data from database
+        $allTimeTotals = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->selectRaw('
+                SUM(expense_asset) as total_expense_asset,
+                SUM(revenue_asset) as total_revenue_asset,
+                SUM(expense_operation) as total_expense_operation,
+                SUM(revenue_operation) as total_revenue_operation,
+                SUM(profit_operation) as total_profit_operation
+            ')
+            ->first();
+        
+        // Calculate total investment amount (total expenses)
+        $investmentAmount = 0;
+        if ($allTimeTotals) {
+            $investmentAmount = (float) $allTimeTotals->total_expense_asset + (float) $allTimeTotals->total_expense_operation;
+        }
+        
+        // Get operation profit from database
+        $operationProfit = $allTimeTotals ? (float) $allTimeTotals->total_profit_operation : 0;
+        
+        // Calculate asset profit using the same formula as Project Financial Report
+        // Formula: (Current Asset Evaluation - Previous Asset Evaluation + Revenue Asset - Expense Asset) for each month
+        $assetProfit = 0;
+        $allMonthlyData = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->orderBy('month_date', 'asc')
+            ->get();
+            
+        $previousAssetEvaluation = 0;
+        foreach ($allMonthlyData as $monthData) {
+            $currentAssetEvaluation = (float) $monthData->asset_evaluation;
+            $revenueAsset = (float) $monthData->revenue_asset;
+            $expenseAsset = (float) $monthData->expense_asset;
+            
+            // Profit Asset Formula
+            $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+            $assetProfit += $monthlyProfitAsset;
+            
+            $previousAssetEvaluation = $currentAssetEvaluation;
+        }
+        
+        // Calculate total profit
+        $totalProfit = $operationProfit + $assetProfit;
+        
+        return [
+            'investment_amount' => round($investmentAmount, 2),
+            'total_profit' => round($totalProfit, 2),
+            'operation_profit' => round($operationProfit, 2),
+            'asset_profit' => round($assetProfit, 2),
+            'currency' => 'USD'
+        ];
     }
 
     /**
