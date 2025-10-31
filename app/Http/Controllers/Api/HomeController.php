@@ -31,8 +31,8 @@ class HomeController extends Controller
             $equityPercentage = $this->getUserEquityPercentage($user->id, $currentDate);
 
             // Calculate profit using the SAME method as historical data
-            $currentMonth = $currentDate->format('Y-m-01');
-            $previousMonth = $currentDate->copy()->subMonth()->format('Y-m-01');
+            $currentMonth = $currentDate->copy()->startOfMonth()->format('Y-m-01');
+            $previousMonth = $currentDate->copy()->subMonth()->startOfMonth()->format('Y-m-01');
             $profitData = $this->calculateUserProfitForMonth($user->id, $currentMonth, $previousMonth);
             
             $totalProfit = $profitData['total_profit'];
