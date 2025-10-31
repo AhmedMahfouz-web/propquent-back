@@ -35,6 +35,15 @@ class HomeController extends Controller
             $currentMonth = $now->format('Y-m-01');
             $previousMonthDate = Carbon::now()->subMonth();
             $previousMonth = $previousMonthDate->format('Y-m-01');
+            
+            // Debug before calling method
+            $debugBeforeCall = [
+                'current_month_before' => $currentMonth,
+                'previous_month_before' => $previousMonth,
+                'now' => $now->toDateTimeString(),
+                'previous_date' => $previousMonthDate->toDateTimeString()
+            ];
+            
             $profitData = $this->calculateUserProfitForMonth($user->id, $currentMonth, $previousMonth);
             
             $totalProfit = $profitData['total_profit'];
@@ -43,7 +52,7 @@ class HomeController extends Controller
             $operationProfit = $profitData['profit_operation'];
             
             // Debug data
-            $debugData = $profitData['debug'];
+            $debugData = array_merge($debugBeforeCall, $profitData['debug']);
 
             $roi = $this->calculateROI($user->id, $currentDate);
 
