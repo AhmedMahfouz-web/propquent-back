@@ -222,13 +222,19 @@ class HomeController extends Controller
 
     /**
      * Get historical data for equity and profit (last 12 months or custom range)
+     * EXACTLY matches User Financial Report calculation logic
      */
     private function getHistoricalData(int $userId, Carbon $startDate, Carbon $endDate): array
     {
-        $months = [];
+        // Generate list of months in range
+        $allMonths = [];
         $current = $startDate->copy()->startOfMonth();
+        while ($current <= $endDate) {
+            $allMonths[] = $current->format('Y-m-01');
+            $current->addMonth();
+        }
 
-        // Get all user transactions to calculate cumulative equity properly
+        // Get user transactions grouped by month
         $userTransactions = UserTransaction::where('user_id', $userId)
             ->where('status', UserTransaction::STATUS_DONE)
             ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date")
@@ -238,75 +244,84 @@ class HomeController extends Controller
             ->get()
             ->keyBy('month_date');
 
-        // Calculate equity from before start date
-        $equityBeforeStart = UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', UserTransaction::TYPE_DEPOSIT)
-            ->where('status', UserTransaction::STATUS_DONE)
-            ->where('transaction_date', '<', $startDate)
-            ->sum('amount');
-
-        $equityBeforeStart -= UserTransaction::where('user_id', $userId)
-            ->where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
-            ->where('status', UserTransaction::STATUS_DONE)
-            ->where('transaction_date', '<', $startDate)
-            ->sum('amount');
-
-        $previousEquity = $equityBeforeStart;
+        // Step 1: Calculate equity for each month (chronological order)
+        $userData = [];
+        $previousEquity = 0;
         
-        // Get equity percentage from the month BEFORE start date for first month's profit calculation
-        $monthBeforeStart = $startDate->copy()->subMonth()->endOfMonth();
-        $previousEquityPercentage = $this->getUserEquityPercentage($userId, $monthBeforeStart);
-
-        while ($current <= $endDate) {
-            $monthEnd = $current->copy()->endOfMonth();
-            if ($monthEnd > $endDate) {
-                $monthEnd = $endDate;
-            }
-
-            $monthKey = $current->format('Y-m-01');
+        foreach ($allMonths as $month) {
+            $deposits = $userTransactions[$month]->deposits ?? 0;
+            $withdrawals = $userTransactions[$month]->withdrawals ?? 0;
             
-            // Get deposits and withdrawals for this month
-            $deposits = $userTransactions[$monthKey]->deposits ?? 0;
-            $withdrawals = $userTransactions[$monthKey]->withdrawals ?? 0;
-
             // Calculate cumulative equity
             $currentEquity = $previousEquity + $deposits - $withdrawals;
-
-            // Calculate equity percentage for this month
-            $equityPercentage = $this->getUserEquityPercentage($userId, $monthEnd);
-
-            // Calculate profit using PREVIOUS month's equity percentage (from loop, not recalculated)
-            // Formula: User Profit = (Previous Month Equity % / 100) × Current Month Company Profit
-            $equityFraction = $previousEquityPercentage / 100;
             
-            // Get company profit breakdown for this month
-            $assetCompanyProfit = $this->calculateCurrentMonthAssetProfit($monthEnd);
-            $operationCompanyProfit = $this->calculateCurrentMonthOperationProfit($monthEnd);
-            
-            // Calculate user's share of each profit type
-            $userAssetProfit = $equityFraction * $assetCompanyProfit;
-            $userOperationProfit = $equityFraction * $operationCompanyProfit;
-            $userTotalProfit = $userAssetProfit + $userOperationProfit;
-
-            $monthData = [
-                'month' => $current->format('Y-m'),
-                'month_name' => $current->format('M Y'),
-                'equity' => round($currentEquity, 2),
-                'equity_percentage' => round($equityPercentage, 2),
-                'profit_asset' => round($userAssetProfit, 2),
-                'profit_operation' => round($userOperationProfit, 2),
-                'total_profit' => round($userTotalProfit, 2)
+            $userData[$month] = [
+                'deposits' => $deposits,
+                'withdrawals' => $withdrawals,
+                'equity' => $currentEquity,
+                'equity_percentage' => 0, // Will be calculated next
+                'profit_asset' => 0,
+                'profit_operation' => 0,
+                'total_profit' => 0
             ];
-
-            $months[] = $monthData;
             
-            // Update for next iteration
             $previousEquity = $currentEquity;
-            $previousEquityPercentage = $equityPercentage; // Store THIS month's percentage for NEXT month's profit calculation
-            $current->addMonth();
         }
 
-        return $months;
+        // Step 2: Calculate equity percentages for each month
+        foreach ($allMonths as $month) {
+            $monthEnd = Carbon::parse($month)->endOfMonth();
+            $userEquity = $userData[$month]['equity'];
+            $companyTotalEquity = $this->calculateCompanyTotalEquity($monthEnd);
+            
+            if ($companyTotalEquity != 0) {
+                $userData[$month]['equity_percentage'] = ($userEquity / $companyTotalEquity) * 100;
+            } else {
+                $userData[$month]['equity_percentage'] = 0;
+            }
+        }
+
+        // Step 3: Calculate company profit by month
+        $companyProfitByMonth = $this->calculateCompanyProfitByMonth($allMonths);
+
+        // Step 4: Calculate user profits using PREVIOUS month's equity percentage
+        // This matches User Financial Report logic EXACTLY
+        $previousMonth = null;
+        
+        foreach ($allMonths as $month) {
+            $companyProfitData = $companyProfitByMonth[$month] ?? ['asset' => 0, 'operation' => 0, 'total' => 0];
+            
+            // Get previous month's equity percentage (0 if no previous month)
+            $previousEquityPercentage = 0;
+            if ($previousMonth && isset($userData[$previousMonth])) {
+                $previousEquityPercentage = $userData[$previousMonth]['equity_percentage'];
+            }
+            
+            // Calculate user profit: Equity % (previous month) × Company profit (this month)
+            $equityFraction = $previousEquityPercentage / 100;
+            
+            $userData[$month]['profit_asset'] = $equityFraction * $companyProfitData['asset'];
+            $userData[$month]['profit_operation'] = $equityFraction * $companyProfitData['operation'];
+            $userData[$month]['total_profit'] = $equityFraction * $companyProfitData['total'];
+            
+            $previousMonth = $month;
+        }
+
+        // Step 5: Format output
+        $result = [];
+        foreach ($allMonths as $month) {
+            $result[] = [
+                'month' => Carbon::parse($month)->format('Y-m'),
+                'month_name' => Carbon::parse($month)->format('M Y'),
+                'equity' => round($userData[$month]['equity'], 2),
+                'equity_percentage' => round($userData[$month]['equity_percentage'], 2),
+                'profit_asset' => round($userData[$month]['profit_asset'], 2),
+                'profit_operation' => round($userData[$month]['profit_operation'], 2),
+                'total_profit' => round($userData[$month]['total_profit'], 2)
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -438,6 +453,75 @@ class HomeController extends Controller
 
         // Company Total Equity = Cash + Asset Evaluation
         return $cash + $assetEvaluation;
+    }
+
+    /**
+     * Calculate company profit for multiple months
+     * EXACTLY matches User Financial Report calculateCompanyProfitByMonth logic
+     */
+    private function calculateCompanyProfitByMonth(array $allMonths): array
+    {
+        $companyProfitByMonth = [];
+        
+        // Initialize all months with zero
+        foreach ($allMonths as $month) {
+            $companyProfitByMonth[$month] = [
+                'asset' => 0,
+                'operation' => 0,
+                'total' => 0
+            ];
+        }
+        
+        // Calculate Operation Profit for each month from database
+        foreach ($allMonths as $month) {
+            $operationProfit = MonthlyProjectEvaluation::where('month_date', $month)
+                ->sum('profit_operation');
+            $companyProfitByMonth[$month]['operation'] = (float) $operationProfit;
+        }
+        
+        // Calculate Asset Profit for each project, then sum
+        $projects = Project::all();
+        
+        foreach ($projects as $project) {
+            // Track previous evaluation for this project across all months
+            $previousAssetEvaluation = 0;
+            
+            // Sort months chronologically for correct calculation
+            $monthsChronological = collect($allMonths)->sort()->values()->toArray();
+            
+            foreach ($monthsChronological as $month) {
+                // Get evaluation data from MonthlyProjectEvaluation
+                $evaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                    ->where('month_date', $month)
+                    ->first();
+                
+                if ($evaluation) {
+                    $currentAssetEvaluation = (float) $evaluation->asset_evaluation;
+                    $revenueAsset = (float) $evaluation->revenue_asset;
+                    $expenseAsset = (float) $evaluation->expense_asset;
+                    
+                    // Profit Asset Formula: Current Evaluation - Previous Evaluation + Revenue - Expense
+                    $profitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+                    
+                    $companyProfitByMonth[$month]['asset'] += $profitAsset;
+                    
+                    // Update previous evaluation for next month
+                    $previousAssetEvaluation = $currentAssetEvaluation;
+                } else {
+                    // No evaluation data for this month - profit asset is 0
+                    // Previous evaluation stays the same for next month
+                }
+            }
+        }
+        
+        // Calculate total profit
+        foreach ($allMonths as $month) {
+            $companyProfitByMonth[$month]['total'] = 
+                $companyProfitByMonth[$month]['asset'] + 
+                $companyProfitByMonth[$month]['operation'];
+        }
+        
+        return $companyProfitByMonth;
     }
 
     /**
