@@ -161,18 +161,58 @@ class HomeController extends Controller
      */
     private function calculateTotalProfit(int $userId, Carbon $endDate): float
     {
-        // Get previous month's equity percentage
-        $previousMonthEnd = $endDate->copy()->subMonth()->endOfMonth();
-        $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $previousMonthEnd);
-
-        // Convert percentage to fraction (divide by 100)
-        $equityFraction = $previousMonthEquityPercentage / 100;
-
-        // Get current month's company profit using the new method
         $currentMonth = $endDate->format('Y-m-01');
+        $previousMonth = $endDate->copy()->subMonth()->format('Y-m-01');
+        
+        // Calculate for both months to get proper previous equity percentage
+        $months = [$previousMonth, $currentMonth];
+        
+        // Get user equity for both months
+        $userTransactions = UserTransaction::where('user_id', $userId)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date")
+            ->selectRaw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits")
+            ->selectRaw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals")
+            ->groupBy('month_date')
+            ->get()
+            ->keyBy('month_date');
+        
+        // Calculate equity for both months
+        $previousEquity = 0;
+        $userData = [];
+        
+        foreach ($months as $month) {
+            $deposits = $userTransactions[$month]->deposits ?? 0;
+            $withdrawals = $userTransactions[$month]->withdrawals ?? 0;
+            $currentEquity = $previousEquity + $deposits - $withdrawals;
+            
+            $userData[$month] = [
+                'equity' => $currentEquity,
+                'equity_percentage' => 0
+            ];
+            
+            $previousEquity = $currentEquity;
+        }
+        
+        // Calculate equity percentages
+        foreach ($months as $month) {
+            $monthEnd = Carbon::parse($month)->endOfMonth();
+            $userEquity = $userData[$month]['equity'];
+            $companyTotalEquity = $this->calculateCompanyTotalEquity($monthEnd);
+            
+            if ($companyTotalEquity != 0) {
+                $userData[$month]['equity_percentage'] = ($userEquity / $companyTotalEquity) * 100;
+            }
+        }
+        
+        // Calculate company profit for current month
         $companyProfit = $this->calculateCompanyProfitByMonth([$currentMonth]);
         $currentMonthProfit = $companyProfit[$currentMonth]['total'] ?? 0;
-
+        
+        // Use PREVIOUS month's equity percentage
+        $previousEquityPercentage = $userData[$previousMonth]['equity_percentage'];
+        $equityFraction = $previousEquityPercentage / 100;
+        
         // User Profit = Equity Fraction × Company Profit
         return $equityFraction * $currentMonthProfit;
     }
