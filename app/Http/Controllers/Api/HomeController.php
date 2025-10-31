@@ -30,10 +30,15 @@ class HomeController extends Controller
             $equityChangePercent = $this->calculateEquityChangePercent($user->id, $currentDate);
             $equityPercentage = $this->getUserEquityPercentage($user->id, $currentDate);
 
-            $totalProfit = $this->calculateTotalProfit($user->id, $currentDate);
-            $thisMonthProfit = $this->calculateThisMonthProfit($user->id, $currentDate);
-            $assetProfit = $this->calculateAssetProfit($user->id, $currentDate);
-            $operationProfit = $this->calculateOperationProfit($user->id, $currentDate);
+            // Calculate profit using the SAME method as historical data
+            $currentMonth = $currentDate->format('Y-m-01');
+            $previousMonth = $currentDate->copy()->subMonth()->format('Y-m-01');
+            $profitData = $this->calculateUserProfitForMonth($user->id, $currentMonth, $previousMonth);
+            
+            $totalProfit = $profitData['total_profit'];
+            $thisMonthProfit = $profitData['total_profit'];
+            $assetProfit = $profitData['profit_asset'];
+            $operationProfit = $profitData['profit_operation'];
 
             $roi = $this->calculateROI($user->id, $currentDate);
 
@@ -147,6 +152,68 @@ class HomeController extends Controller
         }
 
         return round((($currentEquity - $lastMonthEquity) / $lastMonthEquity) * 100, 2);
+    }
+
+    /**
+     * Calculate user profit for a specific month using previous month's equity percentage
+     * This is the CORE calculation method used by both financial summary and historical data
+     */
+    private function calculateUserProfitForMonth(int $userId, string $currentMonth, string $previousMonth): array
+    {
+        $months = [$previousMonth, $currentMonth];
+        
+        // Get user equity for both months
+        $userTransactions = UserTransaction::where('user_id', $userId)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date")
+            ->selectRaw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits")
+            ->selectRaw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals")
+            ->groupBy('month_date')
+            ->get()
+            ->keyBy('month_date');
+        
+        // Calculate equity for both months
+        $previousEquity = 0;
+        $userData = [];
+        
+        foreach ($months as $month) {
+            $deposits = $userTransactions[$month]->deposits ?? 0;
+            $withdrawals = $userTransactions[$month]->withdrawals ?? 0;
+            $currentEquity = $previousEquity + $deposits - $withdrawals;
+            
+            $userData[$month] = [
+                'equity' => $currentEquity,
+                'equity_percentage' => 0
+            ];
+            
+            $previousEquity = $currentEquity;
+        }
+        
+        // Calculate equity percentages
+        foreach ($months as $month) {
+            $monthEnd = Carbon::parse($month)->endOfMonth();
+            $userEquity = $userData[$month]['equity'];
+            $companyTotalEquity = $this->calculateCompanyTotalEquity($monthEnd);
+            
+            if ($companyTotalEquity != 0) {
+                $userData[$month]['equity_percentage'] = ($userEquity / $companyTotalEquity) * 100;
+            }
+        }
+        
+        // Calculate company profit for current month
+        $companyProfit = $this->calculateCompanyProfitByMonth([$currentMonth]);
+        $companyProfitData = $companyProfit[$currentMonth] ?? ['asset' => 0, 'operation' => 0, 'total' => 0];
+        
+        // Use PREVIOUS month's equity percentage
+        $previousEquityPercentage = $userData[$previousMonth]['equity_percentage'];
+        $equityFraction = $previousEquityPercentage / 100;
+        
+        // Calculate user's share of each profit type
+        return [
+            'profit_asset' => $equityFraction * $companyProfitData['asset'],
+            'profit_operation' => $equityFraction * $companyProfitData['operation'],
+            'total_profit' => $equityFraction * $companyProfitData['total']
+        ];
     }
 
     /**
