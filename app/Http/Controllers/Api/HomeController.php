@@ -194,18 +194,7 @@ class HomeController extends Controller
             'profit_asset' => $equityFraction * $companyAssetProfit,
             'profit_operation' => $equityFraction * $companyOperationProfit,
             'total_profit' => $equityFraction * $companyTotalProfit,
-            'debug' => [
-                'current_month' => $currentMonth,
-                'previous_month' => $previousMonth,
-                'previous_equity_percentage' => $previousEquityPercentage,
-                'equity_fraction' => $equityFraction,
-                'company_asset_profit' => (float) $companyAssetProfit,
-                'company_operation_profit' => (float) $companyOperationProfit,
-                'company_total_profit' => (float) $companyTotalProfit,
-                'user_asset_profit' => $equityFraction * $companyAssetProfit,
-                'user_operation_profit' => $equityFraction * $companyOperationProfit,
-                'user_total_profit' => $equityFraction * $companyTotalProfit
-            ]
+            
         ];
     }
 
