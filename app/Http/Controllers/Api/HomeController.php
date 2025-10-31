@@ -486,11 +486,16 @@ class HomeController extends Controller
         $projects = Project::all();
         
         foreach ($projects as $project) {
-            // Track previous evaluation for this project across all months
-            $previousAssetEvaluation = 0;
-            
             // Sort months chronologically for correct calculation
             $monthsChronological = collect($allMonths)->sort()->values()->toArray();
+            
+            // Get the previous evaluation from the month BEFORE the first month in range
+            $firstMonth = $monthsChronological[0];
+            $previousMonth = Carbon::parse($firstMonth)->subMonth()->format('Y-m-01');
+            $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
+                ->where('month_date', $previousMonth)
+                ->first();
+            $previousAssetEvaluation = $previousEvaluation ? (float) $previousEvaluation->asset_evaluation : 0;
             
             foreach ($monthsChronological as $month) {
                 // Get evaluation data from MonthlyProjectEvaluation
