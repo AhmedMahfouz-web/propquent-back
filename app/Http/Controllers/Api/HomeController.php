@@ -68,16 +68,16 @@ class HomeController extends Controller
                     ],
                     'financial_summary' => [
                         'equity' => [
-                            'amount' => $equity,
+                            'amount' => round($equity, 2),
                             'change_percent' => $equityChangePercent,
                             'percentage' => round($equityPercentage, 2),
                             'currency' => 'USD'
                         ],
                         'profit' => [
-                            'total' => $totalProfit,
-                            'this_month' => $thisMonthProfit,
-                            'asset_profit' => $assetProfit,
-                            'operation_profit' => $operationProfit,
+                            'total' => round($totalProfit, 2),
+                            'this_month' => round($thisMonthProfit, 2),
+                            'asset_profit' => round($assetProfit, 2),
+                            'operation_profit' => round($operationProfit, 2),
                             'currency' => 'USD'
                         ],
                         'roi' => [
@@ -85,9 +85,9 @@ class HomeController extends Controller
                             'description' => 'Return on Investment'
                         ],
                         'deposits_withdrawals' => [
-                            'net_deposit' => $depositData['net_deposit'],
-                            'total_deposits' => $depositData['total_deposits'],
-                            'total_withdrawals' => $depositData['total_withdrawals'],
+                            'net_deposit' => round($depositData['net_deposit'], 2),
+                            'total_deposits' => round($depositData['total_deposits'], 2),
+                            'total_withdrawals' => round($depositData['total_withdrawals'], 2),
                             'currency' => 'USD'
                         ]
                     ],
@@ -221,12 +221,37 @@ class HomeController extends Controller
     }
 
     /**
-     * Get historical data for capital and profit only (last 12 months or custom range)
+     * Get historical data for equity and profit (last 12 months or custom range)
      */
     private function getHistoricalData(int $userId, Carbon $startDate, Carbon $endDate): array
     {
         $months = [];
         $current = $startDate->copy()->startOfMonth();
+
+        // Get all user transactions to calculate cumulative equity properly
+        $userTransactions = UserTransaction::where('user_id', $userId)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m-01') as month_date")
+            ->selectRaw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_DEPOSIT . "' THEN amount ELSE 0 END) as deposits")
+            ->selectRaw("SUM(CASE WHEN transaction_type = '" . UserTransaction::TYPE_WITHDRAWAL . "' THEN amount ELSE 0 END) as withdrawals")
+            ->groupBy('month_date')
+            ->get()
+            ->keyBy('month_date');
+
+        // Calculate equity from before start date
+        $equityBeforeStart = UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', UserTransaction::TYPE_DEPOSIT)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<', $startDate)
+            ->sum('amount');
+
+        $equityBeforeStart -= UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<', $startDate)
+            ->sum('amount');
+
+        $previousEquity = $equityBeforeStart;
 
         while ($current <= $endDate) {
             $monthEnd = $current->copy()->endOfMonth();
@@ -234,8 +259,20 @@ class HomeController extends Controller
                 $monthEnd = $endDate;
             }
 
-            // Calculate profit for this month using the same formula
-            $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $current->copy()->subMonth());
+            $monthKey = $current->format('Y-m-01');
+            
+            // Get deposits and withdrawals for this month
+            $deposits = $userTransactions[$monthKey]->deposits ?? 0;
+            $withdrawals = $userTransactions[$monthKey]->withdrawals ?? 0;
+
+            // Calculate cumulative equity
+            $currentEquity = $previousEquity + $deposits - $withdrawals;
+
+            // Calculate equity percentage for this month
+            $equityPercentage = $this->getUserEquityPercentage($userId, $monthEnd);
+
+            // Calculate profit using previous month's equity percentage
+            $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $current->copy()->subMonth()->endOfMonth());
             $equityFraction = $previousMonthEquityPercentage / 100;
             $currentMonthProfit = $this->getCurrentMonthProjectsProfit($monthEnd);
             $userProfit = $equityFraction * $currentMonthProfit;
@@ -243,12 +280,13 @@ class HomeController extends Controller
             $monthData = [
                 'month' => $current->format('Y-m'),
                 'month_name' => $current->format('M Y'),
-                'equity' => $this->calculateEquity($userId, $monthEnd),
-                'equity_percentage' => round($this->getUserEquityPercentage($userId, $monthEnd), 2),
-                'profit' => $userProfit
+                'equity' => round($currentEquity, 2),
+                'equity_percentage' => round($equityPercentage, 2),
+                'profit' => round($userProfit, 2)
             ];
 
             $months[] = $monthData;
+            $previousEquity = $currentEquity;
             $current->addMonth();
         }
 
