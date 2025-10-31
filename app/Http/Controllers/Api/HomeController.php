@@ -39,6 +39,9 @@ class HomeController extends Controller
             $thisMonthProfit = $profitData['total_profit'];
             $assetProfit = $profitData['profit_asset'];
             $operationProfit = $profitData['profit_operation'];
+            
+            // Debug data
+            $debugData = $profitData['debug'];
 
             $roi = $this->calculateROI($user->id, $currentDate);
 
@@ -102,7 +105,8 @@ class HomeController extends Controller
                         'start_date' => $historicalStartDate->format('Y-m-d'),
                         'end_date' => $historicalEndDate->format('Y-m-d'),
                         'months_count' => $historicalStartDate->diffInMonths($historicalEndDate)
-                    ]
+                    ],
+                    'debug' => $debugData
                 ]
             ]);
         } catch (\Exception $e) {
@@ -178,7 +182,19 @@ class HomeController extends Controller
         return [
             'profit_asset' => $equityFraction * $companyAssetProfit,
             'profit_operation' => $equityFraction * $companyOperationProfit,
-            'total_profit' => $equityFraction * $companyTotalProfit
+            'total_profit' => $equityFraction * $companyTotalProfit,
+            'debug' => [
+                'current_month' => $currentMonth,
+                'previous_month' => $previousMonth,
+                'previous_equity_percentage' => $previousEquityPercentage,
+                'equity_fraction' => $equityFraction,
+                'company_asset_profit' => (float) $companyAssetProfit,
+                'company_operation_profit' => (float) $companyOperationProfit,
+                'company_total_profit' => (float) $companyTotalProfit,
+                'user_asset_profit' => $equityFraction * $companyAssetProfit,
+                'user_operation_profit' => $equityFraction * $companyOperationProfit,
+                'user_total_profit' => $equityFraction * $companyTotalProfit
+            ]
         ];
     }
 
