@@ -222,7 +222,7 @@ class HomeController extends Controller
     private function calculateTotalProfit(int $userId, Carbon $endDate): float
     {
         $currentMonth = $endDate->format('Y-m-01');
-        $previousMonth = $endDate->copy()->subMonth()->format('Y-m-01');
+        $previousMonth = $endDate->copy()->subMonthNoOverflow()->format('Y-m-01');
         
         // Calculate for both months to get proper previous equity percentage
         $months = [$previousMonth, $currentMonth];
@@ -591,7 +591,7 @@ class HomeController extends Controller
             
             // Get the previous evaluation from the month BEFORE the first month in range
             $firstMonth = $monthsChronological[0];
-            $previousMonth = Carbon::parse($firstMonth)->subMonth()->format('Y-m-01');
+            $previousMonth = Carbon::parse($firstMonth)->subMonthNoOverflow()->format('Y-m-01');
             $previousEvaluation = MonthlyProjectEvaluation::where('project_key', $project->key)
                 ->where('month_date', $previousMonth)
                 ->first();
@@ -650,7 +650,7 @@ class HomeController extends Controller
     private function calculateCurrentMonthAssetProfit(Carbon $endDate): float
     {
         $currentMonth = $endDate->format('Y-m-01');
-        $previousMonth = $endDate->copy()->subMonth()->format('Y-m-01');
+        $previousMonth = $endDate->copy()->subMonthNoOverflow()->format('Y-m-01');
 
         $totalAssetProfit = 0;
         $projects = Project::all();
@@ -701,7 +701,7 @@ class HomeController extends Controller
      */
     private function calculateAssetProfit(int $userId, Carbon $endDate): float
     {
-        $previousMonthEnd = $endDate->copy()->subMonth()->endOfMonth();
+        $previousMonthEnd = $endDate->copy()->subMonthNoOverflow()->endOfMonth();
         $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $previousMonthEnd);
         $equityFraction = $previousMonthEquityPercentage / 100;
         
@@ -718,7 +718,7 @@ class HomeController extends Controller
      */
     private function calculateOperationProfit(int $userId, Carbon $endDate): float
     {
-        $previousMonthEnd = $endDate->copy()->subMonth()->endOfMonth();
+        $previousMonthEnd = $endDate->copy()->subMonthNoOverflow()->endOfMonth();
         $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $previousMonthEnd);
         $equityFraction = $previousMonthEquityPercentage / 100;
         
@@ -884,7 +884,7 @@ class HomeController extends Controller
             $companyProfit = $this->getCurrentMonthProjectsProfit($monthEnd);
 
             // Calculate user profit using previous month's equity percentage
-            $previousMonthEnd = Carbon::parse($month)->subMonth()->endOfMonth();
+            $previousMonthEnd = Carbon::parse($month)->subMonthNoOverflow()->endOfMonth();
             $previousEquityPercentage = $this->getUserEquityPercentage($userId, $previousMonthEnd);
             $equityFraction = $previousEquityPercentage / 100;
             $totalProfit = $equityFraction * $companyProfit;
