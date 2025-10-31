@@ -252,6 +252,10 @@ class HomeController extends Controller
             ->sum('amount');
 
         $previousEquity = $equityBeforeStart;
+        
+        // Get equity percentage from the month BEFORE start date for first month's profit calculation
+        $monthBeforeStart = $startDate->copy()->subMonth()->endOfMonth();
+        $previousEquityPercentage = $this->getUserEquityPercentage($userId, $monthBeforeStart);
 
         while ($current <= $endDate) {
             $monthEnd = $current->copy()->endOfMonth();
@@ -271,10 +275,9 @@ class HomeController extends Controller
             // Calculate equity percentage for this month
             $equityPercentage = $this->getUserEquityPercentage($userId, $monthEnd);
 
-            // Calculate profit using previous month's equity percentage
+            // Calculate profit using PREVIOUS month's equity percentage (from loop, not recalculated)
             // Formula: User Profit = (Previous Month Equity % / 100) × Current Month Company Profit
-            $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $current->copy()->subMonth()->endOfMonth());
-            $equityFraction = $previousMonthEquityPercentage / 100;
+            $equityFraction = $previousEquityPercentage / 100;
             
             // Get company profit breakdown for this month
             $assetCompanyProfit = $this->calculateCurrentMonthAssetProfit($monthEnd);
@@ -296,7 +299,10 @@ class HomeController extends Controller
             ];
 
             $months[] = $monthData;
+            
+            // Update for next iteration
             $previousEquity = $currentEquity;
+            $previousEquityPercentage = $equityPercentage; // Store THIS month's percentage for NEXT month's profit calculation
             $current->addMonth();
         }
 
