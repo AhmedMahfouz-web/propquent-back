@@ -272,17 +272,27 @@ class HomeController extends Controller
             $equityPercentage = $this->getUserEquityPercentage($userId, $monthEnd);
 
             // Calculate profit using previous month's equity percentage
+            // Formula: User Profit = (Previous Month Equity % / 100) × Current Month Company Profit
             $previousMonthEquityPercentage = $this->getUserEquityPercentage($userId, $current->copy()->subMonth()->endOfMonth());
             $equityFraction = $previousMonthEquityPercentage / 100;
-            $currentMonthProfit = $this->getCurrentMonthProjectsProfit($monthEnd);
-            $userProfit = $equityFraction * $currentMonthProfit;
+            
+            // Get company profit breakdown for this month
+            $assetCompanyProfit = $this->calculateCurrentMonthAssetProfit($monthEnd);
+            $operationCompanyProfit = $this->calculateCurrentMonthOperationProfit($monthEnd);
+            
+            // Calculate user's share of each profit type
+            $userAssetProfit = $equityFraction * $assetCompanyProfit;
+            $userOperationProfit = $equityFraction * $operationCompanyProfit;
+            $userTotalProfit = $userAssetProfit + $userOperationProfit;
 
             $monthData = [
                 'month' => $current->format('Y-m'),
                 'month_name' => $current->format('M Y'),
                 'equity' => round($currentEquity, 2),
                 'equity_percentage' => round($equityPercentage, 2),
-                'profit' => round($userProfit, 2)
+                'profit_asset' => round($userAssetProfit, 2),
+                'profit_operation' => round($userOperationProfit, 2),
+                'total_profit' => round($userTotalProfit, 2)
             ];
 
             $months[] = $monthData;
@@ -436,7 +446,8 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate current month's asset profit (using evaluation-based formula)
+     * Calculate current month's asset profit from database (uses pre-calculated values)
+     * Matches User Financial Report calculation exactly
      */
     private function calculateCurrentMonthAssetProfit(Carbon $endDate): float
     {
@@ -473,27 +484,18 @@ class HomeController extends Controller
     }
 
     /**
-     * Calculate current month's operation profit (simple revenue - expense)
+     * Calculate current month's operation profit from database (uses pre-calculated values)
+     * Matches User Financial Report calculation exactly
      */
     private function calculateCurrentMonthOperationProfit(Carbon $endDate): float
     {
-        $monthStart = $endDate->copy()->startOfMonth();
+        $currentMonth = $endDate->format('Y-m-01');
 
-        // Get revenue from operation project transactions for current month
-        $revenue = ProjectTransaction::where('financial_type', 'revenue')
-            ->where('serving', 'operation')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
+        // Sum operation profit from all projects for this month
+        $totalOperationProfit = MonthlyProjectEvaluation::where('month_date', $currentMonth)
+            ->sum('profit_operation');
 
-        // Get expenses from operation project transactions for current month
-        $expenses = ProjectTransaction::where('financial_type', 'expense')
-            ->where('serving', 'operation')
-            ->where('status', 'done')
-            ->whereBetween('transaction_date', [$monthStart, $endDate])
-            ->sum('amount');
-
-        return $revenue - $expenses;
+        return (float) $totalOperationProfit;
     }
 
     /**
