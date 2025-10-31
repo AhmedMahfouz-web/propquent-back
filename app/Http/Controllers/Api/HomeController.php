@@ -33,7 +33,7 @@ class HomeController extends Controller
             // Calculate profit using the SAME method as historical data
             $now = Carbon::now();
             $currentMonth = $now->format('Y-m-01');
-            $previousMonthDate = Carbon::now()->subMonth();
+            $previousMonthDate = Carbon::now()->subMonthNoOverflow();
             $previousMonth = $previousMonthDate->format('Y-m-01');
             
             // Debug before calling method
@@ -156,8 +156,8 @@ class HomeController extends Controller
     private function calculateEquityChangePercent(int $userId, Carbon $endDate): float
     {
         $currentMonthStart = $endDate->copy()->startOfMonth();
-        $lastMonthStart = $endDate->copy()->subMonth()->startOfMonth();
-        $lastMonthEnd = $endDate->copy()->subMonth()->endOfMonth();
+        $lastMonthStart = $endDate->copy()->subMonthNoOverflow()->startOfMonth();
+        $lastMonthEnd = $endDate->copy()->subMonthNoOverflow()->endOfMonth();
 
         $currentEquity = $this->calculateEquity($userId, $endDate);
         $lastMonthEquity = $this->calculateEquity($userId, $lastMonthEnd);
