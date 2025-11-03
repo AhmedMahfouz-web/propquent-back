@@ -170,7 +170,7 @@ class ProjectController extends BaseApiController
         $allMonthlyData = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
             ->orderBy('month_date', 'asc')
             ->get();
-            
+        
         $previousAssetEvaluation = 0;
         foreach ($allMonthlyData as $monthData) {
             $currentAssetEvaluation = (float) $monthData->asset_evaluation;
