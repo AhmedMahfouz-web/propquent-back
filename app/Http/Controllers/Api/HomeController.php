@@ -48,6 +48,9 @@ class HomeController extends Controller
             $roi = $this->calculateROI($user->id, $currentDate);
 
             $depositData = $this->calculateDepositData($user->id);
+            
+            // Calculate user's share of company cash and assets
+            $cashAssetData = $this->calculateUserCashAndAssets($user->id, $currentDate);
 
             // Historical data: Get date range from request or default to last 12 months
             $historicalEndDate = $request->has('end_date')
@@ -99,7 +102,9 @@ class HomeController extends Controller
                             'total_deposits' => round($depositData['total_deposits'], 2),
                             'total_withdrawals' => round($depositData['total_withdrawals'], 2),
                             'currency' => 'USD'
-                        ]
+                        ],
+                        'cash' => round($cashAssetData['cash'], 2),
+                        'asset' => round($cashAssetData['asset'], 2)
                     ],
                     'historical_data' => $historicalData,
                     'recent_transactions' => $recentTransactions,
@@ -351,6 +356,68 @@ class HomeController extends Controller
             'total_withdrawals' => $totalWithdrawals,
             'net_deposit' => $totalDeposits - $totalWithdrawals
         ];
+    }
+
+    /**
+     * Calculate user's share of company cash and assets
+     * Formula: User Equity % × Company Value
+     */
+    private function calculateUserCashAndAssets(int $userId, Carbon $endDate): array
+    {
+        $currentMonth = $endDate->format('Y-m-01');
+        
+        // Get user's equity percentage for current month
+        $userEquityPercentage = $this->getUserEquityPercentage($userId, $endDate);
+        $equityFraction = $userEquityPercentage / 100;
+        
+        // Get company cash for current month
+        $companyCash = $this->getCompanyCash($currentMonth, $endDate);
+        
+        // Get company asset evaluation for current month
+        $companyAssetEvaluation = MonthlyProjectEvaluation::where('month_date', $currentMonth)
+            ->sum('asset_evaluation');
+        
+        return [
+            'cash' => $equityFraction * $companyCash,
+            'asset' => $equityFraction * $companyAssetEvaluation
+        ];
+    }
+
+    /**
+     * Get company cash balance for a specific month
+     * Tries cached database first, calculates manually if not available
+     */
+    private function getCompanyCash(string $month, Carbon $endDate): float
+    {
+        // Try to get cached cash balance first
+        $cachedCash = MonthlyCashBalance::where('month_date', $month)->first();
+        
+        if ($cachedCash) {
+            return (float) $cachedCash->cash_balance;
+        }
+        
+        // Fallback: Calculate manually
+        $allDeposits = UserTransaction::where('transaction_type', UserTransaction::TYPE_DEPOSIT)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+        
+        $allWithdrawals = UserTransaction::where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+        
+        $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
+            ->where('status', 'done')
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+        
+        $allExpenses = ProjectTransaction::where('financial_type', 'expense')
+            ->where('status', 'done')
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+        
+        return $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
     }
 
     /**
