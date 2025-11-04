@@ -127,6 +127,13 @@ class CalculateMonthlyEvaluations extends Command
 
             // Use the later of the two dates, but at least current month
             $endDate = collect([$transactionEndDate, $correctionEndDate, Carbon::now()])->max()->startOfMonth();
+            
+            // Safety check: Don't calculate beyond 5 years in the future (protects against data entry errors)
+            $maxAllowedDate = Carbon::now()->addYears(5)->startOfMonth();
+            if ($endDate->gt($maxAllowedDate)) {
+                $this->warn("  Warning: End date {$endDate->format('Y-m-d')} is too far in future. Limiting to {$maxAllowedDate->format('Y-m-d')}");
+                $endDate = $maxAllowedDate;
+            }
         }
 
         return [
