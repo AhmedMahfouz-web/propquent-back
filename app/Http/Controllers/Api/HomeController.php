@@ -30,18 +30,20 @@ class HomeController extends Controller
             $equityChangePercent = $this->calculateEquityChangePercent($user->id, $currentDate);
             $equityPercentage = $this->getUserEquityPercentage($user->id, $currentDate);
 
-            // Calculate profit using the SAME method as historical data
+            // Calculate this month's profit
             $now = Carbon::now();
             $currentMonth = $now->format('Y-m-01');
             $previousMonthDate = Carbon::now()->subMonthNoOverflow();
             $previousMonth = $previousMonthDate->format('Y-m-01');
             
-            $profitData = $this->calculateUserProfitForMonth($user->id, $currentMonth, $previousMonth);
+            $currentMonthProfitData = $this->calculateUserProfitForMonth($user->id, $currentMonth, $previousMonth);
+            $thisMonthProfit = $currentMonthProfitData['total_profit'];
             
-            $totalProfit = $profitData['total_profit'];
-            $thisMonthProfit = $profitData['total_profit'];
-            $assetProfit = $profitData['profit_asset'];
-            $operationProfit = $profitData['profit_operation'];
+            // Calculate TOTAL profit (sum of all months from beginning)
+            $totalProfitData = $this->calculateTotalProfitAllMonths($user->id, $currentDate);
+            $totalProfit = $totalProfitData['total_profit'];
+            $assetProfit = $totalProfitData['profit_asset'];
+            $operationProfit = $totalProfitData['profit_operation'];
 
             $roi = $this->calculateROI($user->id, $currentDate);
 
@@ -168,20 +170,69 @@ class HomeController extends Controller
         $previousEquityPercentage = $this->getUserEquityPercentage($userId, $previousMonthEnd);
         $equityFraction = $previousEquityPercentage / 100;
         
-        // Get company profit from database (already calculated and stored)
-        $companyAssetProfit = MonthlyProjectEvaluation::where('month_date', $currentMonth)
-            ->sum('profit_asset_cumulative');
-        
-        $companyOperationProfit = MonthlyProjectEvaluation::where('month_date', $currentMonth)
-            ->sum('profit_operation');
-        
-        $companyTotalProfit = $companyAssetProfit + $companyOperationProfit;
+        // Calculate company profit using the SAME method as historical data
+        // This ensures consistency between financial_summary and historical_data
+        $companyProfit = $this->calculateCompanyProfitByMonth([$currentMonth]);
+        $companyAssetProfit = $companyProfit[$currentMonth]['asset'] ?? 0;
+        $companyOperationProfit = $companyProfit[$currentMonth]['operation'] ?? 0;
+        $companyTotalProfit = $companyProfit[$currentMonth]['total'] ?? 0;
         
         // User profit = Previous month equity % × Current month company profit
         return [
             'profit_asset' => $equityFraction * $companyAssetProfit,
             'profit_operation' => $equityFraction * $companyOperationProfit,
             'total_profit' => $equityFraction * $companyTotalProfit
+        ];
+    }
+
+    /**
+     * Calculate TOTAL profit for user (sum of ALL months from beginning)
+     * Returns asset, operation, and total profit
+     */
+    private function calculateTotalProfitAllMonths(int $userId, Carbon $endDate): array
+    {
+        // Get earliest transaction date for this user
+        $earliestTransaction = UserTransaction::where('user_id', $userId)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->orderBy('transaction_date', 'asc')
+            ->first();
+        
+        if (!$earliestTransaction) {
+            return [
+                'profit_asset' => 0,
+                'profit_operation' => 0,
+                'total_profit' => 0
+            ];
+        }
+        
+        $startDate = Carbon::parse($earliestTransaction->transaction_date)->startOfMonth();
+        
+        // Generate all months from start to end
+        $allMonths = [];
+        $current = $startDate->copy();
+        while ($current <= $endDate) {
+            $allMonths[] = $current->format('Y-m-01');
+            $current->addMonth();
+        }
+        
+        // Get historical data which calculates profit for each month
+        $historicalData = $this->getHistoricalData($userId, $startDate, $endDate);
+        
+        // Sum all months' profits
+        $totalAssetProfit = 0;
+        $totalOperationProfit = 0;
+        $totalProfit = 0;
+        
+        foreach ($historicalData as $monthData) {
+            $totalAssetProfit += $monthData['profit_asset'];
+            $totalOperationProfit += $monthData['profit_operation'];
+            $totalProfit += $monthData['total_profit'];
+        }
+        
+        return [
+            'profit_asset' => $totalAssetProfit,
+            'profit_operation' => $totalOperationProfit,
+            'total_profit' => $totalProfit
         ];
     }
 
@@ -264,11 +315,14 @@ class HomeController extends Controller
 
     /**
      * Calculate ROI (Return on Investment)
+     * ROI = (Total Profit / Total Equity) × 100
+     * Where Total Profit = Sum of all months' profits from beginning
      */
     private function calculateROI(int $userId, Carbon $endDate): float
     {
         $totalEquity = $this->calculateEquity($userId, $endDate);
-        $totalProfit = $this->calculateTotalProfit($userId, $endDate);
+        $totalProfitData = $this->calculateTotalProfitAllMonths($userId, $endDate);
+        $totalProfit = $totalProfitData['total_profit'];
 
         if ($totalEquity == 0) {
             return 0;
