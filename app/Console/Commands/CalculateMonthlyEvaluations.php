@@ -94,46 +94,31 @@ class CalculateMonthlyEvaluations extends Command
 
     private function getProjectDateRange(Project $project, ?string $fromMonth, ?string $toMonth): array
     {
-        // Get earliest and latest transaction dates
+        // Get earliest transaction date (for start date)
         $earliestTransaction = $project->transactions()
             ->where('status', 'done')
             ->where('serving', 'asset')
             ->orderBy('transaction_date', 'asc')
             ->first();
 
-        $latestTransaction = $project->transactions()
-            ->where('status', 'done')
-            ->where('serving', 'asset')
-            ->orderBy('transaction_date', 'desc')
-            ->first();
-
         if (!$earliestTransaction) {
+            // No transactions yet, skip this project
             return [];
         }
 
         $startDate = $fromMonth ? Carbon::parse($fromMonth) : Carbon::parse($earliestTransaction->transaction_date)->startOfMonth();
 
-        // End date should include future months if there are value corrections or future transactions
+        // End date: Use current month by default (real-world date, not database dates)
+        // This prevents typos in transaction dates from affecting calculation range
         if ($toMonth) {
+            // If user explicitly provides --to-month, use it
             $endDate = Carbon::parse($toMonth);
         } else {
-            // Get the latest date from either transactions or value corrections
-            $latestValueCorrection = \App\Models\ValueCorrection::where('project_key', $project->key)
-                ->orderBy('correction_date', 'desc')
-                ->first();
-
-            $transactionEndDate = $latestTransaction ? Carbon::parse($latestTransaction->transaction_date) : Carbon::now();
-            $correctionEndDate = $latestValueCorrection ? Carbon::parse($latestValueCorrection->correction_date) : Carbon::now();
-
-            // Use the later of the two dates, but at least current month
-            $endDate = collect([$transactionEndDate, $correctionEndDate, Carbon::now()])->max()->startOfMonth();
+            // Always calculate up to current month (real-world date)
+            // Ignore transaction/correction dates to prevent typos from causing issues
+            $endDate = Carbon::now()->startOfMonth();
             
-            // Safety check: Don't calculate beyond 5 years in the future (protects against data entry errors)
-            $maxAllowedDate = Carbon::now()->addYears(5)->startOfMonth();
-            if ($endDate->gt($maxAllowedDate)) {
-                $this->warn("  Warning: End date {$endDate->format('Y-m-d')} is too far in future. Limiting to {$maxAllowedDate->format('Y-m-d')}");
-                $endDate = $maxAllowedDate;
-            }
+            $this->line("  Calculating from {$startDate->format('Y-m')} to {$endDate->format('Y-m')} (current month)");
         }
 
         return [
