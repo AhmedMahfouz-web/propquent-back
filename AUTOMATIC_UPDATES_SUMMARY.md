@@ -94,8 +94,8 @@ php artisan schedule:list
 
 | Task | Frequency | Time | Command | Purpose |
 |------|-----------|------|---------|---------|
-| **Monthly Refresh** | 1st of month | 1:00 AM | `evaluations:calculate --force` | Full recalculation |
-| **Daily Update** | Every day | 2:00 AM | `evaluations:calculate` | Current month update |
+| **Monthly Refresh** | 1st of month | 1:00 AM | `evaluations:calculate --force` | Full recalculation (all data) |
+| **Daily Update** | Every day | 2:00 AM | `evaluations:calculate --from-month=LAST_3_MONTHS` | Update last 3 months (optimized) |
 
 **Timezone**: Africa/Cairo (configurable in `routes/console.php`)
 

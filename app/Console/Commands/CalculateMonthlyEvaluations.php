@@ -112,7 +112,7 @@ class CalculateMonthlyEvaluations extends Command
         }
 
         $startDate = $fromMonth ? Carbon::parse($fromMonth) : Carbon::parse($earliestTransaction->transaction_date)->startOfMonth();
-        
+
         // End date should include future months if there are value corrections or future transactions
         if ($toMonth) {
             $endDate = Carbon::parse($toMonth);
@@ -121,10 +121,10 @@ class CalculateMonthlyEvaluations extends Command
             $latestValueCorrection = \App\Models\ValueCorrection::where('project_key', $project->key)
                 ->orderBy('correction_date', 'desc')
                 ->first();
-            
+
             $transactionEndDate = $latestTransaction ? Carbon::parse($latestTransaction->transaction_date) : Carbon::now();
             $correctionEndDate = $latestValueCorrection ? Carbon::parse($latestValueCorrection->correction_date) : Carbon::now();
-            
+
             // Use the later of the two dates, but at least current month
             $endDate = collect([$transactionEndDate, $correctionEndDate, Carbon::now()])->max()->startOfMonth();
         }

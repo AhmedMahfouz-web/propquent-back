@@ -85,12 +85,14 @@ Typical Hostinger paths:
 ## 📝 What Happens Automatically
 
 ✨ **Monthly (1st at 1:00 AM)**:
-- Full recalculation of all evaluations and profits
-- Updates all historical data
+- Full recalculation of ALL evaluations and profits
+- Updates all historical data from beginning
+- Ensures long-term accuracy
 
-✨ **Daily (2:00 AM)**:
-- Updates current month data
-- Ensures reports are always current
+✨ **Daily (2:00 AM)** - OPTIMIZED:
+- Updates only last 3 months (current + previous 2)
+- Much faster than full calculation
+- Keeps current data fresh without overloading server
 
 ---
 

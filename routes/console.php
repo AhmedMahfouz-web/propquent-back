@@ -8,26 +8,36 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Automatically refresh evaluations and profits on the first day of each month at 1:00 AM
+// MONTHLY: Full refresh on 1st of month at 1:00 AM (recalculates everything)
 Schedule::command('evaluations:calculate --force')
-    ->monthlyOn(1, '00:01')
+    ->monthlyOn(1, '01:00')
     ->timezone('Africa/Cairo')
-    ->description('Refresh monthly evaluations and profits')
+    ->description('Monthly: Full recalculation of all evaluations')
     ->onSuccess(function () {
-        \Log::info('Monthly evaluations refreshed successfully');
+        \Log::info('[MONTHLY] All evaluations refreshed successfully');
     })
     ->onFailure(function () {
-        \Log::error('Failed to refresh monthly evaluations');
+        \Log::error('[MONTHLY] Failed to refresh evaluations');
     });
 
-// Also run daily at 00:02 AM to ensure current month is always up to date
-Schedule::command('evaluations:calculate')
-    ->dailyAt('00:02')
+// DAILY: Update only last 3 months at 2:00 AM (efficient, keeps current data fresh)
+Schedule::command('evaluations:calculate --from-month=' . now()->subMonths(2)->format('Y-m-01'))
+    ->dailyAt('02:00')
     ->timezone('Africa/Cairo')
-    ->description('Update current month evaluations')
+    ->description('Daily: Update last 3 months evaluations')
     ->onSuccess(function () {
-        \Log::info('Daily evaluations update completed');
+        \Log::info('[DAILY] Last 3 months evaluations updated successfully');
     })
     ->onFailure(function () {
-        \Log::error('Failed to update daily evaluations');
+        \Log::error('[DAILY] Failed to update evaluations');
     });
+
+// OPTIONAL: Light check every 6 hours during business day (only if you need real-time updates)
+// Uncomment if you want evaluations updated 4 times a day
+// Schedule::command('evaluations:calculate --from-month=' . now()->startOfMonth()->format('Y-m-01'))
+//     ->cron('0 8,12,16,20 * * *')  // 8am, 12pm, 4pm, 8pm
+//     ->timezone('Africa/Cairo')
+//     ->description('Update current month only (lightweight)')
+//     ->onSuccess(function () {
+//         \Log::info('[HOURLY] Current month updated');
+//     });
