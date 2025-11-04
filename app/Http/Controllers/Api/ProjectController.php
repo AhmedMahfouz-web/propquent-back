@@ -116,12 +116,13 @@ class ProjectController extends BaseApiController
     public function show(Request $request, $id): JsonResponse
     {
         try {
+            $user = Auth::user();
             $resource = $this->model::with(['media', 'developer', 'compound'])->findOrFail($id);
 
             $data = $this->resource ? new $this->resource($resource) : $resource;
             
-            // Add financial data (matches Project Financial Report calculations)
-            $financialData = $this->getProjectFinancialData($resource);
+            // Add financial data with user's share (user equity % × project values)
+            $financialData = $this->getProjectFinancialData($resource, $user->id);
 
             return response()->json([
                 'success' => true,
@@ -140,10 +141,15 @@ class ProjectController extends BaseApiController
     }
     
     /**
-     * Get financial data for a project (matches Project Financial Report calculations)
+     * Get financial data for a project showing user's share (user equity % × project values)
      */
-    private function getProjectFinancialData($project): array
+    private function getProjectFinancialData($project, int $userId): array
     {
+        // Get user's equity percentage
+        $currentDate = Carbon::now();
+        $userEquityPercentage = $this->getUserEquityPercentageForHome($userId, $currentDate);
+        $equityFraction = $userEquityPercentage / 100;
+        
         // Get all monthly evaluation data from database
         $allTimeTotals = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
             ->selectRaw('
@@ -156,17 +162,17 @@ class ProjectController extends BaseApiController
             ->first();
         
         // Calculate total investment amount (total expenses)
-        $investmentAmount = 0;
+        $projectInvestmentAmount = 0;
         if ($allTimeTotals) {
-            $investmentAmount = (float) $allTimeTotals->total_expense_asset + (float) $allTimeTotals->total_expense_operation;
+            $projectInvestmentAmount = (float) $allTimeTotals->total_expense_asset + (float) $allTimeTotals->total_expense_operation;
         }
         
         // Get operation profit from database
-        $operationProfit = $allTimeTotals ? (float) $allTimeTotals->total_profit_operation : 0;
+        $projectOperationProfit = $allTimeTotals ? (float) $allTimeTotals->total_profit_operation : 0;
         
         // Calculate asset profit using the same formula as Project Financial Report
         // Formula: (Current Asset Evaluation - Previous Asset Evaluation + Revenue Asset - Expense Asset) for each month
-        $assetProfit = 0;
+        $projectAssetProfit = 0;
         $allMonthlyData = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
             ->orderBy('month_date', 'asc')
             ->get();
@@ -179,21 +185,106 @@ class ProjectController extends BaseApiController
             
             // Profit Asset Formula
             $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
-            $assetProfit += $monthlyProfitAsset;
+            $projectAssetProfit += $monthlyProfitAsset;
             
             $previousAssetEvaluation = $currentAssetEvaluation;
         }
         
         // Calculate total profit
-        $totalProfit = $operationProfit + $assetProfit;
+        $projectTotalProfit = $projectOperationProfit + $projectAssetProfit;
         
+        // Apply user's equity percentage to get user's share
         return [
-            'investment_amount' => round($investmentAmount, 2),
-            'total_profit' => round($totalProfit, 2),
-            'operation_profit' => round($operationProfit, 2),
-            'asset_profit' => round($assetProfit, 2),
+            'investment_amount' => round($equityFraction * $projectInvestmentAmount, 2),
+            'total_profit' => round($equityFraction * $projectTotalProfit, 2),
+            'operation_profit' => round($equityFraction * $projectOperationProfit, 2),
+            'asset_profit' => round($equityFraction * $projectAssetProfit, 2),
             'currency' => 'USD'
         ];
+    }
+    
+    /**
+     * Get user's equity percentage (same calculation as HomeController)
+     */
+    private function getUserEquityPercentageForHome(int $userId, Carbon $endDate): float
+    {
+        // Calculate user's cumulative equity up to the given date
+        $userEquity = $this->calculateUserCumulativeEquity($userId, $endDate);
+
+        // Calculate company total equity (cash + asset evaluation)
+        $companyTotalEquity = $this->calculateCompanyTotalEquity($endDate);
+
+        if ($companyTotalEquity == 0) {
+            return 0;
+        }
+
+        // Return as percentage (multiply by 100)
+        return ($userEquity / $companyTotalEquity) * 100;
+    }
+    
+    /**
+     * Calculate user's cumulative equity (deposits - withdrawals)
+     */
+    private function calculateUserCumulativeEquity(int $userId, Carbon $endDate): float
+    {
+        $deposits = UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', UserTransaction::TYPE_DEPOSIT)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+
+        $withdrawals = UserTransaction::where('user_id', $userId)
+            ->where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
+            ->where('status', UserTransaction::STATUS_DONE)
+            ->where('transaction_date', '<=', $endDate)
+            ->sum('amount');
+
+        return $deposits - $withdrawals;
+    }
+    
+    /**
+     * Calculate company total equity (cash + asset evaluation)
+     */
+    private function calculateCompanyTotalEquity(Carbon $endDate): float
+    {
+        $month = $endDate->format('Y-m-01');
+
+        // Try to get cached cash balance first
+        $cachedCash = \App\Models\MonthlyCashBalance::where('month_date', $month)->first();
+
+        if ($cachedCash) {
+            $cash = (float) $cachedCash->cash_balance;
+        } else {
+            // Fallback: Calculate manually
+            $allDeposits = UserTransaction::where('transaction_type', UserTransaction::TYPE_DEPOSIT)
+                ->where('status', UserTransaction::STATUS_DONE)
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $allWithdrawals = UserTransaction::where('transaction_type', UserTransaction::TYPE_WITHDRAWAL)
+                ->where('status', UserTransaction::STATUS_DONE)
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $allRevenue = ProjectTransaction::where('financial_type', 'revenue')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $allExpenses = ProjectTransaction::where('financial_type', 'expense')
+                ->where('status', 'done')
+                ->where('transaction_date', '<=', $endDate)
+                ->sum('amount');
+
+            $cash = $allDeposits - $allWithdrawals + $allRevenue - $allExpenses;
+        }
+
+        // Get total asset evaluation for this month from MonthlyProjectEvaluation
+        $assetEvaluation = MonthlyProjectEvaluation::where('month_date', $month)
+            ->sum('asset_evaluation');
+
+        // Company Total Equity = Cash + Asset Evaluation
+        return $cash + $assetEvaluation;
     }
 
     /**
