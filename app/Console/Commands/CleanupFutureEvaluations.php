@@ -10,9 +10,9 @@ use Carbon\Carbon;
 
 class CleanupFutureEvaluations extends Command
 {
-    protected $signature = 'evaluations:cleanup-future 
+    protected $signature = 'evaluations:cleanup-future
                           {--dry-run : Show what would be deleted without actually deleting}
-                          {--years=2 : How many years in future to allow (default: 2)}';
+                          {--years=0 : How many years in future to allow (default: 0)}';
 
     protected $description = 'Clean up evaluations and find transactions with dates too far in the future';
 
@@ -20,14 +20,14 @@ class CleanupFutureEvaluations extends Command
     {
         $dryRun = $this->option('dry-run');
         $yearsAllowed = (int) $this->option('years');
-        
+
         $cutoffDate = Carbon::now()->addYears($yearsAllowed)->format('Y-m-d');
-        
+
         $this->info('===========================================');
         $this->info('  CLEANUP FUTURE EVALUATIONS');
         $this->info('===========================================');
         $this->newLine();
-        
+
         $this->info("Cutoff Date: {$cutoffDate}");
         $this->info("Mode: " . ($dryRun ? 'DRY RUN (no changes)' : 'LIVE (will delete)'));
         $this->newLine();
@@ -40,7 +40,7 @@ class CleanupFutureEvaluations extends Command
         if ($futureEvaluations->count() > 0) {
             $this->warn("Found {$futureEvaluations->count()} evaluations beyond {$cutoffDate}:");
             $this->newLine();
-            
+
             $this->table(
                 ['Project Key', 'Month', 'Asset Eval', 'Expense', 'Revenue'],
                 $futureEvaluations->map(function ($eval) {
@@ -53,7 +53,7 @@ class CleanupFutureEvaluations extends Command
                     ];
                 })->toArray()
             );
-            
+
             if (!$dryRun) {
                 if ($this->confirm('Delete these future evaluations?', true)) {
                     $deleted = MonthlyProjectEvaluation::where('month_date', '>', $cutoffDate)->delete();
@@ -67,7 +67,7 @@ class CleanupFutureEvaluations extends Command
         } else {
             $this->info("✓ No future evaluations found beyond {$cutoffDate}");
         }
-        
+
         $this->newLine();
 
         // Find future transactions
@@ -78,7 +78,7 @@ class CleanupFutureEvaluations extends Command
         if ($futureTransactions->count() > 0) {
             $this->warn("Found {$futureTransactions->count()} transactions beyond {$cutoffDate}:");
             $this->newLine();
-            
+
             $this->table(
                 ['ID', 'Project Key', 'Date', 'Type', 'Amount', 'Status'],
                 $futureTransactions->map(function ($trans) {
@@ -92,14 +92,14 @@ class CleanupFutureEvaluations extends Command
                     ];
                 })->toArray()
             );
-            
+
             $this->warn("⚠️  These transactions should be reviewed manually!");
             $this->info("   They may be legitimate future transactions or data entry errors.");
             $this->info("   To fix: Update dates in admin panel or delete if wrong.");
         } else {
             $this->info("✓ No future transactions found beyond {$cutoffDate}");
         }
-        
+
         $this->newLine();
 
         // Find future value corrections
@@ -110,7 +110,7 @@ class CleanupFutureEvaluations extends Command
         if ($futureCorrections->count() > 0) {
             $this->warn("Found {$futureCorrections->count()} value corrections beyond {$cutoffDate}:");
             $this->newLine();
-            
+
             $this->table(
                 ['ID', 'Project Key', 'Date', 'Amount'],
                 $futureCorrections->map(function ($corr) {
@@ -122,7 +122,7 @@ class CleanupFutureEvaluations extends Command
                     ];
                 })->toArray()
             );
-            
+
             $this->warn("⚠️  These corrections should be reviewed manually!");
             $this->info("   To fix: Update dates in admin panel or delete if wrong.");
         } else {
