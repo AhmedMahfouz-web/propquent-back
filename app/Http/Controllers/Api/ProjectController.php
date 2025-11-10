@@ -141,11 +141,12 @@ class ProjectController extends BaseApiController
     }
     
     /**
-     * Get financial data for a project showing user's share (user equity % × project values)
+     * Get financial data for a project showing user's share
+     * Total profit = sum of each month's (user's equity% * previous month's project profit)
      */
     private function getProjectFinancialData($project, int $userId): array
     {
-        // Get user's equity percentage
+        // Get user's current equity percentage for investment amount calculation
         $currentDate = Carbon::now();
         $userEquityPercentage = $this->getUserEquityPercentageForHome($userId, $currentDate);
         $equityFraction = $userEquityPercentage / 100;
@@ -167,38 +168,71 @@ class ProjectController extends BaseApiController
             $projectInvestmentAmount = (float) $allTimeTotals->total_expense_asset + (float) $allTimeTotals->total_expense_operation;
         }
         
-        // Get operation profit from database
-        $projectOperationProfit = $allTimeTotals ? (float) $allTimeTotals->total_profit_operation : 0;
-        
-        // Calculate asset profit using the same formula as Project Financial Report
-        // Formula: (Current Asset Evaluation - Previous Asset Evaluation + Revenue Asset - Expense Asset) for each month
-        $projectAssetProfit = 0;
+        // Get all monthly data ordered chronologically
         $allMonthlyData = \App\Models\MonthlyProjectEvaluation::where('project_key', $project->key)
             ->orderBy('month_date', 'asc')
             ->get();
         
+        // Calculate project profit for each month
+        $projectProfitByMonth = [];
         $previousAssetEvaluation = 0;
+        
         foreach ($allMonthlyData as $monthData) {
+            $month = $monthData->month_date->format('Y-m-01');
+            
+            // Calculate asset profit for this month
             $currentAssetEvaluation = (float) $monthData->asset_evaluation;
             $revenueAsset = (float) $monthData->revenue_asset;
             $expenseAsset = (float) $monthData->expense_asset;
-            
-            // Profit Asset Formula
             $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
-            $projectAssetProfit += $monthlyProfitAsset;
+            
+            // Operation profit for this month
+            $monthlyProfitOperation = (float) $monthData->profit_operation;
+            
+            // Total profit for this month
+            $projectProfitByMonth[$month] = [
+                'asset' => $monthlyProfitAsset,
+                'operation' => $monthlyProfitOperation,
+                'total' => $monthlyProfitAsset + $monthlyProfitOperation
+            ];
             
             $previousAssetEvaluation = $currentAssetEvaluation;
         }
         
-        // Calculate total profit
-        $projectTotalProfit = $projectOperationProfit + $projectAssetProfit;
+        // Calculate user's total profit: sum of (user's equity% of previous month * project profit of current month)
+        $userTotalProfit = 0;
+        $userAssetProfit = 0;
+        $userOperationProfit = 0;
+        $previousMonth = null;
         
-        // Apply user's equity percentage to get user's share
+        foreach ($allMonthlyData as $monthData) {
+            $month = $monthData->month_date->format('Y-m-01');
+            
+            // Get user's equity percentage for the PREVIOUS month
+            $userEquityForPreviousMonth = 0;
+            if ($previousMonth) {
+                $previousMonthDate = Carbon::parse($previousMonth)->endOfMonth();
+                $userEquityForPreviousMonth = $this->getUserEquityPercentageForHome($userId, $previousMonthDate);
+            }
+            // First month: equity% = 0 (no previous month)
+            
+            $equityFractionForMonth = $userEquityForPreviousMonth / 100;
+            
+            // Calculate user's profit for this month
+            $projectProfit = $projectProfitByMonth[$month];
+            $userTotalProfit += $equityFractionForMonth * $projectProfit['total'];
+            $userAssetProfit += $equityFractionForMonth * $projectProfit['asset'];
+            $userOperationProfit += $equityFractionForMonth * $projectProfit['operation'];
+            
+            $previousMonth = $month;
+        }
+        
+        // Apply current user's equity percentage to investment amount
         return [
             'investment_amount' => round($equityFraction * $projectInvestmentAmount, 2),
-            'total_profit' => round($equityFraction * $projectTotalProfit, 2),
-            'operation_profit' => round($equityFraction * $projectOperationProfit, 2),
-            'asset_profit' => round($equityFraction * $projectAssetProfit, 2),
+            'total_profit' => round($userTotalProfit, 2),
+            'operation_profit' => round($userOperationProfit, 2),
+            'asset_profit' => round($userAssetProfit, 2),
             'currency' => 'USD'
         ];
     }
@@ -355,14 +389,14 @@ class ProjectController extends BaseApiController
             $currentDate = Carbon::now();
             $currentMonth = $currentDate->format('Y-m-01');
 
-            // Get user's equity percentage
-            $userEquity = $this->getUserEquityPercentage($user->id, $currentDate);
+            // Get user's current equity percentage for display
+            $userEquityPercentage = $this->getUserEquityPercentageForHome($user->id, $currentDate);
 
             // Get all projects with their financial data and images
             $projects = Project::with(['developer', 'media'])
                 ->get()
-                ->map(function ($project) use ($userEquity, $currentMonth) {
-                    return $this->enrichProjectWithFinancialData($project, $userEquity, $currentMonth);
+                ->map(function ($project) use ($user, $currentMonth) {
+                    return $this->enrichProjectWithFinancialData($project, $user->id, $currentMonth);
                 });
 
             // Calculate total asset value from current month's evaluations (sum of all projects)
@@ -380,7 +414,7 @@ class ProjectController extends BaseApiController
                         'id' => $user->id,
                         'full_name' => $user->full_name,
                         'custom_id' => $user->custom_id,
-                        'equity_percentage' => round($userEquity * 100, 2)
+                        'equity_percentage' => round($userEquityPercentage, 2)
                     ],
                     'financial_summary' => [
                         'asset_value' => (float) $totalAssetValue,
@@ -402,29 +436,95 @@ class ProjectController extends BaseApiController
 
     /**
      * Enrich project with user's financial data
+     * Uses same logic: sum of (user's equity% of previous month × project profit of current month)
      */
-    private function enrichProjectWithFinancialData(Project $project, float $userEquity, string $currentMonth): array
+    private function enrichProjectWithFinancialData(Project $project, int $userId, string $currentMonth): array
     {
         // Get current month's asset evaluation from database (matches Project Financial Report)
         $assetEvaluation = MonthlyProjectEvaluation::getLatestAssetEvaluation($project->key);
 
-        // Calculate project's total revenue and expenses
-        $projectRevenue = ProjectTransaction::where('project_key', $project->key)
-            ->where('financial_type', 'revenue')
-            ->where('status', 'completed')
-            ->sum('amount');
+        // Get user's current equity percentage for investment amount calculation
+        $currentDate = Carbon::now();
+        $userEquityPercentage = $this->getUserEquityPercentageForHome($userId, $currentDate);
+        $equityFraction = $userEquityPercentage / 100;
 
-        $projectExpenses = ProjectTransaction::where('project_key', $project->key)
-            ->where('financial_type', 'expense')
-            ->where('status', 'completed')
-            ->sum('amount');
+        // Get all monthly evaluation data
+        $allTimeTotals = MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->selectRaw('
+                SUM(expense_asset) as total_expense_asset,
+                SUM(revenue_asset) as total_revenue_asset,
+                SUM(expense_operation) as total_expense_operation,
+                SUM(revenue_operation) as total_revenue_operation
+            ')
+            ->first();
+        
+        // Calculate total investment amount (total expenses)
+        $projectInvestmentAmount = 0;
+        if ($allTimeTotals) {
+            $projectInvestmentAmount = (float) $allTimeTotals->total_expense_asset + (float) $allTimeTotals->total_expense_operation;
+        }
 
-        $projectNetRevenue = $projectRevenue - $projectExpenses;
-        $projectTotalProfit = $projectNetRevenue; // Assuming profit = net revenue for now
+        // Get all monthly data ordered chronologically
+        $allMonthlyData = MonthlyProjectEvaluation::where('project_key', $project->key)
+            ->orderBy('month_date', 'asc')
+            ->get();
+        
+        // Calculate project profit for each month
+        $projectProfitByMonth = [];
+        $previousAssetEvaluation = 0;
+        
+        foreach ($allMonthlyData as $monthData) {
+            $month = $monthData->month_date->format('Y-m-01');
+            
+            // Calculate asset profit for this month
+            $currentAssetEvaluation = (float) $monthData->asset_evaluation;
+            $revenueAsset = (float) $monthData->revenue_asset;
+            $expenseAsset = (float) $monthData->expense_asset;
+            $monthlyProfitAsset = $currentAssetEvaluation - $previousAssetEvaluation + $revenueAsset - $expenseAsset;
+            
+            // Operation profit for this month
+            $monthlyProfitOperation = (float) $monthData->profit_operation;
+            
+            // Total profit for this month
+            $projectProfitByMonth[$month] = [
+                'asset' => $monthlyProfitAsset,
+                'operation' => $monthlyProfitOperation,
+                'total' => $monthlyProfitAsset + $monthlyProfitOperation
+            ];
+            
+            $previousAssetEvaluation = $currentAssetEvaluation;
+        }
+        
+        // Calculate user's total profit: sum of (user's equity% of previous month * project profit of current month)
+        $userTotalProfit = 0;
+        $userAssetProfit = 0;
+        $userOperationProfit = 0;
+        $previousMonth = null;
+        
+        foreach ($allMonthlyData as $monthData) {
+            $month = $monthData->month_date->format('Y-m-01');
+            
+            // Get user's equity percentage for the PREVIOUS month
+            $userEquityForPreviousMonth = 0;
+            if ($previousMonth) {
+                $previousMonthDate = Carbon::parse($previousMonth)->endOfMonth();
+                $userEquityForPreviousMonth = $this->getUserEquityPercentageForHome($userId, $previousMonthDate);
+            }
+            // First month: equity% = 0 (no previous month)
+            
+            $equityFractionForMonth = $userEquityForPreviousMonth / 100;
+            
+            // Calculate user's profit for this month
+            $projectProfit = $projectProfitByMonth[$month];
+            $userTotalProfit += $equityFractionForMonth * $projectProfit['total'];
+            $userAssetProfit += $equityFractionForMonth * $projectProfit['asset'];
+            $userOperationProfit += $equityFractionForMonth * $projectProfit['operation'];
+            
+            $previousMonth = $month;
+        }
 
-        // Calculate user's invested amount and profit for this project
-        $userInvestedAmount = $userEquity * $projectNetRevenue;
-        $userProfitFromProject = $userEquity * $projectTotalProfit;
+        // Calculate user's invested amount using current equity
+        $userInvestedAmount = $equityFraction * $projectInvestmentAmount;
 
         // Get project images with URLs
         $images = $project->getMedia('images')->map(function ($media) {
@@ -466,12 +566,10 @@ class ProjectController extends BaseApiController
             'images' => $images,
             'financial_data' => [
                 'asset_evaluation' => (float) $assetEvaluation,
-                'project_revenue' => $projectRevenue,
-                'project_expenses' => $projectExpenses,
-                'project_net_revenue' => $projectNetRevenue,
-                'project_total_profit' => $projectTotalProfit,
-                'user_invested_amount' => $userInvestedAmount,
-                'user_profit_from_project' => $userProfitFromProject,
+                'user_invested_amount' => round($userInvestedAmount, 2),
+                'user_total_profit' => round($userTotalProfit, 2),
+                'user_asset_profit' => round($userAssetProfit, 2),
+                'user_operation_profit' => round($userOperationProfit, 2),
                 'currency' => 'USD'
             ],
             'created_at' => $project->created_at,
