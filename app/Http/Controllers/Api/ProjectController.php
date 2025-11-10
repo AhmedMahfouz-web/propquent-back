@@ -78,19 +78,25 @@ class ProjectController extends BaseApiController
                 });
             }
 
-            // Calculate total asset value from current month's evaluations (sum of ALL on-going projects, not just filtered/paginated)
-            $currentMonth = Carbon::now()->format('Y-m-01');
-            $assetValue = MonthlyProjectEvaluation::where('month_date', $currentMonth)
-                ->whereHas('project', function ($query) {
-                    $query->where('status', '!=', Project::STATUS_EXITED);
-                })
-                ->sum('asset_evaluation');
+            // Calculate user's total profit from ALL projects (not just paginated results)
+            $user = Auth::user();
+            $currentDate = Carbon::now();
+            $currentMonth = $currentDate->format('Y-m-01');
+            
+            // Get all projects and calculate user's total profit
+            $allProjects = Project::all();
+            $totalUserProfit = 0;
+            
+            foreach ($allProjects as $project) {
+                $financialData = $this->getProjectFinancialData($project, $user->id);
+                $totalUserProfit += $financialData['total_profit'];
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Resources retrieved successfully',
                 'data' => $results->items(),
-                'asset_value' => (float) $assetValue,
+                'asset_value' => round($totalUserProfit, 2),
                 'pagination' => [
                     'current_page' => $results->currentPage(),
                     'per_page' => $results->perPage(),
