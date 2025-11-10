@@ -399,9 +399,10 @@ class ProjectController extends BaseApiController
                     return $this->enrichProjectWithFinancialData($project, $user->id, $currentMonth);
                 });
 
-            // Calculate total asset value from current month's evaluations (sum of all projects)
-            $totalAssetValue = MonthlyProjectEvaluation::where('month_date', $currentMonth)
-                ->sum('asset_evaluation');
+            // Calculate total user profit from all projects (sum of user_total_profit from each project)
+            $totalUserProfit = $projects->sum(function ($project) {
+                return $project['financial_data']['user_total_profit'] ?? 0;
+            });
 
             // Calculate summary financial data
             $totalNonExitedProjectsAmount = $this->calculateTotalNonExitedProjectsAmount();
@@ -417,7 +418,7 @@ class ProjectController extends BaseApiController
                         'equity_percentage' => round($userEquityPercentage, 2)
                     ],
                     'financial_summary' => [
-                        'asset_value' => (float) $totalAssetValue,
+                        'asset_value' => round($totalUserProfit, 2),
                         'total_non_exited_projects_amount' => $totalNonExitedProjectsAmount,
                         'currency' => 'USD'
                     ],
